@@ -84,6 +84,8 @@ Finally, our PP design introduces an important nuance: **rank0-out-of-mesh** mea
 
 ### Practical checklist
 
+> **Compiled distributed region contract**: Compiled distributed code must be treated as SPMD inside its process group. Any rank divergence in graph breaks, guard-driven recompiles, or conditional collective behavior is a deadlock seed. Therefore: (1) parity-check all compile and backend selection knobs at init, (2) broadcast a per-call plan that fixes call-count and optional phases, (3) use functional collectives inside compiled regions and never wrap collectives in dynamo-disable, (4) warm up in lockstep before serving, and (5) keep crash > hang with watchdogs and drift tripwires.
+
 - **Define symmetry domains up front** (who must run the same compiled behavior?):
   - TP inside `mesh_pg`: all mesh ranks must be symmetric.
   - rank0-out-of-mesh: rank0 may diverge by design, but must not enter mesh collectives.

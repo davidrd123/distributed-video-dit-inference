@@ -1,3 +1,7 @@
+---
+status: stub
+---
+
 # Topic 12: Compile + distributed interaction — compile with DDP/FSDP/TP
 
 The core challenge is that **DDP/FSDP use backward hooks for communication**, and these hooks create graph breaks in AOTAutograd. The solutions are: (1) **Compiled Autograd** (PyTorch 2.4+), which captures the full backward graph at runtime, (2) **FSDP2 built on DTensor**, which is compile-friendly by design, and (3) **functional collectives** for tensor parallelism.

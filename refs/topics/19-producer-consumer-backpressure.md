@@ -1,3 +1,7 @@
+---
+status: stub
+---
+
 # Topic 19: Producer-consumer with backpressure — bounded channels, ring buffers
 
 In a pipeline-parallel inference system, each stage is a producer for the next stage. Without backpressure, a fast producer can overwhelm a slow consumer, causing OOM or unbounded latency. **Bounded queues** are the simplest correct solution: block the producer when the queue is full.

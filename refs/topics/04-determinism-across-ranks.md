@@ -1,3 +1,7 @@
+---
+status: stub
+---
+
 # Topic 4: Determinism across ranks in distributed training/inference
 
 Non-determinism in distributed settings comes from three sources: **CUDA atomicAdd operations** (non-associative floating-point), **cuDNN autotuning** selecting different algorithms per run, and **NCCL reduction order** across ranks.

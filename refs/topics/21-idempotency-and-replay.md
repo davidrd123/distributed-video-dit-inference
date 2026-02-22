@@ -1,3 +1,7 @@
+---
+status: stub
+---
+
 # Topic 21: Idempotency and replay
 
 For fault tolerance in a streaming video pipeline, operations should be idempotent — re-executing a denoising step or VAE decode with the same inputs produces the same output. Combined with **replay from checkpointed state**, this gives you exactly-once semantics without distributed transactions.

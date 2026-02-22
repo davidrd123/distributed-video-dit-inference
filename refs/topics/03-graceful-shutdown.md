@@ -1,3 +1,7 @@
+---
+status: stub
+---
+
 # Topic 3: Graceful shutdown and draining in distributed PyTorch
 
 Graceful shutdown in distributed PyTorch remains **underserved by documentation**. The core API is `destroy_process_group()`, but real-world challenges include ranks exiting at different times, CUDA graph capture preventing clean NCCL communicator destruction, and signal handling under `torchrun`.

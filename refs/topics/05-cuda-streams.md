@@ -1,3 +1,7 @@
+---
+status: stub
+---
+
 # Topic 5: CUDA streams — execution/dependency model, events, synchronization, NCCL interaction
 
 Streams are the fundamental concurrency primitive for overlapping compute, communication, and memory transfers. NCCL operations execute on their own streams, and understanding how events synchronize across streams is essential for pipeline parallelism.

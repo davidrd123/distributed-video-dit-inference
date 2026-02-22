@@ -124,6 +124,20 @@ Optional sections vary by type:
 
 **Manifest status after**: `converted` → `condensed`
 
+## Topic synthesis docs (`refs/topics/<nn>-<slug>.md`)
+
+Topic docs synthesize across multiple resource cards for a single topic. Each has a `## Synthesis` section with 6 subsections: Mental model, Key concepts, Cross-resource agreement/disagreement, Practical checklist, Gotchas and failure modes, Experiments to run.
+
+**Status tracking**: Topic files use YAML frontmatter at the top of the file:
+
+```yaml
+---
+status: draft
+---
+```
+
+Status values: `stub` (synthesis empty) → `draft` (synthesis written, awaiting review) → `approved` (user reviewed). Same ownership rule as resource cards: agents set `draft` when they write the synthesis; only set `approved` if the user explicitly asks.
+
 ## Reference implementations
 
 Two completed references exist covering the main resource types:

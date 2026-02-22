@@ -1,3 +1,7 @@
+---
+status: stub
+---
+
 # Topic 7: GPU memory management — PyTorch caching allocator, fragmentation
 
 The PyTorch caching allocator avoids expensive `cudaMalloc`/`cudaFree` calls by maintaining a pool of allocated blocks. Fragmentation under dynamic workloads (variable sequence lengths, different denoising steps) is the primary operational concern.

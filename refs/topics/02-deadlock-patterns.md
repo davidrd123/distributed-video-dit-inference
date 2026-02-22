@@ -1,3 +1,7 @@
+---
+status: stub
+---
+
 # Topic 2: Deadlock patterns in multi-group distributed code
 
 Deadlocks in multi-group code almost always stem from mismatched collective ordering across ranks or accidentally issuing operations on the wrong process group. `NCCL_DEBUG=INFO` (or `WARN`) is your primary diagnostic tool.

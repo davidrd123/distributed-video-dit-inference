@@ -1,3 +1,7 @@
+---
+status: stub
+---
+
 # Topic 20: Message framing and versioning
 
 When pipeline stages communicate over network boundaries (multi-node inference), you need message framing (length-prefixed or delimited) and versioning for forward/backward compatibility as the system evolves.

@@ -1,3 +1,7 @@
+---
+status: stub
+---
+
 # Topic 23: VAE latency and chunking for video
 
 The VAE decoder is often the **latency bottleneck** in video generation pipelines. 3D VAEs compress both spatially and temporally (typical compression: 8x8x4), but decoding back to pixel space is expensive. **Tiled decoding** splits the latent spatially, **temporal chunking** with causal convolution caching enables frame-by-frame streaming decode.

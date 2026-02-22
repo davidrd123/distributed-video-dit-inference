@@ -1,3 +1,7 @@
+---
+status: stub
+---
+
 # Topic 22: KV cache management in streaming inference
 
 KV caches store the key/value projections from previous tokens to avoid recomputation during autoregressive generation. In video DiT streaming, this extends to **temporal KV caches** across denoising steps and frames. PagedAttention (from vLLM) introduced OS-style paged memory management, reducing waste from **60-80% to under 4%**.

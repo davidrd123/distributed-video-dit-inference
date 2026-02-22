@@ -1,3 +1,7 @@
+---
+status: stub
+---
+
 # Topic 16: Roofline model applied to transformers — arithmetic intensity for attention vs FFN
 
 The roofline model plots achievable FLOPS against **arithmetic intensity** (FLOPS/byte of memory traffic). Attention is typically **memory-bandwidth-bound** (low arithmetic intensity due to reading/writing large KV matrices), while FFN layers are more likely **compute-bound** (high arithmetic intensity from large matrix multiplications). This distinction drives optimization strategy.

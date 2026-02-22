@@ -1,3 +1,7 @@
+---
+status: stub
+---
+
 # Topic 17: Reading Nsight / torch.profiler traces
 
 Profiling is the primary tool for understanding where time is spent in distributed GPU workloads. PyTorch's built-in profiler integrates with TensorBoard for visualization, while NVIDIA Nsight Compute provides kernel-level analysis including roofline positioning.

@@ -1,3 +1,7 @@
+---
+status: stub
+---
+
 # Topic 15: Pipeline scheduling theory — bubble fraction derivation, Little's law connection
 
 The bubble fraction for a P-stage pipeline processing B micro-batches is **(P-1)/(B+P-1)**. This is a direct consequence of pipeline startup and drain latency. **Little's law** (L = lambda * W) provides the framework: to keep P stages busy, you need at least P micro-batches in flight, and throughput approaches the ideal rate as B approaches infinity.

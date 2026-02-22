@@ -1,3 +1,7 @@
+---
+status: stub
+---
+
 # Topic 24: Video DiT scheduling — denoising steps, causal dependencies, rolling windows
 
 Video DiT scheduling determines how denoising steps are ordered and parallelized across frames. **Rolling window** approaches generate video autoregressively: each window of N frames shares context from the previous window, enabling arbitrarily long generation. **Stream Batch** (from StreamDiffusion) batches denoising steps across time for throughput.

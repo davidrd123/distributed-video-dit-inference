@@ -1,3 +1,7 @@
+---
+status: stub
+---
+
 # Topic 18: Bandwidth accounting from first principles
 
 Bandwidth accounting means computing the **theoretical minimum memory traffic** for an operation, then comparing against measured bandwidth to determine utilization. For a matrix multiply C = A x B with dimensions (M, K) x (K, N), minimum traffic is `2(MK + KN + MN)` bytes (read A, read B, write C).

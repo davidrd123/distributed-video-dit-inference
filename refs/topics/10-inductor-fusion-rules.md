@@ -1,3 +1,7 @@
+---
+status: stub
+---
+
 # Topic 10: Inductor fusion rules — what fuses, verification
 
 TorchInductor's scheduler decides fusion using `score_fusion(node1, node2)`, which scores pairs of operations by **estimated memory traffic savings**. Pointwise-to-pointwise fusion is most common; reduction and template fusions have additional constraints.

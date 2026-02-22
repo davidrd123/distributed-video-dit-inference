@@ -1,3 +1,7 @@
+---
+status: stub
+---
+
 # Topic 8: Kernel launch overhead — Python-to-GPU dispatch path
 
 Each PyTorch operator call traverses Python -> C++ dispatch -> CUDA kernel launch. At **~10us per launch**, this overhead dominates when running many small operations. `torch.compile` and CUDA graphs are the primary mitigations.

@@ -23,6 +23,12 @@ Goal output: a **ship checklist** + a small set of **contract fields + tests** t
 - `scope-drd/notes/FA4/h200/tp/pp0-bringup-runbook.md` (PP0/R0a step)
 - `scope-drd/notes/FA4/h200/tp/bringup-run-log.md` (Run 11 recompute frequency experiment)
 
+### Prior 5 Pro history (calibration; treat as baseline)
+
+- `scope-drd/notes/FA4/h200/tp/5pro/10-v11-correctness-deadlock-audit/response.md` (failure taxonomy; plan/call-count mismatch)
+- `scope-drd/notes/FA4/h200/tp/5pro/12-v11-risk-ranked-execution-plan/response.md` (stop/go gates and sequencing constraints)
+- `scope-drd/notes/FA4/h200/tp/5pro/13-pp-execution-ready/response.md` (PP sequencing implications)
+
 ### Library (target operator manual)
 
 - `refs/topics/22-kv-cache-management.md` *(may still be stub; treat as the output target)*
@@ -37,6 +43,15 @@ Goal output: a **ship checklist** + a small set of **contract fields + tests** t
 - `refs/resources/pytorch-cuda-semantics.md` (stream/allocator gotchas if overlap touches cache buffers)
 
 ## Questions to answer
+
+### 0) Delta vs prior 5 Pro thread outputs (10/12/13)
+
+Summarize (briefly) what is unchanged vs changed relative to the 5 Pro history above.
+
+Deliverable: a “delta list” with:
+- `unchanged` (still true),
+- `refined` (same idea, sharper state machine/fields/tests),
+- `overridden` (what changed and why).
 
 ### 1) State machine: define the lifecycle precisely
 
@@ -99,3 +114,4 @@ Return:
 - recommended recompute decoupling path (R1→R0a→R0 or alternative),
 - and break-it tests.
 
+Make the output copy-pastable into `refs/topics/22-kv-cache-management.md` (primary), plus any deltas for `refs/topics/21-idempotency-and-replay.md` / `refs/topics/04-determinism-across-ranks.md`.

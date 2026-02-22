@@ -23,6 +23,11 @@ We want: a crisp **ship checklist**, a minimal PP envelope/result schema, and �
 - `scope-drd/notes/FA4/h200/tp/explainers/06-failure-modes.md`
 - (optional) `scope-drd/notes/FA4/h200/tp/v1.1-generator-only-workers.md` (only for shared “plan + envelope” vocabulary)
 
+### Prior 5 Pro history (calibration; treat as baseline)
+
+- `scope-drd/notes/FA4/h200/tp/5pro/13-pp-execution-ready/response.md`
+- (shared v1.1 deadlock taxonomy) `scope-drd/notes/FA4/h200/tp/5pro/10-v11-correctness-deadlock-audit/response.md`
+
 ### Library operator manuals (target packaging)
 
 - `refs/topics/20-message-framing-versioning.md`
@@ -32,6 +37,15 @@ We want: a crisp **ship checklist**, a minimal PP envelope/result schema, and �
 - `refs/topics/21-idempotency-and-replay.md`
 
 ## Questions to answer (prioritize P0 correctness)
+
+### 0) Delta vs prior 5 Pro PP readiness review (13)
+
+Summarize (briefly) what is unchanged vs changed relative to the 5 Pro PP readiness thread.
+
+Deliverable: a “delta list” with:
+- `unchanged` (still true),
+- `refined` (same idea, sharper schema/tripwire/test),
+- `overridden` (what changed and why).
 
 ### 1) Minimal PP contract (schema) — what must be explicit?
 
@@ -115,3 +129,6 @@ Return:
 - overlap proof recipe (metrics + gates),
 - break-it tests with expected failure signatures.
 
+Use the failure-mode taxonomy naming (FM-01/FM-02/…) where applicable, so tests map cleanly to known risks.
+
+Make the output copy-pastable into the topic operator manuals (especially `refs/topics/19-producer-consumer-backpressure.md`, `refs/topics/20-message-framing-versioning.md`, and `refs/topics/02-deadlock-patterns.md`).

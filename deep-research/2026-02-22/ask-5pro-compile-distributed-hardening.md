@@ -23,6 +23,15 @@ Goal output: an operator-manual checklist + a minimal regression test set we can
 - `scope-drd/notes/FA4/h200/tp/explainers/06-failure-modes.md` (Q6 compile divergence)
 - `scope-drd/notes/FA4/h200/tp/bringup-run-log.md` (Run 8–12b story: graph breaks → fix)
 
+### Prior 5 Pro history (calibration; treat as baseline)
+
+These are the earlier compile thread outputs. Your answer should explicitly call out what you’re reusing vs changing.
+
+- `scope-drd/notes/FA4/h200/tp/5pro/05-followup-compile/response.md`
+- `scope-drd/notes/FA4/h200/tp/5pro/06-compile-deep-dive/response.md`
+- `scope-drd/notes/FA4/h200/tp/5pro/07-graph-break-audit/response-reg.md`
+- `scope-drd/notes/FA4/h200/tp/5pro/07-graph-break-audit/response-spark.md`
+
 ### Library resources (physics)
 
 - `refs/resources/funcol-rfc-93173.md` (functional collectives semantics)
@@ -39,6 +48,15 @@ Goal output: an operator-manual checklist + a minimal regression test set we can
 
 ## Questions to answer
 
+### 0) Delta vs prior 5 Pro compile thread (05–07)
+
+Summarize (briefly) what is unchanged vs changed relative to the 5 Pro history above.
+
+Deliverable: a “delta list” with:
+- `unchanged` (still true),
+- `refined` (same idea, sharper checklist/tests),
+- `overridden` (what changed and why).
+
 ### 1) Parity invariants: what must match across ranks?
 
 List the rank-parity invariants required for compiled distributed execution:
@@ -51,6 +69,8 @@ Deliverable: a “parity checklist” divided into:
 - must be **env-parity-checked** at init,
 - must be **broadcast in-envelope** each call,
 - can be “best effort” later.
+
+Also include: which parity checks are already implemented today (vs proposed additions), so this doesn’t become a generic “everything must match” list.
 
 ### 2) Graph breaks and guard churn: operational triage
 
@@ -106,3 +126,4 @@ Return:
 - warmup protocol,
 - regression suite list (with expected failure signatures).
 
+Make the output copy-pastable into the topic operator manuals (especially `refs/topics/09-dynamo-tracing.md`, `refs/topics/11-functional-collectives.md`, `refs/topics/12-compile-distributed-interaction.md`, and `refs/topics/04-determinism-across-ranks.md`).

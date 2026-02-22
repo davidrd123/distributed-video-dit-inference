@@ -26,6 +26,18 @@ Goal output: a **ship checklist** + a **minimal envelope schema** that prevents 
 - `scope-drd/notes/FA4/h200/tp/5pro/10-v11-correctness-deadlock-audit/response.md`
 - `scope-drd/notes/FA4/h200/tp/bringup-run-log.md` (only the v1.1 matrix + memory notes are needed)
 
+### Prior 5 Pro history (calibration; treat as baseline)
+
+These are “what 5 Pro already decided” in the v1.1 thread. Your output should explicitly note whether it is:
+- reiterating an existing recommendation,
+- refining it with a clearer schema/test,
+- or overriding it (and why).
+
+- `scope-drd/notes/FA4/h200/tp/5pro/08-v11-generator-only-workers/response.md`
+- `scope-drd/notes/FA4/h200/tp/5pro/10-v11-correctness-deadlock-audit/response.md`
+- `scope-drd/notes/FA4/h200/tp/5pro/11-v11-perf-roi-stop-go/response.md`
+- `scope-drd/notes/FA4/h200/tp/5pro/12-v11-risk-ranked-execution-plan/response.md`
+
 ### Library operator manuals (the “ship checklists” we want to align to)
 
 - `refs/v1.1-generator-only-workers-crosswalk.md`
@@ -45,6 +57,15 @@ Goal output: a **ship checklist** + a **minimal envelope schema** that prevents 
 - `refs/resources/dynamo-deep-dive.md`
 
 ## Questions to answer (be opinionated; prioritize P0 correctness)
+
+### 0) Delta vs prior 5 Pro v1.1 thread (08–12)
+
+Summarize (briefly) what is unchanged vs changed relative to the 5 Pro history above.
+
+Deliverable: a “delta list” with:
+- `unchanged` (still true),
+- `refined` (same idea, sharper schema/tripwire/test),
+- `overridden` (what changed and why).
 
 ### 1) Envelope schema: what is required, when?
 
@@ -102,6 +123,8 @@ Specify tests (or harness-level experiments) that intentionally violate the cont
 - it does **not** hang for minutes,
 - and it provides actionable logs.
 
+Use the failure-mode taxonomy naming from the deadlock audit (FM-01/FM-02/…) where applicable, so tests map cleanly to known risks.
+
 At minimum include:
 1) meta serialization failure (anti-stranding),
 2) dtype unsupported discovered late,
@@ -117,3 +140,4 @@ Return:
 - a **tripwire checklist** (where/when to assert),
 - and **break-it tests** (with expected failure signatures).
 
+Make the output copy-pastable into the topic operator manuals (especially `refs/topics/20-message-framing-versioning.md`, `refs/topics/02-deadlock-patterns.md`, `refs/topics/04-determinism-across-ranks.md`, and `refs/topics/22-kv-cache-management.md`).

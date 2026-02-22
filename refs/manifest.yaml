@@ -533,8 +533,10 @@ resources:
     type: paper
     topics: [13]
     priority: high
-    status: fetched
-    local_paths: []
+    status: converted
+    local_paths:
+      - sources/pipedream-2bw/raw/paper.pdf
+      - sources/pipedream-2bw/full.md
     notes: "Narayanan et al., 2020. PipeDream-Flush (synchronous 1F1B), double-buffered weight updates. The 1F1B schedule most modern systems implement"
 
   - id: pp-siboehm
@@ -570,8 +572,10 @@ resources:
     type: paper
     topics: [14]
     priority: high
-    status: fetched
-    local_paths: []
+    status: converted
+    local_paths:
+      - sources/zero-bubble-pp/raw/paper.pdf
+      - sources/zero-bubble-pp/full.md
     notes: "Qi et al., 2024. Zero bubbles by splitting backward into B and W phases. 23-31% throughput improvement over 1F1B"
 
   - id: pytorch-pipelining-api
@@ -857,8 +861,11 @@ resources:
     type: paper
     topics: [22]
     priority: high
-    status: fetched
-    local_paths: []
+    status: converted
+    local_paths:
+      - sources/pagedattention/raw/paper.pdf
+      - sources/pagedattention/raw/abstract.html
+      - sources/pagedattention/full.md
     notes: "Kwon et al., SOSP 2023. OS virtual memory analogy, block tables, non-contiguous allocation, copy-on-write sharing"
 
   - id: continuous-batching

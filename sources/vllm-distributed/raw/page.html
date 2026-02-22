@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Distributed Inference with vLLM | vLLM Blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Distributed Inference with vLLM" />
+<meta name="author" content="vLLM Team" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Motivation" />
+<meta property="og:description" content="Motivation" />
+<link rel="canonical" href="https://blog.vllm.ai/2025/02/17/distributed-inference.html" />
+<meta property="og:url" content="https://blog.vllm.ai/2025/02/17/distributed-inference.html" />
+<meta property="og:site_name" content="vLLM Blog" />
+<meta property="og:image" content="https://blog.vllm.ai/assets/logos/vllm-logo-only-light.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-02-17T00:00:00+00:00" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta property="twitter:image" content="https://blog.vllm.ai/assets/logos/vllm-logo-only-light.png" />
+<meta property="twitter:title" content="Distributed Inference with vLLM" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"vLLM Team"},"dateModified":"2025-02-17T00:00:00+00:00","datePublished":"2025-02-17T00:00:00+00:00","description":"Motivation","headline":"Distributed Inference with vLLM","image":"https://blog.vllm.ai/assets/logos/vllm-logo-only-light.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.vllm.ai/2025/02/17/distributed-inference.html"},"publisher":{"@type":"Organization","logo":{"@type":"ImageObject","url":"https://blog.vllm.ai/assets/logos/vllm-logo-only-light.png"},"name":"vLLM Team"},"url":"https://blog.vllm.ai/2025/02/17/distributed-inference.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://blog.vllm.ai/feed.xml" title="vLLM Blog" /><script async src="https://www.googletagmanager.com/gtag/js?id=G-9C5R3JR3QS"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){window.dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-9C5R3JR3QS');
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">vLLM Blog</a></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Distributed Inference with vLLM</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2025-02-17T00:00:00+00:00" itemprop="datePublished">
+        Feb 17, 2025
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">vLLM Team</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h3 id="motivation">Motivation</h3>
+
+<p>Serving large models often leads to memory bottlenecks, such as the dreaded <strong>CUDA out of memory</strong> error. To tackle this, there are two main solutions:</p>
+
+<ol>
+  <li><strong>Reduce Precision</strong> – Utilizing FP8 and lower-bit quantization methods can reduce memory usage. However, this approach may impact accuracy and scalability, and is not sufficient by itself as models grow beyond hundreds of billions of parameters.</li>
+  <li><strong>Distributed Inference</strong> – Spreading model computations across multiple GPUs or nodes enables scalability and efficiency. This is where distributed architectures like tensor parallelism and pipeline parallelism come into play.</li>
+</ol>
+
+<h3 id="vllm-architecture-and-large-language-model-inference-challenges">vLLM Architecture and Large Language Model Inference Challenges</h3>
+
+<p>LLM inference poses unique challenges compared to training:</p>
+
+<ul>
+  <li>Unlike training, which focuses purely on throughput with known static shapes, inference requires low latency and dynamic workload handling.</li>
+  <li>Inference workloads must efficiently manage KV caches, speculative decoding, and prefill-to-decode transitions.</li>
+  <li>Large models often <strong>exceed single-GPU capacity</strong>, requiring advanced <strong>parallelization strategies</strong>.</li>
+</ul>
+
+<p>To address these issues, vLLM provides:</p>
+
+<ul>
+  <li><strong>Tensor parallelism</strong> to shard each model layer across multiple GPUs within a node.</li>
+  <li><strong>Pipeline parallelism</strong> to distribute contiguous sections of model layers across multiple nodes.</li>
+  <li><strong>Optimized communication kernels and control plane architecture</strong> to minimize CPU overhead and maximize GPU utilization.</li>
+</ul>
+
+<h2 id="gpu-parallelism-techniques-in-vllm">GPU Parallelism Techniques in vLLM</h2>
+
+<h3 id="tensor-parallelism">Tensor Parallelism</h3>
+
+<h4 id="problem-model-exceeds-single-gpu-capacity">Problem: Model Exceeds Single GPU Capacity</h4>
+
+<p>As models grow, a single GPU cannot accommodate them, necessitating multi-GPU strategies. Tensor parallelism <strong>shards model weights across GPUs</strong>, allowing concurrent computation for lower latency and enhanced scalability.</p>
+
+<p>This approach, originally developed for training in <a href="https://arxiv.org/abs/1909.08053">Megatron-LM (Shoeybi et al., 2019)</a>, has been adapted and optimized in vLLM for inference workloads.</p>
+
+<figure>
+  <img src="/assets/figures/distributed-inference/tp_strategies.png" />
+</figure>
+
+<p>Tensor Parallelism relies on two primary techniques:</p>
+
+<ol>
+  <li>Column Parallelism: Splitting weight matrices along columns and concatenating results after computation.</li>
+  <li>Row Parallelism: Splitting matrices along rows, summing partial results post-computation.</li>
+</ol>
+
+<figure>
+  <img src="/assets/figures/distributed-inference/column_row_parallel.png" />
+</figure>
+
+<p>As a specific example, let’s break down how this parallelism works for the MLP (multi-layer perceptron) layers in Llama models:</p>
+
+<ul>
+  <li>Column parallelism applies to up-projection operations.</li>
+  <li>Element-wise activation functions (e.g., SILU) operate on sharded outputs.</li>
+  <li>Row parallelism is used in down-projection, with an <strong>all-reduce</strong> operation to aggregate final results.</li>
+</ul>
+
+<p>Tensor parallelism ensures that inference computations are distributed across multiple GPUs, maximizing the memory bandwidth and compute available. When used, we can achieve latency improvements from effectively multiplying memory bandwidth. This occurs because sharding model weights allows multiple GPUs to access memory in parallel, reducing bottlenecks that a single GPU might encounter.</p>
+
+<figure>
+  <img src="/assets/figures/distributed-inference/tensor_parallelism.png" />
+<figcaption>
+Source: <a href="https://sebastianraschka.com/blog/2023/pytorch-memory-optimization.html" target="_blank">Sebastian Raschka, 2023</a>.
+</figcaption>
+</figure>
+
+<p>However, it requires <strong>high-bandwidth interconnects</strong> between each GPU, like NVLink or InfiniBand, to minimize overhead from the increased communication costs.</p>
+
+<h3 id="pipeline-parallelism">Pipeline Parallelism</h3>
+
+<h4 id="problem-model-exceeds-multi-gpu-capacity">Problem: Model Exceeds Multi-GPU Capacity</h4>
+
+<p>For extremely large models (e.g., DeepSeek R1, Llama 3.1 405B), a single node may not suffice. Pipeline parallelism <strong>shards models across nodes</strong>, each handling specific contiguous model layers.</p>
+
+<h4 id="how-it-works">How It Works</h4>
+
+<ul>
+  <li>Each GPU loads and processes a distinct set of layers.</li>
+  <li><strong>Send/Receive Operations:</strong> Intermediate activations are transmitted between GPUs as computation progresses.</li>
+</ul>
+
+<p><strong>This results in lower communication overhead</strong> compared to tensor parallelism since data transfer occurs once per pipeline stage.</p>
+
+<p>Pipeline Parallelism reduces memory constraints across GPUs but does not inherently decrease inference latency as tensor parallelism does. To mitigate throughput inefficiencies, vLLM incorporates <strong>advanced pipeline scheduling</strong>, ensuring that all GPUs remain active by optimizing micro-batch execution.</p>
+
+<h3 id="combining-tensor-parallelism-and-pipeline-parallelism">Combining Tensor Parallelism and Pipeline Parallelism</h3>
+
+<p>As a general rule of thumb, think of the applications of parallelism like this:</p>
+
+<ul>
+  <li>Use <strong>pipeline parallelism across nodes</strong> and <strong>tensor parallelism within nodes</strong> when interconnects are slow.</li>
+  <li>If interconnects are efficient (e.g., NVLink, InfiniBand), <strong>tensor parallelism can extend across nodes</strong>.</li>
+  <li>Combining both techniques intelligently <strong>reduces unnecessary communication overhead</strong> and maximizes GPU utilization.</li>
+</ul>
+
+<h4 id="performance-scaling-and-memory-effects">Performance Scaling and Memory Effects</h4>
+
+<p>While the basic principles of parallelization suggest linear scaling, in practice, the <strong>performance improvements can be super-linear</strong> due to memory effects. With either Tensor Parallelism or Pipeline Parallelism, throughput improvements can arise in non-obvious ways due to the memory available for KV Cache increasing super-linearly.</p>
+
+<figure>
+  <img src="/assets/figures/distributed-inference/kv_cache_effects.png" />
+</figure>
+
+<p>This super-linear scaling effect occurs because larger caches allow for larger batch sizes for processing more requests in parallel and better memory locality, resulting in improved GPU utilization beyond what might be expected from simply adding more compute resources. In the above graph you can see between TP=1 and TP=2, we are able to increase the amount of KV Cache blocks by 13.9x which allows us to observe <strong>3.9x more token throughput</strong> - much more than the linear 2x we would expect from using 2 GPUs instead of 1.</p>
+
+<h3 id="further-reading">Further Reading</h3>
+
+<p>For readers interested in diving deeper into the techniques and systems that influenced vLLM’s design:</p>
+
+<ul>
+  <li><a href="https://arxiv.org/abs/1909.08053">Megatron-LM (Shoeybi et al., 2019)</a> introduces the foundational techniques for model parallelism in large language models</li>
+  <li><a href="https://www.usenix.org/conference/osdi22/presentation/yu">Orca (Yu et al., 2022)</a> presents an alternative approach to distributed serving using iteration-level scheduling</li>
+  <li><a href="https://github.com/deepspeedai/DeepSpeed">DeepSpeed</a> and <a href="https://github.com/NVIDIA/FasterTransformer">FasterTransformer</a> provide complementary perspectives on optimizing transformer inference</li>
+</ul>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>Serving large models efficiently requires a combination of <strong>Tensor Parallelism</strong>, <strong>Pipeline Parallelism</strong>, and <strong>performance optimizations</strong> like <strong>Chunked Prefill</strong>. vLLM enables scalable inference by leveraging these techniques while ensuring adaptability across different hardware accelerators. As we continue to enhance vLLM, staying informed about new developments such as <strong>expert parallelism for Mixture of Experts (MoE)</strong> and <strong>expanded quantization support</strong> will be crucial for optimizing AI workloads.</p>
+
+<h5 id="come-to-the-bi-weekly-office-hours-to-learn-more-about-llm-inference-optimizations-and-vllm">Come to the Bi-weekly Office Hours to learn more about LLM inference optimizations and vLLM!</h5>
+
+<h3 id="acknowledgement">Acknowledgement</h3>
+
+<p>Sangbin Cho (xAI) for the origination of some of the figures.</p>
+
+  </div><a class="u-url" href="/2025/02/17/distributed-inference.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="https://blog.vllm.ai/feed.xml">
+            <svg class="svg-icon orange">
+              <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194
+                11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0
+                13.806c0-1.21.983-2.195 2.194-2.195zM10.606
+                16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"
+              />
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">© 2026. vLLM Team. All rights reserved.</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>vLLM is a fast and easy-to-use library for LLM inference and serving.
+</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li>
+    <a rel="me" href="https://github.com/vllm-project/vllm" target="_blank" title="vLLM repository on GitHub">
+      <span class="grey fa-brands fa-github fa-lg"></span>
+    </a>
+  </li><li>
+    <a rel="me" href="https://x.com/vllm_project" target="_blank" title="vLLM on X (formerly Twitter)">
+      <span class="grey fa-brands fa-x-twitter fa-lg"></span>
+    </a>
+  </li><li>
+    <a rel="me" href="https://www.linkedin.com/company/vllm-project" target="_blank" title="vLLM on LinkedIn">
+      <span class="grey fa-brands fa-linkedin fa-lg"></span>
+    </a>
+  </li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

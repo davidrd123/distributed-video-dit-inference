@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>TorchInductor: a PyTorch-native Compiler with Define-by-Run IR and Symbolic Shapes - compiler - PyTorch Developer Mailing List</title>
+    <meta name="description" content="The PyTorch team has been building TorchDynamo, which helps to solve the graph capture problem of PyTorch with dynamic Python bytecode transformation. To actually make PyTorch faster, TorchDynamo must be paired with a co&amp;hellip;">
+    <meta name="generator" content="Discourse 2026.2.0-latest - https://github.com/discourse/discourse version 10d109e4c816786100ab725049cd05de90ab5cf4">
+<link rel="icon" type="image/png" href="https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/optimized/1X/6cd7da56682d360e2c6006ff3e31eb250c5a8675_2_32x32.png">
+<link rel="apple-touch-icon" type="image/png" href="https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/optimized/1X/6cd7da56682d360e2c6006ff3e31eb250c5a8675_2_180x180.png">
+<meta name="theme-color" media="all" content="#111111">
+
+<meta name="color-scheme" content="dark">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
+<link rel="canonical" href="https://dev-discuss.pytorch.org/t/torchinductor-a-pytorch-native-compiler-with-define-by-run-ir-and-symbolic-shapes/747" />
+
+
+<link rel="search" type="application/opensearchdescription+xml" href="https://dev-discuss.pytorch.org/opensearch.xml" title="PyTorch Developer Mailing List Search">
+
+    
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/color_definitions_dark_1_1_588a4e74f4bf0814b302f2560fbb906815aa73d8.css?__ws=dev-discuss.pytorch.org" media="all" rel="stylesheet" class="light-scheme" data-scheme-id="1"/>
+
+<link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/common_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="all" rel="stylesheet" data-target="common"  />
+
+  <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/mobile_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="(max-width: 39.99999rem)" rel="stylesheet" data-target="mobile"  />
+  <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/desktop_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="(min-width: 40rem)" rel="stylesheet" data-target="desktop"  />
+
+
+
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/checklist_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="all" rel="stylesheet" data-target="checklist"  />
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/discourse-ai_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="all" rel="stylesheet" data-target="discourse-ai"  />
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/discourse-cakeday_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="all" rel="stylesheet" data-target="discourse-cakeday"  />
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/discourse-details_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="all" rel="stylesheet" data-target="discourse-details"  />
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/discourse-github_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="all" rel="stylesheet" data-target="discourse-github"  />
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/discourse-lazy-videos_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="all" rel="stylesheet" data-target="discourse-lazy-videos"  />
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/discourse-local-dates_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="all" rel="stylesheet" data-target="discourse-local-dates"  />
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/discourse-narrative-bot_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="all" rel="stylesheet" data-target="discourse-narrative-bot"  />
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/discourse-presence_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="all" rel="stylesheet" data-target="discourse-presence"  />
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/discourse-solved_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="all" rel="stylesheet" data-target="discourse-solved"  />
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/footnote_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="all" rel="stylesheet" data-target="footnote"  />
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/hosted-site_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="all" rel="stylesheet" data-target="hosted-site"  />
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/poll_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="all" rel="stylesheet" data-target="poll"  />
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/spoiler-alert_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="all" rel="stylesheet" data-target="spoiler-alert"  />
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/discourse-ai_mobile_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="(max-width: 39.99999rem)" rel="stylesheet" data-target="discourse-ai_mobile"  />
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/discourse-solved_mobile_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="(max-width: 39.99999rem)" rel="stylesheet" data-target="discourse-solved_mobile"  />
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/discourse-ai_desktop_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="(min-width: 40rem)" rel="stylesheet" data-target="discourse-ai_desktop"  />
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/poll_desktop_e0d2ce46d897db396b1a4a045c1406b585a364ea.css?__ws=dev-discuss.pytorch.org" media="(min-width: 40rem)" rel="stylesheet" data-target="poll_desktop"  />
+
+  
+    
+    <link href="https://yyz2.discourse-cdn.com/flex036/stylesheets/desktop_theme_1_2356086518314b9cd3ce43be9c036b7a882b0978.css?__ws=dev-discuss.pytorch.org" media="(min-width: 40rem)" rel="stylesheet" data-target="desktop_theme" data-theme-id="1" data-theme-name="dark"/>
+
+    <script defer="" src="https://yyz2.discourse-cdn.com/flex036/theme-javascripts/0d641681e5625dbba02758eb82ec9b98acbe66cf.js?__ws=dev-discuss.pytorch.org" data-theme-id="1" nonce="lmVGiFhrJUErMUV1KgxCtlINk"></script>
+    
+        <link rel="alternate nofollow" type="application/rss+xml" title="RSS feed of &#39;TorchInductor: a PyTorch-native Compiler with Define-by-Run IR and Symbolic Shapes&#39;" href="https://dev-discuss.pytorch.org/t/torchinductor-a-pytorch-native-compiler-with-define-by-run-ir-and-symbolic-shapes/747.rss" />
+    <meta property="og:site_name" content="PyTorch Developer Mailing List" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:image" content="https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/optimized/1X/1eb498be759ef6ef60cbc5a754d580df97f12df5_2_1024x835.png" />
+<meta property="og:image" content="https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/optimized/1X/1eb498be759ef6ef60cbc5a754d580df97f12df5_2_1024x835.png" />
+<meta property="og:image:width" content="1225" />
+<meta property="og:image:height" content="1000" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:url" content="https://dev-discuss.pytorch.org/t/torchinductor-a-pytorch-native-compiler-with-define-by-run-ir-and-symbolic-shapes/747" />
+<meta name="twitter:url" content="https://dev-discuss.pytorch.org/t/torchinductor-a-pytorch-native-compiler-with-define-by-run-ir-and-symbolic-shapes/747" />
+<meta property="og:title" content="TorchInductor: a PyTorch-native Compiler with Define-by-Run IR and Symbolic Shapes" />
+<meta name="twitter:title" content="TorchInductor: a PyTorch-native Compiler with Define-by-Run IR and Symbolic Shapes" />
+<meta property="og:description" content="The PyTorch team has been building TorchDynamo, which helps to solve the graph capture problem of PyTorch with dynamic Python bytecode transformation. To actually make PyTorch faster, TorchDynamo must be paired with a compiler backend that converts the captured graphs into fast machine code. We have integrated numerous backends already, and built a lightweight autotuner to select the best backend for each subgraph.  Unfortunately a lot is lost in translation when exporting to different backends ..." />
+<meta name="twitter:description" content="The PyTorch team has been building TorchDynamo, which helps to solve the graph capture problem of PyTorch with dynamic Python bytecode transformation. To actually make PyTorch faster, TorchDynamo must be paired with a compiler backend that converts the captured graphs into fast machine code. We have integrated numerous backends already, and built a lightweight autotuner to select the best backend for each subgraph.  Unfortunately a lot is lost in translation when exporting to different backends ..." />
+<meta property="og:article:section" content="compiler" />
+<meta property="og:article:section:color" content="BF1E2E" />
+<meta name="twitter:label1" value="Reading time" />
+<meta name="twitter:data1" value="25 mins 🕑" />
+<meta name="twitter:label2" value="Likes" />
+<meta name="twitter:data2" value="40 ❤" />
+<meta property="article:published_time" content="2022-08-31T16:14:21+00:00" />
+<meta property="og:ignore_canonical" content="true" />
+
+        <link rel="next" href="/t/torchinductor-a-pytorch-native-compiler-with-define-by-run-ir-and-symbolic-shapes/747?page=2">
+
+    
+  </head>
+  <body class="crawler ">
+    
+    <header>
+  <a href="/">PyTorch Developer Mailing List</a>
+</header>
+
+    <div id="main-outlet" class="wrap" role="main">
+        <div id="topic-title">
+    <h1>
+      <a href="/t/torchinductor-a-pytorch-native-compiler-with-define-by-run-ir-and-symbolic-shapes/747">TorchInductor: a PyTorch-native Compiler with Define-by-Run IR and Symbolic Shapes</a>
+    </h1>
+
+      <div class="topic-category" itemscope itemtype="http://schema.org/BreadcrumbList">
+          <span itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+            <a href="/c/compiler/5" class="badge-wrapper bullet" itemprop="item">
+              <span class='badge-category-bg' style='background-color: #BF1E2E'></span>
+              <span class='badge-category clear-badge'>
+                <span class='category-name' itemprop='name'>compiler</span>
+              </span>
+            </a>
+            <meta itemprop="position" content="1" />
+          </span>
+      </div>
+
+  </div>
+
+  
+
+    <div itemscope itemtype='http://schema.org/DiscussionForumPosting'>
+      <meta itemprop='headline' content='TorchInductor: a PyTorch-native Compiler with Define-by-Run IR and Symbolic Shapes'>
+      <link itemprop='url' href='https://dev-discuss.pytorch.org/t/torchinductor-a-pytorch-native-compiler-with-define-by-run-ir-and-symbolic-shapes/747'>
+      <meta itemprop='datePublished' content='2022-08-31T16:14:21Z'>
+        <meta itemprop='articleSection' content='compiler'>
+      <meta itemprop='keywords' content=''>
+      <div itemprop='publisher' itemscope itemtype="http://schema.org/Organization">
+        <meta itemprop='name' content='PyTorch Developer Mailing List'>
+          <div itemprop='logo' itemscope itemtype="http://schema.org/ImageObject">
+            <meta itemprop='url' content='https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/original/1X/e22db2017de52aa299cbb742f7a328db4191abd4.svg'>
+          </div>
+      </div>
+
+
+          <div id='post_1'  class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/jansel'><span itemprop='name'>jansel</span></a>
+                
+              </span>
+
+                <link itemprop="mainEntityOfPage" href="https://dev-discuss.pytorch.org/t/torchinductor-a-pytorch-native-compiler-with-define-by-run-ir-and-symbolic-shapes/747">
+
+                <link itemprop="image" href="https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/original/1X/1eb498be759ef6ef60cbc5a754d580df97f12df5.png">
+
+              <span class="crawler-post-infos">
+                  <time  datetime='2022-08-31T16:14:21Z' class='post-time'>
+                    August 31, 2022,  4:14pm
+                  </time>
+                  <meta itemprop='dateModified' content='2022-08-31T17:05:22Z'>
+              <span itemprop='position'>1</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <p>The PyTorch team has been building <a href="https://github.com/pytorch/torchdynamo" rel="noopener nofollow ugc">TorchDynamo</a>, which helps to solve the graph capture problem of PyTorch with dynamic Python bytecode transformation. To actually make PyTorch faster, TorchDynamo must be paired with a compiler backend that converts the captured graphs into fast machine code. We have integrated <a href="https://github.com/pytorch/torchdynamo/blob/main/torchdynamo/optimizations/backends.py" rel="noopener nofollow ugc">numerous backends</a> already, and built a <a href="https://dev-discuss.pytorch.org/t/torchdynamo-update-1-48x-geomean-speedup-on-torchbench-cpu-inference/397">lightweight autotuner</a> to select the best backend for each subgraph.</p>
+<p>Unfortunately a lot is lost in translation when exporting to different backends that differ greatly from PyTorch. Many involve multiple conversion steps, have a fundamentally different execution model than PyTorch, and have limited support for many PyTorch operators and features. Another key challenge is with a few exceptions, most backends are inference only and have made design decisions that make training support intractable. This export-based execution model will be important in a lot of specific applications, but PyTorch needs a native compiler with abstractions that closely mirror those of PyTorch.</p>
+<p>In various updates, you have seen updates about our PyTorch-native compilers <a href="https://dev-discuss.pytorch.org/t/tracing-with-primitives-update-1-nvfuser-and-its-primitives/593">nvFuser</a> and <a href="https://dev-discuss.pytorch.org/t/nnc-walkthrough-how-pytorch-ops-get-fused/125/5">NNC</a>.</p>
+<p>In this post, we will introduce TorchInductor. TorchInductor is a new compiler for PyTorch, which is able to represent all of PyTorch and is built in a general way such that it will be able to support training and multiple backend targets. TorchInductor is able to represent aliasing and mutation by having the concept of <code>TensorBox</code> and <code>StorageBox</code> that map one-to-one with <code>torch.Tensor</code> and <code>torch.Storage</code>. It is able to handle views by having a symbocally strided tensor that maps directly from the native <code>torch.Tensor</code> stride representation, which makes views easy to handle. Other parts of PyTorch are handled similarly, by mirroring the data model of PyTorch in the backend. The design philosophy is a thin, easily hackable, way of symbolically mapping PyTorch to lower level backends and enabling rapid experimentation, autotuning between different backends, and higher level optimizations such as memory planning.</p>
+<h2><a name="p-1126-torchinductor-design-1" class="anchor" href="#p-1126-torchinductor-design-1" aria-label="Heading link"></a>TorchInductor Design</h2>
+<p>TorchInductor is implemented in Python. There are pros and cons to this choice, but we have found this choice greatly increased velocity and developer productivity. We also have observed that the PyTorch community is much more likely to contribute to parts of PyTorch written in Python, and therefore it makes the system more approachable and hackable by our users.</p>
+<p>To force the design of TorchInductor to be general, we are starting off with two lower level execution targets, that represent different points in the design space:</p>
+<ul>
+<li><a href="https://github.com/openai/triton" rel="noopener nofollow ugc">Triton</a> is a new programming language that provides much higher productivity than CUDA, but with the ability to beat the performance of highly optimized libraries like cuDNN with clean and simple code. It is developed by Philippe Tillet at OpenAI, and is seeing enormous adoption and traction across the industry. Triton supports NVIDIA GPUs, and is quickly growing in popularity as a replacement for hand written CUDA kernels.</li>
+<li><a href="https://www.openmp.org/" rel="noopener nofollow ugc">C++/OpenMP</a> is a widely adopted specification for writing parallel kernels. OpenMP provides a work sharing parallel execution model, and enables support for CPUs. C++ is also an interesting target in that it is a highly portable language and could enable export to more exotic edge devices and hardware architectures.</li>
+</ul>
+<p>The approach to building TorchInductor is a breadth-first one. We have spent most of our time make sure the core infrastructure is able to support the vast majority of PyTorch, including: aliasing/mutation/views, scatter (indirect writes), gather (indirect reads), pooling/windows/reductions, masked/conditional execution (padding, etc), template epilogue fusions, tiling, and horizontal/vertical fusions. So far we have not spent too much time optimizing any one pattern, but focused on general optimizations with widespread benefits.</p>
+<p>TorchInductor supports dynamic shapes and strides using the <a href="https://www.sympy.org/" rel="noopener nofollow ugc">SymPy symbolic math library</a>. It specializes on zero and one, but for other unique tensor sizes it will assign them to a sympy.Symbol and flow them through the entire program. Memory loads and stores are represented directly as sympy indexing formulas based on the iteration variables and symbolic tensor sizes. TorchInductor will introduce guards when needed that lift any assumptions/requirements to the top of the subgraph and will trigger a recompile if those guards fail.</p>
+<p>Another unique aspect of TorchInductor is it uses a define-by-run loop-level intermediate representation (IR). Many parts of the IR are Python callables that take SymPy expressions as inputs. We analyze this IR and do codegen by changing the implementation of <code>ops.*</code> and running the IR. As an example, the IR for <code>x.permute(1, 0) + x[2, :]</code> might be something like:</p>
+<pre data-code-wrap="python"><code class="lang-python">def inner_fn(index: List[sympy.Expr]):
+    i1, i0 = index
+    tmp0 = ops.load("x", i1 + i0*size1)
+    tmp1 = ops.load("x", 2*size1 + i0)
+    return ops.add(tmp0, tmp1)
+
+torchinductor.ir.Pointwise(
+    device=torch.device("cuda"),
+    dtype=torch.float32,
+    inner_fn=inner_fn,
+    ranges=[size0, size1],
+)
+</code></pre>
+<p>Where inner_fn defines how to compute a single element of the output buffer.</p>
+<h2><a name="p-1126-training-performance-results-2" class="anchor" href="#p-1126-training-performance-results-2" aria-label="Heading link"></a>Training Performance Results</h2>
+<p><div class="lightbox-wrapper"><a class="lightbox" href="https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/original/1X/1eb498be759ef6ef60cbc5a754d580df97f12df5.png" data-download-href="/uploads/short-url/4nDfxys5hiQl8KPiUz6JMlMIrNH.png?dl=1" title="TorchBench" rel="noopener nofollow ugc"><img src="https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/optimized/1X/1eb498be759ef6ef60cbc5a754d580df97f12df5_2_611x500.png" alt="TorchBench" data-base62-sha1="4nDfxys5hiQl8KPiUz6JMlMIrNH" width="611" height="500" srcset="https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/optimized/1X/1eb498be759ef6ef60cbc5a754d580df97f12df5_2_611x500.png, https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/optimized/1X/1eb498be759ef6ef60cbc5a754d580df97f12df5_2_916x750.png 1.5x, https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/optimized/1X/1eb498be759ef6ef60cbc5a754d580df97f12df5_2_1222x1000.png 2x" data-dominant-color="E1DFDF"><div class="meta"><svg class="fa d-icon d-icon-far-image svg-icon" aria-hidden="true"><use href="#far-image"></use></svg><span class="filename">TorchBench</span><span class="informations">1225×1000 82.6 KB</span><svg class="fa d-icon d-icon-discourse-expand svg-icon" aria-hidden="true"><use href="#discourse-expand"></use></svg></div></a></div><br>
+<div class="lightbox-wrapper"><a class="lightbox" href="https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/original/1X/c4dd809feabee26125a99fdcfa8262ee59a5a853.png" data-download-href="/uploads/short-url/s5y9mqTlE3jMc9s8bhplR9QPirV.png?dl=1" title="HuggingFace" rel="noopener nofollow ugc"><img src="https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/optimized/1X/c4dd809feabee26125a99fdcfa8262ee59a5a853_2_536x500.png" alt="HuggingFace" data-base62-sha1="s5y9mqTlE3jMc9s8bhplR9QPirV" width="536" height="500" srcset="https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/optimized/1X/c4dd809feabee26125a99fdcfa8262ee59a5a853_2_536x500.png, https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/optimized/1X/c4dd809feabee26125a99fdcfa8262ee59a5a853_2_804x750.png 1.5x, https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/optimized/1X/c4dd809feabee26125a99fdcfa8262ee59a5a853_2_1072x1000.png 2x" data-dominant-color="E1E0E0"><div class="meta"><svg class="fa d-icon d-icon-far-image svg-icon" aria-hidden="true"><use href="#far-image"></use></svg><span class="filename">HuggingFace</span><span class="informations">1075×1000 97.4 KB</span><svg class="fa d-icon d-icon-discourse-expand svg-icon" aria-hidden="true"><use href="#discourse-expand"></use></svg></div></a></div><br>
+<div class="lightbox-wrapper"><a class="lightbox" href="https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/original/1X/047e1f57397b5681feb33b30eebfded673a33c93.png" data-download-href="/uploads/short-url/DK7O4KZ753xlacGXUBsba9jFuP.png?dl=1" title="TIMM" rel="noopener nofollow ugc"><img src="https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/optimized/1X/047e1f57397b5681feb33b30eebfded673a33c93_2_690x405.png" alt="TIMM" data-base62-sha1="DK7O4KZ753xlacGXUBsba9jFuP" width="690" height="405" srcset="https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/optimized/1X/047e1f57397b5681feb33b30eebfded673a33c93_2_690x405.png, https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/optimized/1X/047e1f57397b5681feb33b30eebfded673a33c93_2_1035x607.png 1.5x, https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/optimized/1X/047e1f57397b5681feb33b30eebfded673a33c93_2_1380x810.png 2x" data-dominant-color="E1E0DF"><div class="meta"><svg class="fa d-icon d-icon-far-image svg-icon" aria-hidden="true"><use href="#far-image"></use></svg><span class="filename">TIMM</span><span class="informations">1700×1000 115 KB</span><svg class="fa d-icon d-icon-discourse-expand svg-icon" aria-hidden="true"><use href="#discourse-expand"></use></svg></div></a></div></p>
+<p>Full (and possibly more up to date if you are reading this in future) performance results can be found in the <a href="https://github.com/pytorch/torchdynamo/issues/681#issuecomment-1232497899" rel="noopener nofollow ugc">TorchDynamo Performance Dashboard</a>. The dashboard contains NVIDIA A100 training speedups over eager for float32, float16, and automatic mixed precision (AMP). I will highlight just AMP results here:</p>
+<p>Pass rate for AMP on a NVIDIA A100 GPU</p>
+<pre data-code-wrap="table"><code class="lang-table">+---------------------+------------+-------------+-------------+
+|      Compiler       | torchbench | huggingface | timm_models |
++---------------------+------------+-------------+-------------+
+|        eager        | 98%, 48/49 | 100%, 43/43 | 100%, 68/68 |
+|     ts_nvfuser      | 92%, 45/49 | 95%, 41/43  | 74%, 50/68  |
+|      aot_eager      | 86%, 42/49 | 100%, 43/43 | 97%, 66/68  |
+|   aot_cudagraphs    | 84%, 41/49 | 84%, 36/43  | 94%, 64/68  |
+|     aot_nvfuser     | 61%, 30/49 | 40%, 17/43  | 49%, 33/68  |
+| inductor_cudagraphs | 71%, 35/49 | 86%, 37/43  | 72%, 49/68  |
++---------------------+------------+-------------+-------------+
+</code></pre>
+<p>Geometric mean speedup over eager  (of passing models)  for AMP on a NVIDIA A100 GPU</p>
+<pre data-code-wrap="table"><code class="lang-table">+---------------------+------------+-------------+-------------+
+|      Compiler       | torchbench | huggingface | timm_models |
++---------------------+------------+-------------+-------------+
+|        eager        |    1.0x    |    1.01x    |    1.0x     |
+|     ts_nvfuser      |   1.04x    |    1.04x    |    1.03x    |
+|      aot_eager      |    1.0x    |    1.0x     |    1.0x     |
+|   aot_cudagraphs    |   1.17x    |    1.35x    |    1.06x    |
+|     aot_nvfuser     |    1.2x    |    1.38x    |    1.32x    |
+| inductor_cudagraphs |    1.9x    |    2.17x    |    1.69x    |
++---------------------+------------+-------------+-------------+
+</code></pre>
+<p>For <a href="https://github.com/pytorch/benchmark" rel="noopener nofollow ugc">TorchBench</a> models, 35 out of 49 currently run correctly in training and of those working we see a 1.90x geomean speedup.</p>
+<p>For <a href="https://github.com/huggingface/transformers" rel="noopener nofollow ugc">Hugging Face</a> models, 37 out of 43 models run correctly, providing a 2.17x geomean speedup.</p>
+<p>For <a href="https://github.com/rwightman/pytorch-image-models" rel="noopener nofollow ugc">TIMM</a> models, 49 out of 68 run correctly, providing a 1.69x geomean speedup.</p>
+<p>For baselines to compare against, we have:</p>
+<ul>
+<li>eager: baseline that runs the captured FX graph using PyTorch eager mode. This measures the overheads of TorchDynamo.</li>
+<li>ts_nvfuser: <a href="https://dev-discuss.pytorch.org/t/tracing-with-primitives-update-1-nvfuser-and-its-primitives/593">nvFuser</a> using its older TorchScript based backend</li>
+<li>aot_eager: baseline that runs AOT Autograd using a PyTorch eager backend, to measure overheads of AOT Autograd.</li>
+<li>aot_cudagraphs: An AOT Autograd backend that <a href="https://github.com/pytorch/torchdynamo/pull/757" rel="noopener nofollow ugc">applies cudagraphas to reduce overheads</a></li>
+<li>aot_nvfuser: <a href="https://dev-discuss.pytorch.org/t/tracing-with-primitives-update-1-nvfuser-and-its-primitives/593">nvFuser</a> using its newer AOT Autograd based backend</li>
+<li>inductor_cudagraphs: TorchInductor, as described in this post.</li>
+</ul>
+<p>All of these backends use TorchDynamo as a frontend in this experiment, so they get the same graphs to optimize.</p>
+<h1><a name="p-1126-conclusions-3" class="anchor" href="#p-1126-conclusions-3" aria-label="Heading link"></a>Conclusions</h1>
+<p>You can check out the <a href="https://github.com/pytorch/torchdynamo/tree/main/torchinductor" rel="noopener nofollow ugc">TorchInductor source code</a>. To use it you will need to install from source (or use nightlies) of TorchDynamo, <a href="https://github.com/openai/triton#quick-installation" rel="noopener nofollow ugc">Triton</a>, and PyTorch. Once setup, you can try TorchInductor with:</p>
+<pre data-code-wrap="python"><code class="lang-python">@torchdynamo.optimize("inductor")
+def foo(x):
+    …
+</code></pre>
+<p>Or if you have an FX graph already you can call <code>torchinductor.compile_fx(graph, example_inputs)</code>.</p>
+<p>TorchInductor is still an early prototype, so you should expect to find bugs and rough edges. Many models still fail, and there are still missing features.</p>
+<p>Please submit bug reports to the <a href="https://github.com/pytorch/torchdynamo/issues" rel="noopener nofollow ugc">TorchDynamo github</a> to help us improve, and we always welcome external contributions.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="21" />
+              <span class='post-likes'>21 Likes</span>
+            </div>
+
+                <div class='crawler-linkback-list'>
+                    <div>
+                      <a href="https://dev-discuss.pytorch.org/t/torchinductor-update-3-e2e-model-training-with-torchdynamo-inductor-gets-1-67x-2-1x-speedup/793">TorchInductor Update 3: E2E model training with TorchDynamo + Inductor gets 1.67x/2.1x speedup</a>
+                    </div>
+                    <div>
+                      <a href="https://dev-discuss.pytorch.org/t/torchinductor-update-4-cpu-backend-started-to-show-promising-performance-boost/874">TorchInductor Update 4: CPU backend started to show promising performance boost</a>
+                    </div>
+                    <div>
+                      <a href="https://dev-discuss.pytorch.org/t/pytorch-2-x-inference-recommendations/2506">PyTorch 2.x Inference Recommendations</a>
+                    </div>
+                </div>
+
+            
+          </div>
+          <div id='post_2' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/_sean_silva'><span itemprop='name'>_sean_silva</span></a>
+                
+              </span>
+
+
+
+              <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-09-09T03:31:09Z' class='post-time'>
+                    September 9, 2022,  3:31am
+                  </time>
+                  <meta itemprop='dateModified' content='2022-09-09T03:31:09Z'>
+              <span itemprop='position'>2</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <p>This is super exciting.</p>
+<p>A few questions:</p>
+<p>Does <code>inductor_cudagraphs</code> mean that it generates cuda graphs with kernels generated by triton?</p>
+<p>How much does TorchInductor generate kernels “from scratch” with triton/etc. vs reusing the existing Torch kernels?</p>
+<p>Can you talk about how op fusion works? E.g. can your <code>inner_fn</code> in the post be automatically fused with other “Pointwise” ops or even used as a fused activation function?</p>
+<p>In <code>inner_fn</code> – where is <code>size1</code> defined?</p>
+<p>When you say that TorchInductor “is able to represent aliasing and mutation” – what does that mean? What I’ve found is that in practice most backends need to go through a purely functional form and then rely on a buffer allocation pass to make optimal decisions about whether things should reuse buffers or be views/etc. (the way the user wrote is not necessarily optimal).</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="0" />
+              <span class='post-likes'></span>
+            </div>
+
+
+            
+          </div>
+          <div id='post_3' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/jansel'><span itemprop='name'>jansel</span></a>
+                
+              </span>
+
+
+
+              <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-09-09T04:26:43Z' class='post-time'>
+                    September 9, 2022,  4:26am
+                  </time>
+                  <meta itemprop='dateModified' content='2022-09-09T04:26:43Z'>
+              <span itemprop='position'>3</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <blockquote>
+<p>Does <code>inductor_cudagraphs</code> mean that it generates cuda graphs with kernels generated by triton?</p>
+</blockquote>
+<p>Correct, Triton has high CPU overheads, so cudagraphs is helps a lot and is needed.  There is an upstream fix coming in Triton that allows AOT kernel generation and make cudagraphs less important.</p>
+<blockquote>
+<p>How much does TorchInductor generate kernels “from scratch” with triton/etc. vs reusing the existing Torch kernels?</p>
+</blockquote>
+<p>TorchInductor generates nearly all of its kernels automatically from scratch based on its IR.</p>
+<p>The two exceptions are matmul/conv where it has a template with auto-generated epilogue fusions.  In the current numbers these are disabled by config, and we are just using aten.  I’m expecting another 10-20% speedup from enabling this.</p>
+<p>There is also a small list of kernels we haven’t implemented yet and are using aten fallbacks: <a href="https://github.com/pytorch/torchdynamo/issues/327" class="inline-onebox" rel="noopener nofollow ugc">TorchInductor missing ops tracker · Issue #93757 · pytorch/pytorch · GitHub</a><br>
+but eventually we wan’t to codegen everything.</p>
+<blockquote>
+<p>Can you talk about how op fusion works? E.g. can your <code>inner_fn</code> in the post be automatically fused with other “Pointwise” ops or even used as a fused activation function?</p>
+</blockquote>
+<p>Yes, it will be automatically fused.  Pointwise ops can be fused with: other pointwise ops; reduction ops; and matmul/conv templates.  It also supports fusing multiple reductions/broadcasts together.</p>
+<p>The key functions here are <a href="https://github.com/pytorch/torchdynamo/blob/be390ec752f540c13c116a1d04078fd577a26690/torchinductor/scheduler.py#L826" rel="noopener nofollow ugc">can_fuse</a> which tests if two nodes can be fused together, and <a href="https://github.com/pytorch/torchdynamo/blob/be390ec752f540c13c116a1d04078fd577a26690/torchinductor/scheduler.py#L896" rel="noopener nofollow ugc">score_fusion</a> which gives a priority that controls the order fusions happen in.  Since some fusions can block other fusions, order matters.</p>
+<blockquote>
+<p>In <code>inner_fn</code> – where is <code>size1</code> defined?</p>
+</blockquote>
+<p>There is a per-graph database of symbolic size variables defined in terms of the shapes of the inputs.  This is handled in <a href="https://github.com/pytorch/torchdynamo/blob/main/torchinductor/sizevars.py" rel="noopener nofollow ugc">sizevars.py</a> and uses sympy.   For clarity, it is basically just:</p>
+<pre><code class="lang-auto">size1 = sympy.Symbol("size1")
+</code></pre>
+<p>the symbol names get allocated all based on the inputs to the graph.   So <code>size1</code> might be <code>input[0].size(2)</code>.</p>
+<blockquote>
+<p>When you say that TorchInductor “is able to represent aliasing and mutation” – what does that mean?<br>
+What I’ve found is that in practice most backends need to go through a purely functional form and then rely on a buffer allocation pass to make optimal decisions about whether things should reuse buffers or be views/etc. (the way the user wrote is not necessarily optimal).</p>
+</blockquote>
+<p>TorchInductor is “mostly functional,” but not purely functional.  There isn’t a good way to represent scatter operations (which show up in backwards a lot) functionally while maintaining good performance.  It is really easy to turn <code>O(n) </code>stuff into <code>O(n^2)</code> by trying to functionalize a chain of scatters that only mutate a small fraction of the elements of a tensor.  There is also stuff like input mutation, where you don’t control the storage being mutated.  The IR directly supports mutation and scatter, though we do make use of dispater level functionalization.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="4" />
+              <span class='post-likes'>4 Likes</span>
+            </div>
+
+
+            
+          </div>
+          <div id='post_4' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/lpaehler'><span itemprop='name'>lpaehler</span></a>
+                
+              </span>
+
+
+
+              <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-09-11T04:23:43Z' class='post-time'>
+                    September 11, 2022,  4:23am
+                  </time>
+                  <meta itemprop='dateModified' content='2022-09-11T04:23:43Z'>
+              <span itemprop='position'>4</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <p>Really like this direction! Am also 100% for implementing TorchInductor in Python, hence making experimentation a lot lot easier than it being hidden away.</p>
+<p>A key question which I would have it the path to GPU-Computing with TorchInductor. The way I read your post these are the currently planned paths:</p>
+<ol>
+<li>PyTorch → TorchDynamo → TorchInductor → Triton → NVIDIA GPU</li>
+<li>PyTorch → TorchDynamo → TorchInductor → OpenMP → CPU</li>
+</ol>
+<p>Have you also considered potentially exposing OpenMP Device-Offloading to GPUs?</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="1" />
+              <span class='post-likes'>1 Like</span>
+            </div>
+
+
+            
+          </div>
+          <div id='post_5' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/jansel'><span itemprop='name'>jansel</span></a>
+                
+              </span>
+
+
+
+              <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-09-11T05:00:11Z' class='post-time'>
+                    September 11, 2022,  5:00am
+                  </time>
+                  <meta itemprop='dateModified' content='2022-09-11T05:00:11Z'>
+              <span itemprop='position'>5</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <p>Yes correct, those are the current paths.</p>
+<p>I considered OpenMP’s GPU support, but have heard indirectly from multiple people that it performs poorly, so I abandoned the idea before starting.   I’d be curious if you or others have had good experiences with it.</p>
+<p>I suspect it would be easy to add.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="0" />
+              <span class='post-likes'></span>
+            </div>
+
+
+            
+          </div>
+          <div id='post_6' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/lpaehler'><span itemprop='name'>lpaehler</span></a>
+                
+              </span>
+
+
+
+              <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-09-12T18:39:39Z' class='post-time'>
+                    September 12, 2022,  6:39pm
+                  </time>
+                  <meta itemprop='dateModified' content='2022-09-12T18:39:39Z'>
+              <span itemprop='position'>6</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <p>I’d be happy to implement a prototype given the overlap with my current work, and see how it does in the above tests.</p>
+<p>I had a brief glance at the TorchInductor repo, but am a little unsure if the C++/OpenMP path is already functional? What would the files be at which I would have to have a look for this?</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="0" />
+              <span class='post-likes'></span>
+            </div>
+
+
+            
+          </div>
+          <div id='post_7' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/jansel'><span itemprop='name'>jansel</span></a>
+                
+              </span>
+
+
+
+              <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-09-12T20:31:43Z' class='post-time'>
+                    September 12, 2022,  8:31pm
+                  </time>
+                  <meta itemprop='dateModified' content='2022-09-12T20:45:21Z'>
+              <span itemprop='position'>7</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <p>Yes it is functional and used as the CPU backend.  Here is an example:</p>
+<pre><code class="lang-auto">import torch
+import torchdynamo
+import torchinductor.config
+torchinductor.config.debug = True
+
+@torchdynamo.optimize()
+def addrelu(a, b):
+    return torch.relu(torch.add(a, b))
+
+addrelu(torch.randn(128, 8192), torch.randn(128, 8192))
+</code></pre>
+<p>If you run this it prints out the generated code:</p>
+<pre><code class="lang-auto">$ python ex.py 
+torchinductor.compile_fx: [INFO] Compiling FORWARDS graph
+
+from ctypes import c_void_p, c_long
+import torch
+import random
+from torch import empty_strided, as_strided, device
+from torchinductor.codecache import CppCodeCache, TritonCodeCache
+
+aten = torch.ops.aten
+
+import triton
+import triton.language as tl
+
+from torchinductor.triton_ops.autotune import pointwise_heuristics
+from torchinductor.triton_ops.autotune import reduction_heuristics
+from torchinductor.triton_ops.autotune import grid
+
+
+kernel0 = CppCodeCache.load('''
+#include "/tmp/torchinductor_jansel/i7/ci7dxnvwaxl7gpqj7v4mal2m4yuczvf7n52zpzflqmbs2dbau6lt.h"
+extern "C" void kernel(const float* __restrict__ in_ptr0,
+                       const float* __restrict__ in_ptr1,
+                       float* __restrict__ out_ptr0,
+                       const long ks0,
+                       const long ks1)
+{
+    #pragma omp parallel
+    {
+        #pragma omp for
+        for(long i0=0; i0&lt;ks0*ks1; ++i0)
+        {
+            {
+                {
+                    auto tmp0 = in_ptr0[i0];
+                    auto tmp1 = in_ptr1[i0];
+                    auto tmp2 = tmp0 + tmp1;
+                    auto tmp3 = tmp2 * (tmp2&gt;0);
+                    out_ptr0[i0] = tmp3;
+                }
+            }
+        }
+    }
+}
+''').kernel
+
+
+def call(arg0_1, arg1_1):
+    arg0_1_size = arg0_1.size()
+    s0 = arg0_1_size[0]
+    s1 = arg0_1_size[1]
+    buf0 = empty_strided((s0, s1), (s1, 1), device='cpu', dtype=torch.float32)
+    kernel0(c_void_p(arg0_1.data_ptr()), c_void_p(arg1_1.data_ptr()), c_void_p(buf0.data_ptr()), c_long(s0), c_long(s1))
+    return (buf0, )
+
+
+if __name__ == "__main__":
+    from torchdynamo.testing import rand_strided
+    from torchinductor.utils import print_performance
+    arg0_1 = rand_strided((128, 8192), (8192, 1), device='cpu', dtype=torch.float32)
+    arg1_1 = rand_strided((128, 8192), (8192, 1), device='cpu', dtype=torch.float32)
+    print_performance(lambda: call(arg0_1, arg1_1))
+
+torchinductor.graph: [INFO] Output code: /tmp/torchinductor_jansel/pq/cpqtzrpckt3fn5hxa3b3sjai77oa3i562eegdy6icepd6maz2gah.py
+
+</code></pre>
+<p>Most if the C++ backend code is in: <a href="https://github.com/pytorch/torchdynamo/blob/main/torchinductor/codegen/cpp.py" class="inline-onebox" rel="noopener nofollow ugc">torchdynamo/cpp.py at main · pytorch/torchdynamo · GitHub</a></p>
+<p>You can join <span class="hashtag">#torchdynamo</span> on the PyTorch slack if you want to ask questions more real time.  Feel free to ping me with your email if you need an invite.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="2" />
+              <span class='post-likes'>2 Likes</span>
+            </div>
+
+
+            
+          </div>
+          <div id='post_8' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/gong_chen'><span itemprop='name'>gong_chen</span></a>
+                
+              </span>
+
+
+
+              <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-09-17T04:01:14Z' class='post-time'>
+                    September 17, 2022,  4:01am
+                  </time>
+                  <meta itemprop='dateModified' content='2022-09-17T04:01:14Z'>
+              <span itemprop='position'>8</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <p>Exciting work. One question:<br>
+Why do you choose triton as the GPU code-gen instead of TVM. What are your considerations?</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="0" />
+              <span class='post-likes'></span>
+            </div>
+
+
+            
+          </div>
+          <div id='post_9' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/jansel'><span itemprop='name'>jansel</span></a>
+                
+              </span>
+
+
+
+              <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-09-18T04:26:30Z' class='post-time'>
+                    September 18, 2022,  4:26am
+                  </time>
+                  <meta itemprop='dateModified' content='2022-09-18T04:26:30Z'>
+              <span itemprop='position'>9</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <p><a class="mention" href="/u/gong_chen">@gong_chen</a> if you (or someone else) wants to try building a TVM backend for TorchInductor, I’d be curious to see the results.   I think it would be fairly straightforward, but would require integrating at lower level than Relay IR – so it would require knowledge of TVM internals.</p>
+<p>Both nvFuser and NNC have Halide/TVM inspired IRs.  Additionally, there is a <a href="https://github.com/pytorch/torchdynamo/blob/3eef6c1c4ec4143276257242df1a8c796f6906e1/torchdynamo/optimizations/backends.py#L572" rel="noopener nofollow ugc">TVM backend</a> for TorchDynamo using the legacy TorchScript export bindings.</p>
+<p>On NVIDIA GPUs, we have observed better performance results from Triton than TVM on most models.  Though I don’t think it is apples to apples because a lot is lost in the existing export paths to TVM, and TVM performance varies greatly depending on autotuning. I think the strength of TVM is in its many non-GPU execution targets, while Triton is GPU-only.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="2" />
+              <span class='post-likes'>2 Likes</span>
+            </div>
+
+
+            
+          </div>
+          <div id='post_10' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/gong_chen'><span itemprop='name'>gong_chen</span></a>
+                
+              </span>
+
+
+
+              <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-09-18T07:51:10Z' class='post-time'>
+                    September 18, 2022,  7:51am
+                  </time>
+                  <meta itemprop='dateModified' content='2022-09-18T07:51:10Z'>
+              <span itemprop='position'>10</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <p><a class="mention" href="/u/jansel">@jansel</a> Thank you for your reply. Yes, TorchInductor is required at level than Relay IR. What I mean is using TVM script(<a href="https://tvm.apache.org/docs//v0.8.0/tutorial/tensor_ir_blitz_course.html" rel="noopener nofollow ugc">Tensor IR</a>) . I think TVM script is the same level with triton, which both create a DSA for tensor programing on python AST. I am not very sure why Triton can get better performance than TVM on GPU. May it be easy to involve expert experiences to do manual tiling? BTW, I am curious about why you use “Inductor” to name your work.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="0" />
+              <span class='post-likes'></span>
+            </div>
+
+
+            
+          </div>
+          <div id='post_11' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/jansel'><span itemprop='name'>jansel</span></a>
+                
+              </span>
+
+
+
+              <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-09-18T08:50:24Z' class='post-time'>
+                    September 18, 2022,  8:50am
+                  </time>
+                  <meta itemprop='dateModified' content='2022-09-18T08:50:24Z'>
+              <span itemprop='position'>11</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <p>For more on Triton I’d suggest the <a href="https://www.eecs.harvard.edu/~htk/publication/2019-mapl-tillet-kung-cox.pdf" rel="noopener nofollow ugc">Triton Paper</a>, which might give more insight into why it is faster than TVM.  Triton seems to need a lot less tuning.</p>
+<p>The name is to continue the theme of TorchDynamo, which is a reference to DynamoRIO.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="1" />
+              <span class='post-likes'>1 Like</span>
+            </div>
+
+
+            
+          </div>
+          <div id='post_12' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/shingjan'><span itemprop='name'>shingjan</span></a>
+                
+              </span>
+
+
+
+              <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-09-21T07:59:52Z' class='post-time'>
+                    September 21, 2022,  7:59am
+                  </time>
+                  <meta itemprop='dateModified' content='2022-09-21T07:59:52Z'>
+              <span itemprop='position'>12</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <p>Super interesting initiative here! Would like to know more about adding a TVM backend for torchinductor here. <a class="mention" href="/u/jansel">@jansel</a> Do you think it is possible that you can send me a link to the pytorch slack. My email is yuanjing@octoml.ai.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="0" />
+              <span class='post-likes'></span>
+            </div>
+
+
+            
+          </div>
+          <div id='post_13' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/sebastienwood'><span itemprop='name'>sebastienwood</span></a>
+                
+              </span>
+
+
+
+              <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-09-23T05:29:21Z' class='post-time'>
+                    September 23, 2022,  5:29am
+                  </time>
+                  <meta itemprop='dateModified' content='2022-09-23T05:29:21Z'>
+              <span itemprop='position'>13</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <p>Hi !<br>
+Thanks for the exciting new addition to the Pytorch ecosystem <img src="https://emoji.discourse-cdn.com/twitter/slight_smile.png?v=12" title=":slight_smile:" class="emoji" alt=":slight_smile:" loading="lazy" width="20" height="20"><br>
+I have a few questions regarding the scope of the project:</p>
+<ul>
+<li>would Inductor work well with for loops in regard to the current JIT poor performance ? (it would seems based on the previous answers)</li>
+<li>if not, would it take into account the user defined CUDA kernels for optimization ?</li>
+<li>could it infer sparsity in the results and automatically discards useless computations in the graph ? (e.g. some part of the graph only retains the diagonal of a tensor; or a tensor being symmetric by construction)</li>
+<li>there are some hand defined Triton kernel from the previous answers (e.g. Conv2D). Does this mean there would be no further fusion on these kernels ? (use case: 3 convolutions with the same input, and the same weights transformed 3 times: absolute value, clipped at 0;+ and clipped at -:0)</li>
+</ul>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="0" />
+              <span class='post-likes'></span>
+            </div>
+
+
+            
+          </div>
+          <div id='post_14' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/jansel'><span itemprop='name'>jansel</span></a>
+                
+              </span>
+
+
+
+              <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-09-23T16:39:48Z' class='post-time'>
+                    September 23, 2022,  4:39pm
+                  </time>
+                  <meta itemprop='dateModified' content='2022-09-23T16:39:48Z'>
+              <span itemprop='position'>14</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <blockquote>
+<p>would Inductor work well with for loops in regard to the current JIT poor performance ? (it would seems based on the previous answers)<br>
+if not, would it take into account the user defined CUDA kernels for optimization ?</p>
+</blockquote>
+<p>Do you mean loops in python code like defining a custom kernel?  For that I’d recommend checking out Triton.  You could think of Triton like a better Cuda.</p>
+<p>There is no reason custom ops shouldn’t work, though might need some minor glue code.</p>
+<blockquote>
+<p>could it infer sparsity in the results and automatically discards useless computations in the graph ? (e.g. some part of the graph only retains the diagonal of a tensor; or a tensor being symmetric by construction)</p>
+</blockquote>
+<p>Yes this would be possible, but future work and not currently planned.</p>
+<blockquote>
+<p>there are some hand defined Triton kernel from the previous answers (e.g. Conv2D). Does this mean there would be no further fusion on these kernels ? (use case: 3 convolutions with the same input, and the same weights transformed 3 times: absolute value, clipped at 0;+ and clipped at -:0)</p>
+</blockquote>
+<p>Currently, we only support epilogue fusion into Triton templates.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="1" />
+              <span class='post-likes'>1 Like</span>
+            </div>
+
+
+            
+          </div>
+          <div id='post_15' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/menelaus'><span itemprop='name'>menelaus</span></a>
+                
+              </span>
+
+
+
+              <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-10-10T20:25:41Z' class='post-time'>
+                    October 10, 2022,  8:25pm
+                  </time>
+                  <meta itemprop='dateModified' content='2022-10-10T20:25:41Z'>
+              <span itemprop='position'>15</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <p><a class="mention" href="/u/jansel">@jansel</a> Hi looks like the performance of inductor benefits a lot from cuda graph.<br>
+I am curious how inductor handles dynamic shape?<br>
+cuda graph cannot deal with those ops with dynamic input/output shapes, which are common in the framework.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="0" />
+              <span class='post-likes'></span>
+            </div>
+
+
+            
+          </div>
+          <div id='post_16' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/jansel'><span itemprop='name'>jansel</span></a>
+                
+              </span>
+
+
+
+              <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-10-10T20:58:33Z' class='post-time'>
+                    October 10, 2022,  8:58pm
+                  </time>
+                  <meta itemprop='dateModified' content='2022-10-10T20:58:33Z'>
+              <span itemprop='position'>16</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <p>For dynamic shapes it doesn’t use cudagraphs.</p>
+<p>Since writing this post, there is actually an entirely new Triton runtime which reduces the reliance on cudagraphs a lot.  The  plan is to lower CPU overheads to the point where cudagraphs isn’t needed for competitive performance.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="0" />
+              <span class='post-likes'></span>
+            </div>
+
+
+            
+          </div>
+          <div id='post_17' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/menelaus'><span itemprop='name'>menelaus</span></a>
+                
+              </span>
+
+
+
+              <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-10-10T21:12:53Z' class='post-time'>
+                    October 10, 2022,  9:12pm
+                  </time>
+                  <meta itemprop='dateModified' content='2022-10-10T21:12:53Z'>
+              <span itemprop='position'>17</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <p>is there any post or links that we can read on this feature that can lower the CPU overheads?</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="0" />
+              <span class='post-likes'></span>
+            </div>
+
+
+            
+          </div>
+          <div id='post_18' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/jansel'><span itemprop='name'>jansel</span></a>
+                
+              </span>
+
+
+
+              <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-10-10T21:31:52Z' class='post-time'>
+                    October 10, 2022,  9:31pm
+                  </time>
+                  <meta itemprop='dateModified' content='2022-10-10T21:31:52Z'>
+              <span itemprop='position'>18</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <p>The changes that already landed:</p><aside class="onebox githubpullrequest" data-onebox-src="https://github.com/openai/triton/pull/644">
+  <header class="source">
+
+      <a href="https://github.com/openai/triton/pull/644" target="_blank" rel="noopener nofollow ugc">github.com/openai/triton</a>
+  </header>
+
+  <article class="onebox-body">
+    <div class="github-row">
+
+
+
+    <div class="github-icon-container" title="Pull Request">
+      <svg width="60" height="60" class="github-icon" viewbox="0 0 12 16" aria-hidden="true"><path fill-rule="evenodd" d="M11 11.28V5c-.03-.78-.34-1.47-.94-2.06C9.46 2.35 8.78 2.03 8 2H7V0L4 3l3 3V4h1c.27.02.48.11.69.31.21.2.3.42.31.69v6.28A1.993 1.993 0 0 0 10 15a1.993 1.993 0 0 0 1-3.72zm-1 2.92c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zM4 3c0-1.11-.89-2-2-2a1.993 1.993 0 0 0-1 3.72v6.56A1.993 1.993 0 0 0 2 15a1.993 1.993 0 0 0 1-3.72V4.72c.59-.34 1-.98 1-1.72zm-.8 10c0 .66-.55 1.2-1.2 1.2-.65 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2zM2 4.2C1.34 4.2.8 3.65.8 3c0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2z"></path></svg>
+    </div>
+
+  <div class="github-info-container">
+
+
+
+      <h4>
+        <a href="https://github.com/openai/triton/pull/644" target="_blank" rel="noopener nofollow ugc">[FRONTEND] Complete rewrite of the runtime</a>
+      </h4>
+
+    <div class="branches">
+      <code>openai:master</code> ← <code>openai:phil/new-runtime</code>
+    </div>
+
+      <div class="github-info">
+        <div class="date">
+          opened <span class="discourse-local-date" data-format="ll" data-date="2022-09-11" data-time="23:48:18" data-timezone="UTC">11:48PM - 11 Sep 22 UTC</span>
+        </div>
+
+        <div class="user">
+          <a href="https://github.com/ptillet" target="_blank" rel="noopener nofollow ugc">
+            <img alt="ptillet" src="https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/original/1X/4350fb5304507776cfa2f454753d188c68342b2c.png" class="onebox-avatar-inline" width="20" height="20">
+            ptillet
+          </a>
+        </div>
+
+        <div class="lines" title="48 commits changed 17 files with 1226 additions and 808 deletions">
+          <a href="https://github.com/openai/triton/pull/644/files" target="_blank" rel="noopener nofollow ugc">
+            <span class="added">+1226</span>
+            <span class="removed">-808</span>
+          </a>
+        </div>
+      </div>
+  </div>
+</div>
+
+  <div class="github-row">
+    <p class="github-body-container">This PR completely rewrites the runtime of Triton to be more lean and clearly se<span class="show-more-container"><a href="https://github.com/openai/triton/pull/644" target="_blank" rel="noopener nofollow ugc" class="show-more">…</a></span><span class="excerpt hidden">parate the compilation step from the just-in-time cache logic. This should substantially remove launch overhead, and also pave the way for even lower overhead in the future as support for type annotations is added, and users start explicitly leveraging the &lt;500ns C entry point that `triton.compile` now provides when specialization hints are known.</span></p>
+  </div>
+
+  </article>
+
+  <div class="onebox-metadata">
+    
+    
+  </div>
+
+  <div style="clear: both"></div>
+</aside>
+<aside class="onebox githubpullrequest" data-onebox-src="https://github.com/pytorch/torchdynamo/pull/1338">
+  <header class="source">
+
+      <a href="https://github.com/pytorch/torchdynamo/pull/1338" target="_blank" rel="noopener nofollow ugc">github.com/pytorch/torchdynamo</a>
+  </header>
+
+  <article class="onebox-body">
+    <div class="github-row">
+
+
+
+    <div class="github-icon-container" title="Pull Request">
+      <svg width="60" height="60" class="github-icon" viewbox="0 0 12 16" aria-hidden="true"><path fill-rule="evenodd" d="M11 11.28V5c-.03-.78-.34-1.47-.94-2.06C9.46 2.35 8.78 2.03 8 2H7V0L4 3l3 3V4h1c.27.02.48.11.69.31.21.2.3.42.31.69v6.28A1.993 1.993 0 0 0 10 15a1.993 1.993 0 0 0 1-3.72zm-1 2.92c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zM4 3c0-1.11-.89-2-2-2a1.993 1.993 0 0 0-1 3.72v6.56A1.993 1.993 0 0 0 2 15a1.993 1.993 0 0 0 1-3.72V4.72c.59-.34 1-.98 1-1.72zm-.8 10c0 .66-.55 1.2-1.2 1.2-.65 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2zM2 4.2C1.34 4.2.8 3.65.8 3c0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2z"></path></svg>
+    </div>
+
+  <div class="github-info-container">
+
+
+
+      <h4>
+        <a href="https://github.com/pytorch/torchdynamo/pull/1338" target="_blank" rel="noopener nofollow ugc">Use new Triton runtime</a>
+      </h4>
+
+    <div class="branches">
+      <code>pytorch:main</code> ← <code>jansel:newruntime202209</code>
+    </div>
+
+      <div class="github-info">
+        <div class="date">
+          opened <span class="discourse-local-date" data-format="ll" data-date="2022-09-24" data-time="23:59:54" data-timezone="UTC">11:59PM - 24 Sep 22 UTC</span>
+        </div>
+
+        <div class="user">
+          <a href="https://github.com/jansel" target="_blank" rel="noopener nofollow ugc">
+            <img alt="jansel" src="https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/original/1X/992f996dc57b6e0228ef91ab6bd80559c139663e.jpeg" class="onebox-avatar-inline" width="20" height="20">
+            jansel
+          </a>
+        </div>
+
+        <div class="lines" title="26 commits changed 18 files with 453 additions and 176 deletions">
+          <a href="https://github.com/pytorch/torchdynamo/pull/1338/files" target="_blank" rel="noopener nofollow ugc">
+            <span class="added">+453</span>
+            <span class="removed">-176</span>
+          </a>
+        </div>
+      </div>
+  </div>
+</div>
+
+  <div class="github-row">
+    <p class="github-body-container">@ptillet recently rewrote the Triton runtime in https://github.com/openai/triton<span class="show-more-container"><a href="https://github.com/pytorch/torchdynamo/pull/1338" target="_blank" rel="noopener nofollow ugc" class="show-more">…</a></span><span class="excerpt hidden">/pull/644
+
+This should dramatically reduce CPU overheads when cudagraphs is disabled.
+
+This updates TorchInductor to use that new runtime.  We now call `triton.compile()`, and no longer use `triton.jit()`.  
+
+There is also some early support for parallel compiles, but still need optimize that part.
+
+Note this PR breaks support for Triton versions prior to 998fd5f9afe166247f441999c605dfe624ca9331.</span></p>
+  </div>
+
+  </article>
+
+  <div class="onebox-metadata">
+    
+    
+  </div>
+
+  <div style="clear: both"></div>
+</aside>
+
+<p>The next lowest hanging fruit is:</p><aside class="onebox githubissue" data-onebox-src="https://github.com/pytorch/torchdynamo/issues/1556">
+  <header class="source">
+
+      <a href="https://github.com/pytorch/torchdynamo/issues/1556" target="_blank" rel="noopener nofollow ugc">github.com/pytorch/torchdynamo</a>
+  </header>
+
+  <article class="onebox-body">
+    <div class="github-row">
+  <div class="github-icon-container" title="Issue">
+	  <svg width="60" height="60" class="github-icon" viewbox="0 0 14 16" aria-hidden="true"><path fill-rule="evenodd" d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+  </div>
+
+  <div class="github-info-container">
+    <h4>
+      <a href="https://github.com/pytorch/torchdynamo/issues/1556" target="_blank" rel="noopener nofollow ugc">Support cpp wrapper code</a>
+    </h4>
+
+    <div class="github-info">
+      <div class="date">
+        opened <span class="discourse-local-date" data-format="ll" data-date="2022-10-08" data-time="08:35:08" data-timezone="UTC">08:35AM - 08 Oct 22 UTC</span>
+      </div>
+
+
+      <div class="user">
+        <a href="https://github.com/jgong5" target="_blank" rel="noopener nofollow ugc">
+          <img alt="jgong5" src="https://canada1.discourse-cdn.com/flex036/uploads/pytorch1/original/1X/2e1890189699bf9c9825e2e285e9dccca5e559b9.png" class="onebox-avatar-inline" width="20" height="20">
+          jgong5
+        </a>
+      </div>
+    </div>
+
+    <div class="labels">
+    </div>
+  </div>
+</div>
+
+  <div class="github-row">
+    <p class="github-body-container">Currently wrapper.py generates python code that invokes generated kernels and ex<span class="show-more-container"><a href="" rel="noopener" class="show-more">…</a></span><span class="excerpt hidden">ternal kernels. This would incur Python overhead which can be avoided if the wrapper can generate c++ code that invokes these kernels via C++ directly.</span></p>
+  </div>
+
+  </article>
+
+  <div class="onebox-metadata">
+    
+    
+  </div>
+
+  <div style="clear: both"></div>
+</aside>
+<p>
+(which I believe is in progress)</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="0" />
+              <span class='post-likes'></span>
+            </div>
+
+
+            
+          </div>
+          <div id='post_19' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/Sujoy_Saraswati'><span itemprop='name'>Sujoy_Saraswati</span></a>
+                
+              </span>
+
+
+
+              <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-12-11T11:26:03Z' class='post-time'>
+                    December 11, 2022, 11:26am
+                  </time>
+                  <meta itemprop='dateModified' content='2022-12-11T11:26:03Z'>
+              <span itemprop='position'>19</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <p>How does TorchInductor handle aliasing and mutation, does it always perform a functionalization, or are they exposed to the backend compilers? The description above mentions the concept of TensorBox and StorageBox, are there more details on these?</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="0" />
+              <span class='post-likes'></span>
+            </div>
+
+
+            
+          </div>
+          <div id='post_20' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" rel='nofollow' href='https://dev-discuss.pytorch.org/u/jansel'><span itemprop='name'>jansel</span></a>
+                
+              </span>
+
+
+
+              <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-12-12T17:08:20Z' class='post-time'>
+                    December 12, 2022,  5:08pm
+                  </time>
+                  <meta itemprop='dateModified' content='2022-12-12T17:08:20Z'>
+              <span itemprop='position'>20</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+              <p>TorchInductor uses functionalization, but there are some things (like mutating inputs and scatter operations) that are not functionalized.</p>
+<p>TensorBox maps to <code>torch.Tensor</code>.  StorageBox maps to <code>torch.Storage</code>.  The core representation is a pointer plus strides, same as eager PyTorch.  Basically the compiler abstractions match the eager mode abstractions one-to-one.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+              <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+              <meta itemprop="userInteractionCount" content="0" />
+              <span class='post-likes'></span>
+            </div>
+
+
+            
+          </div>
+    </div>
+
+      <div role='navigation' itemscope itemtype='http://schema.org/SiteNavigationElement' class="topic-body crawler-post">
+            <span itemprop='name'><b><a rel="next" itemprop="url" href="/t/torchinductor-a-pytorch-native-compiler-with-define-by-run-ir-and-symbolic-shapes/747?page=2">next page →</a></b></span>
+      </div>
+
+    <div id="related-topics" class="more-topics__list " role="complementary" aria-labelledby="related-topics-title">
+  <h3 id="related-topics-title" class="more-topics__list-title">
+    Related topics
+  </h3>
+  <div class="topic-list-container" itemscope itemtype='http://schema.org/ItemList'>
+    <meta itemprop='itemListOrder' content='http://schema.org/ItemListOrderDescending'>
+    <table class='topic-list'>
+      <thead>
+        <tr>
+          <th>Topic</th>
+          <th></th>
+          <th class="replies">Replies</th>
+          <th class="views">Views</th>
+          <th>Activity</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="topic-list-item" id="topic-list-item-2370">
+            <td class="main-link" itemprop='itemListElement' itemscope itemtype='http://schema.org/ListItem'>
+              <meta itemprop='position' content='1'>
+              <span class="link-top-line">
+                <a itemprop='url' href='https://dev-discuss.pytorch.org/t/how-to-access-triton-kernels-from-torchinductor-when-running-on-cpu/2370' class='title raw-link raw-topic-link'>How to Access Triton Kernels from TorchInductor when running on CPU?</a>
+              </span>
+              <div class="link-bottom-line">
+                  <a href='/c/compiler/5' class='badge-wrapper bullet'>
+                    <span class='badge-category-bg' style='background-color: #BF1E2E'></span>
+                    <span class='badge-category clear-badge'>
+                      <span class='category-name'>compiler</span>
+                    </span>
+                  </a>
+                  <div class="discourse-tags">
+                  </div>
+              </div>
+            </td>
+            <td class="replies">
+              <span class='posts' title='posts'>1</span>
+            </td>
+            <td class="views">
+              <span class='views' title='views'>1025</span>
+            </td>
+            <td>
+              August 12, 2024
+            </td>
+          </tr>
+          <tr class="topic-list-item" id="topic-list-item-2088">
+            <td class="main-link" itemprop='itemListElement' itemscope itemtype='http://schema.org/ListItem'>
+              <meta itemprop='position' content='2'>
+              <span class="link-top-line">
+                <a itemprop='url' href='https://dev-discuss.pytorch.org/t/when-does-the-inductor-code-run/2088' class='title raw-link raw-topic-link'>When does the inductor code run?</a>
+              </span>
+              <div class="link-bottom-line">
+                  <a href='/c/compiler/5' class='badge-wrapper bullet'>
+                    <span class='badge-category-bg' style='background-color: #BF1E2E'></span>
+                    <span class='badge-category clear-badge'>
+                      <span class='category-name'>compiler</span>
+                    </span>
+                  </a>
+                  <div class="discourse-tags">
+                  </div>
+              </div>
+            </td>
+            <td class="replies">
+              <span class='posts' title='posts'>5</span>
+            </td>
+            <td class="views">
+              <span class='views' title='views'>855</span>
+            </td>
+            <td>
+              May 15, 2024
+            </td>
+          </tr>
+          <tr class="topic-list-item" id="topic-list-item-1514">
+            <td class="main-link" itemprop='itemListElement' itemscope itemtype='http://schema.org/ListItem'>
+              <meta itemprop='position' content='3'>
+              <span class="link-top-line">
+                <a itemprop='url' href='https://dev-discuss.pytorch.org/t/torchinductor-update-6-cpu-backend-performance-update-and-new-features-in-pytorch-2-1/1514' class='title raw-link raw-topic-link'>TorchInductor Update 6: CPU backend performance update and new features in PyTorch 2.1</a>
+              </span>
+              <div class="link-bottom-line">
+                  <a href='/c/compiler/5' class='badge-wrapper bullet'>
+                    <span class='badge-category-bg' style='background-color: #BF1E2E'></span>
+                    <span class='badge-category clear-badge'>
+                      <span class='category-name'>compiler</span>
+                    </span>
+                  </a>
+                  <div class="discourse-tags">
+                  </div>
+              </div>
+            </td>
+            <td class="replies">
+              <span class='posts' title='posts'>0</span>
+            </td>
+            <td class="views">
+              <span class='views' title='views'>2159</span>
+            </td>
+            <td>
+              September 22, 2023
+            </td>
+          </tr>
+          <tr class="topic-list-item" id="topic-list-item-874">
+            <td class="main-link" itemprop='itemListElement' itemscope itemtype='http://schema.org/ListItem'>
+              <meta itemprop='position' content='4'>
+              <span class="link-top-line">
+                <a itemprop='url' href='https://dev-discuss.pytorch.org/t/torchinductor-update-4-cpu-backend-started-to-show-promising-performance-boost/874' class='title raw-link raw-topic-link'>TorchInductor Update 4: CPU backend started to show promising performance boost</a>
+              </span>
+              <div class="link-bottom-line">
+                  <a href='/c/compiler/5' class='badge-wrapper bullet'>
+                    <span class='badge-category-bg' style='background-color: #BF1E2E'></span>
+                    <span class='badge-category clear-badge'>
+                      <span class='category-name'>compiler</span>
+                    </span>
+                  </a>
+                  <div class="discourse-tags">
+                  </div>
+              </div>
+            </td>
+            <td class="replies">
+              <span class='posts' title='posts'>1</span>
+            </td>
+            <td class="views">
+              <span class='views' title='views'>3049</span>
+            </td>
+            <td>
+              November 25, 2022
+            </td>
+          </tr>
+          <tr class="topic-list-item" id="topic-list-item-2007">
+            <td class="main-link" itemprop='itemListElement' itemscope itemtype='http://schema.org/ListItem'>
+              <meta itemprop='position' content='5'>
+              <span class="link-top-line">
+                <a itemprop='url' href='https://dev-discuss.pytorch.org/t/pytorch-to-triton-for-non-gpu-devices/2007' class='title raw-link raw-topic-link'>Pytorch to Triton for Non-GPU Devices</a>
+              </span>
+              <div class="link-bottom-line">
+                  <a href='/c/compiler/5' class='badge-wrapper bullet'>
+                    <span class='badge-category-bg' style='background-color: #BF1E2E'></span>
+                    <span class='badge-category clear-badge'>
+                      <span class='category-name'>compiler</span>
+                    </span>
+                  </a>
+                  <div class="discourse-tags">
+                  </div>
+              </div>
+            </td>
+            <td class="replies">
+              <span class='posts' title='posts'>7</span>
+            </td>
+            <td class="views">
+              <span class='views' title='views'>1901</span>
+            </td>
+            <td>
+              August 30, 2024
+            </td>
+          </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+
+
+
+    </div>
+    <footer class="container wrap">
+  <nav class='crawler-nav'>
+    <ul>
+      <li itemscope itemtype='http://schema.org/SiteNavigationElement'>
+        <span itemprop='name'>
+          <a href='/' itemprop="url">Home </a>
+        </span>
+      </li>
+      <li itemscope itemtype='http://schema.org/SiteNavigationElement'>
+        <span itemprop='name'>
+          <a href='/categories' itemprop="url">Categories </a>
+        </span>
+      </li>
+      <li itemscope itemtype='http://schema.org/SiteNavigationElement'>
+        <span itemprop='name'>
+          <a href='/guidelines' itemprop="url">Guidelines </a>
+        </span>
+      </li>
+        <li itemscope itemtype='http://schema.org/SiteNavigationElement'>
+          <span itemprop='name'>
+            <a href='/tos' itemprop="url">Terms of Service </a>
+          </span>
+        </li>
+        <li itemscope itemtype='http://schema.org/SiteNavigationElement'>
+          <span itemprop='name'>
+            <a href='/privacy' itemprop="url">Privacy Policy </a>
+          </span>
+        </li>
+    </ul>
+  </nav>
+  <p class='powered-by-link'>Powered by <a href="https://www.discourse.org">Discourse</a>, best viewed with JavaScript enabled</p>
+</footer>
+
+    
+    
+  </body>
+  
+</html>

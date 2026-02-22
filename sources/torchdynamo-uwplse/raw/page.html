@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>UW PLSE | How does torch.compile work?</title>
+  
+  <link rel="stylesheet" type="text/css" href="/dash.css">
+  <link rel="stylesheet" type="text/css" href="/css/blog_style.css">
+  <link rel="stylesheet" type="text/css" href="/css/syntax.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- icons -->
+  <link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-touch-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="/icons/apple-touch-icon-60x60.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="/icons/apple-touch-icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="/icons/apple-touch-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="/icons/apple-touch-icon-114x114.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="/icons/apple-touch-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="/icons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180x180.png">
+  <link rel="icon" type="image/png" href="/icons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="/icons/android-chrome-192x192.png" sizes="192x192">
+  <link rel="icon" type="image/png" href="/icons/favicon-96x96.png" sizes="96x96">
+  <link rel="icon" type="image/png" href="/icons/favicon-16x16.png" sizes="16x16">
+  <link rel="manifest" href="/icons/manifest.json">
+  <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#4b2e83">
+  <link rel="shortcut icon" href="/icons/favicon.ico">
+  <meta name="msapplication-TileColor" content="#4b2e83">
+  <meta name="msapplication-TileImage" content="/icons/mstile-144x144.png">
+  <meta name="msapplication-config" content="/icons/browserconfig.xml">
+  <meta name="theme-color" content="#4b2e83">
+
+  
+    
+
+
+
+
+
+
+  
+
+  
+
+</head>
+<body>
+  <header>
+  <a href="/">
+    <img class="logo" src="/logo/header@2x.png" alt="PLSE homepage">
+  </a>
+  <nav>
+  <ul style="margin: 0; padding: 0;">
+    <li class="nav-first-row"><a href="/#news">News</a></li>
+    <li class="nav-first-row"><a href="/blog/">Blog</a></li>
+    <li class="nav-first-row"><a href="/#projects">Projects</a></li>
+    <li class="nav-first-row"><a href="/#faculty">People</a></li>
+    <li><a href="/colloquia/">Colloquia</a></li>
+    <li><a href="/meet/">Meetings</a></li>
+    <li><a href="/internal/">Internal</a></li>
+    <li><a href="/getting-involved/">Get&nbsp;Involved</a></li>
+  </ul>
+  </nav>
+</header>
+
+
+  <main id="content">
+  <article class="post">
+  <header>
+    <h1>How does torch.compile work?</h1>
+  </header>
+  <section>
+    
+    <h2 class="sr-only">Post Metadata</h2>
+    
+
+<dl class="post-meta">
+  <dt><span class="sr-only">Author</span><span class="fa fa-pencil" aria-hidden="true"></span></dt>
+  <dd class="post-author">Megan Frisella</dd>
+  <dt><span class="sr-only">Date Published</span><span class="fa fa-calendar" aria-hidden="true"></span></dt>
+  <dd><time datetime="2025-04-28T00:00:00+00:00">28 April 2025</time></dd>
+</dl>
+
+  </section>
+  <div class="entry">
+    <p>PyTorch is a popular open-source tensor library for machine learning (ML) and scientific computing in Python.
+It’s especially popular among the research community because of its active open-source community and its flexibility for experimenting with new ML architectures.
+For all of its benefits, it has a clear downfall compared to other ML frameworks like TensorFlow.
+<strong>It’s slow!</strong>
+Recent work from the PyTorch team at Meta attempts to bridge the flexibility-performance gap with <code class="language-plaintext highlighter-rouge">torch.compile</code>, a feature that speeds up PyTorch code with compilation.
+In this blog post, I’ll discuss the motivation for <code class="language-plaintext highlighter-rouge">torch.compile</code> and its implementation as a Python-level just-in-time (JIT) compiler called TorchDynamo.</p>
+
+<h2 id="what-is-pytorch">What is PyTorch?</h2>
+
+<p>PyTorch is a tensor library for machine learning and scientific computing.
+It provides a library of tensor operations and linear algebra and numerical optimization routines built on top of them.
+PyTorch makes it easy to run code on GPUs and accelerate code by plugging in optimized computation kernels like <a href="https://developer.nvidia.com/cublas">cuBLAS</a> and <a href="https://en.wikipedia.org/wiki/LAPACK">LAPACK</a>.
+It’s been widely adopted by ML researchers largely thanks to its flexibility.
+PyTorch does <em>eager-mode</em> (interpreted) execution, which sets it apart from other <em>graph-mode</em> (compiled) ML frameworks like TensorFlow.
+The term graph-mode comes from specifying a model’s entire <strong>computation graph</strong> ahead of time.</p>
+
+<h3 id="computation-graph">Computation graph</h3>
+
+<p>A computation graph is a directed acyclic graph with nodes representing computation and edges representing input/output dependencies.
+For example, consider the program:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">a</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">b</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span> <span class="o">+</span> <span class="n">a</span>
+</code></pre></div></div>
+
+<p>which has the following computation graph.
+<img src="/images/computation-graph.png" alt="alt text" /></p>
+
+<p>Some ML frameworks require users to specify a model’s computation graph ahead of time, so that a compiler can optimize the model based on its data flow.
+For example, supposing the program above operates on tensors rather than integers, a ML compiler might fuse together the tensor operations “times” and “plus” into a single function that applies both operations without doing redundant data loading.</p>
+
+<p>PyTorch traditionally doesn’t work this way.
+It builds computation graphs for tensors at runtime by associating a graph data structure with each tensor and logging operations in the graphs as they occur on the fly.
+PyTorch calls this <strong>eager-mode</strong> execution because computation graphs are constructed and interpreted on the fly.</p>
+
+<h3 id="what-are-the-benefits-of-eager-mode-execution">What are the benefits of eager-mode execution?</h3>
+
+<p>Eagerly constructing computation graphs has many benefits for programmability.
+When it comes to building models, programmers aren’t limited to static computation graphs and can encode dynamic behaviors.
+For example, PyTorch models can</p>
+
+<ul>
+  <li>handle tensors of varying input sizes,</li>
+  <li>conditionally skip sub-modules at runtime,</li>
+  <li>conditionally pass input data to different sub-modules (e.g. <a href="https://huggingface.co/blog/moe">mixture of experts</a>), and</li>
+  <li>execute a model in both a training and inference setting (e.g. <a href="https://en.wikipedia.org/wiki/Reinforcement_learning">reinforcement learning</a>).</li>
+</ul>
+
+<p>Another benefit of eager-mode execution is an easier debugging experience, similar to how debugging interpreted programs tends to be easier than debugging compiled programs.
+Eager-mode executes operations line by line (like interpreters), so users can directly inspect the state of variables, whereas graph-mode translates programs before execution (like compilers), making it more complicated to inspect intermediate program state and locate the source of errors.
+With PyTorch eager-mode, users can debug PyTorch programs like normal Python programs with print statements and interactive debugging tools like <code class="language-plaintext highlighter-rouge">pdb</code> and <code class="language-plaintext highlighter-rouge">IPython</code>.</p>
+
+<h3 id="what-are-the-drawbacks">What are the drawbacks?</h3>
+
+<p>The drawback to this flexibility is performance.
+PyTorch models are typically slower to train and run compared to their graph-mode counterparts.
+PyTorch is slow because eager-mode execution only sees one operation at a time, so it can’t perform optimizations across multiple operations like pre-allcoating input/output buffers, fusing operations together, and scheduling CPU-GPU data transfers.</p>
+
+<h2 id="what-is-torchcompile">What is <code class="language-plaintext highlighter-rouge">torch.compile</code>?</h2>
+
+<p><code class="language-plaintext highlighter-rouge">torch.compile</code> is a feature that speeds up PyTorch code through just-in-time (JIT) compilation.
+JIT compilers combine the flexibility of eager interpretation and the performance benefits of ahead-of-time compilation by compiling at runtime.
+But compiling code at runtime sounds slow, and it can be.
+The JIT compiler will incur some performance cost to pause execution and compile a chunk of code at runtime, so that the compiled version can be run instead whenever the code is called in the future.
+The compilation cost is amortized, especially when chunks of compiled code get frequently reused.
+JIT compilation is apt for machine learning because there is a lot of code reuse, as training and inference involve repeatedly iterating over a model’s forward pass.</p>
+
+<p><code class="language-plaintext highlighter-rouge">torch.compile</code> has two main components.
+<strong>TorchDynamo</strong> is a JIT-compiler that dynamically extracts computation graphs from PyTorch code.
+<strong>TorchInductor</strong> is a compiler backend to TorchDynamo that compiles the extracted computation graphs into optimized C++ or <a href="https://openai.com/index/triton/">Triton</a> functions.
+This blog post focuses on TorchDynamo.</p>
+
+<h3 id="torchdynamo-python-frame-evaluation">TorchDynamo: Python frame evaluation</h3>
+
+<p>TorchDynamo is a Python-level JIT compiler that hooks into Python’s <em>frame evaluation</em> API and operates on <a href="https://github.com/python/cpython/blob/main/InternalDocs/frames.md">frames</a>.
+Frames are runtime data structures that store information about the execution state of a function call, including the function’s local variables, arguments, and body.
+Frame evaluation refers to evaluating the body in the context of the local variables/arguments.
+Python’s default logic for frame evaluation calls the Python interpreter.
+TorchDynamo implements custom frame evaluation logic to achieve JIT compilation:</p>
+
+<ul>
+  <li>First, check if the frame should be skipped, and if so default to the interpreter.
+A frame may be skipped, e.g., due to filename exclusion of Python standard libraries, which will not contain PyTorch operations.</li>
+  <li>Next, check if the frame’s body has been previously compiled and cached. If so, execute the corresponding “guard” function and if it passes, run the compiled code (otherwise, run the interpreter).
+<em>Guards</em> are functions which check properties of a frame’s input arguments that must be met in order to re-use previously compiled code. Guards are necessary because a compiled artifact may depend on, e.g., inputs being tensors of certain shapes.</li>
+  <li>If the guard fails or there is no cached compilation, then compile the frame and generate a new wrapper function that runs the compiled code (see the next section).
+Also generate a guard function (not discussed in this post).
+Cache the two functions in the frame object and then call into the wrapper.</li>
+</ul>
+
+<p>The diagram below shows how TorchDynamo modifies the default behavior of Python (shown on the left) according to the steps above.
+The diagram is heavily inspired by Fig. 1 of <a href="https://pytorch.org/assets/pytorch2-2.pdf">PyTorch 2</a>.
+<img src="/images/torchdynamo-system.png" alt="alt text" /></p>
+
+<p>Now we’ve seen the flow of the JIT compiler, but there are some missing pieces:</p>
+
+<ol>
+  <li>How does TorchDynamo extract computation graphs from Python frames?</li>
+  <li>How do the computation graphs get transformed into compiled code?</li>
+</ol>
+
+<p>I will discuss (1) in the next section.
+(2) is the job of TorchInductor, a compiler backend that transforms computation graphs into optimized C++ or Triton functions.
+TorchInductor is left for a future blog post.</p>
+
+<h3 id="torchdynamo-symbolic-evaluation--bytecode-translation">TorchDynamo: symbolic evaluation + bytecode translation</h3>
+
+<p>TorchDynamo extracts computation graphs from Python frames via <a href="https://en.wikipedia.org/wiki/Symbolic_execution">symbolic evaluation</a>.
+Symbolic evaluation is a general program analysis technique that interprets a program on <em>symbolic</em> inputs.
+It builds up an expression that represents the program’s computation in terms of symbolic variables.</p>
+
+<p>TorchDynamo uses symbolic evaluation to build computation graphs of PyTorch operations from Python frames.
+TorchDynamo uses <a href="https://pytorch.org/docs/stable/fx.html">FX graphs</a> as a data structure to represent computation graphs.
+TorchDynamo’s symbolic evaluation engine interprets one Python bytecode instruction at a time on symbolic input tensors.
+Python bytecodes are an intermediate representation that Python gets parsed into before interpreting.</p>
+
+<p>As TorchDynamo symbolically evaluates bytecode instructions, it accumulates a computation graph that records each of the frame’s PyTorch operations.
+Once it reaches the end of a frame, it passes the computation graph to TorchInductor to compile it into optimized C++ or Triton code.
+Then, TorchDynamo generates a new wrapper function that calls into the compiled code, then reconstructs the behavior of the original code by updating the local stack state and performing any side effects (for more details, see Sec. 3.7 of <a href="https://pytorch.org/assets/pytorch2-2.pdf">PyTorch 2</a>).</p>
+
+<p>The explanation so far has skipped an important case: symbolic evaluation cannot handle every Python bytecode instruction.
+For example, instructions that need to materialize data, e.g. to print a value or do data-dependent control flow, cannot be symbolically evaluated as symbolic variables have no underlying data to materialize.</p>
+
+<p>When the symbolic evaluation engine hits an instruction that it can’t handle, it creates a “graph break”.
+At a high level, a graph break is like reverting back to interpreted mode.
+TorchDynamo compiles and runs code for a <em>partial</em> graph, then interprets the instruction that can’t be compiled, and then resumes trying to compile the remaining code after the break.</p>
+
+<p>To instrument a graph break, TorchDynamo first passes a partial graph (the computation graph that has been accumulated up to this point) to TorchInductor to get compiled.
+Then, it generates a new wrapper function that (1) runs the compiled code, then (2) interprets the bytecode instruction that can’t be compiled, then (3) calls a <em>continuation</em> function, which runs the remainder of the original code.
+All the live variables in the original frame at the point of the graph break are passed along into the continuation.
+The continuation design enables TorchDynamo’s analysis to be recursively applied after graph breaks; when Python executes a continuation function, TorchDynamo will attempt to compile the function just like any other Python frame.</p>
+
+<p>Let’s see an example.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="mi">1</span><span class="p">:</span>  <span class="kn">import</span> <span class="nn">torch</span>
+<span class="mi">2</span><span class="p">:</span>
+<span class="mi">3</span><span class="p">:</span>  <span class="k">def</span> <span class="nf">foo</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">torch</span><span class="p">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">torch</span><span class="p">.</span><span class="n">Tensor</span><span class="p">):</span>
+<span class="mi">4</span><span class="p">:</span>      <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span>
+<span class="mi">5</span><span class="p">:</span>      <span class="k">if</span> <span class="n">c</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+<span class="mi">6</span><span class="p">:</span>          <span class="n">c</span> <span class="o">=</span> <span class="o">-</span><span class="n">c</span>
+<span class="mi">7</span><span class="p">:</span>      <span class="k">else</span><span class="p">:</span>
+<span class="mi">8</span><span class="p">:</span>          <span class="n">c</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="mi">2</span>
+<span class="mi">9</span><span class="p">:</span>      <span class="k">return</span> <span class="n">c</span>
+<span class="mi">10</span><span class="p">:</span>
+<span class="mi">11</span><span class="p">:</span> <span class="n">foo</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="nb">compile</span><span class="p">(</span><span class="n">foo</span><span class="p">)</span>
+<span class="mi">12</span><span class="p">:</span> <span class="n">foo</span><span class="p">(</span><span class="n">torch</span><span class="p">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">1.0</span><span class="p">),</span> <span class="n">torch</span><span class="p">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">2.0</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>When <code class="language-plaintext highlighter-rouge">foo</code> gets called on line 11, TorchDynamo compiles the frame associated with the function call.
+The frame includes the body of <code class="language-plaintext highlighter-rouge">foo</code> and the values of the arguments.
+We can turn logging on to see the bytecode that TorchDynamo’s symbolic evaluation engine sees by setting <code class="language-plaintext highlighter-rouge">export TORCH_LOGS="+bytecode"</code>.
+Before any compilation, the bytecode for <code class="language-plaintext highlighter-rouge">foo</code> looks like:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>4           0 LOAD_FAST                0 (a)
+            2 LOAD_FAST                1 (b)
+            4 BINARY_SUBTRACT
+            6 STORE_FAST               2 (c)
+
+5           8 LOAD_FAST                2 (c)
+            10 LOAD_CONST              1 (1)
+            12 COMPARE_OP              0 (&lt;)
+            14 POP_JUMP_IF_FALSE      24
+
+6           16 LOAD_FAST               2 (c)
+            18 UNARY_NEGATIVE
+            20 STORE_FAST              2 (c)
+            22 JUMP_FORWARD            8 (to 32)
+
+8     &gt;&gt;    24 LOAD_FAST               2 (c)
+            26 LOAD_CONST              1 (1)
+            28 BINARY_ADD
+            30 STORE_FAST              2 (c)
+
+9     &gt;&gt;    32 LOAD_FAST               2 (c)
+            34 RETURN_VALUE
+</code></pre></div></div>
+
+<p>First, TorchDynamo creates symbolic (fake) input tensors for <code class="language-plaintext highlighter-rouge">a</code> and <code class="language-plaintext highlighter-rouge">b</code> which both have the shape <code class="language-plaintext highlighter-rouge">torch.Size([])</code>, which is the shape of a zero-dimensional tensor (a single number).
+TorchDynamo starts by symbolically evaluating the bytecode instructions corresponding to <code class="language-plaintext highlighter-rouge">c = a - b</code> and builds a computation graph for the operation.
+When it hits the <code class="language-plaintext highlighter-rouge">COMPARE_OP</code> instruction, the symbolic evaluation engine realizes that it can’t do a data-dependent jump and triggers a graph break.
+We can turn on logging to see when TorchDynamo creates a graph break by setting <code class="language-plaintext highlighter-rouge">export TORCH_LOGS="+bytecode,+graph_breaks"</code>.
+It reports:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Graph break in user code at test.py:5
+Reason: Data-dependent jump
+User code traceback:
+File "test.py", line 5, in foo
+    if c &lt; 1:
+</code></pre></div></div>
+
+<p>TorchDynamo compiles the partial graph (corresponding to <code class="language-plaintext highlighter-rouge">c = a - b</code>) and generates two continuations, one for each branch of the data-dependent conditional.
+The modified bytecode looks like:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    0 LOAD_GLOBAL              0 (__compiled_fn_1)
+    2 LOAD_FAST                0 (a)
+    4 LOAD_FAST                1 (b)
+    6 CALL_FUNCTION            2
+    8 UNPACK_SEQUENCE          2
+    10 STORE_FAST              2 (c)
+    12 POP_JUMP_IF_FALSE      22
+    14 LOAD_GLOBAL             1 (__resume_at_16_2)
+    16 LOAD_FAST               2 (c)
+    18 CALL_FUNCTION           1
+    20 RETURN_VALUE
+&gt;&gt;  22 LOAD_GLOBAL             2 (__resume_at_24_3)
+    24 LOAD_FAST               2 (c)
+    26 CALL_FUNCTION           1
+    28 RETURN_VALUE
+</code></pre></div></div>
+
+<p>The original bytecode is transformed into a bunch of function calls separated by some data-dependent control flow.
+In particular,</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">__compiled_fn_1</code> corresponds to the compiled partial graph for <code class="language-plaintext highlighter-rouge">c = a - b</code>,</li>
+  <li><code class="language-plaintext highlighter-rouge">__resume_at_16_2</code> is a continuation function that runs the code in the true branch, and</li>
+  <li><code class="language-plaintext highlighter-rouge">__resume_at_24_3</code> is a continuation function that runs the code in the false branch.</li>
+</ul>
+
+<p>When the new bytecode executes, the continuations <code class="language-plaintext highlighter-rouge">__resume_at_16_2</code> and <code class="language-plaintext highlighter-rouge">__resume_at_24_3</code> get compiled by TorchDynamo just like any other function, resulting in three partial graphs:
+<img src="/images/partial-graphs.png" alt="alt text" /></p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>I hope you thought this was cool!
+I think this is an exciting technique for optimizing ML systems, especially ones that have dynamic runtime characteristics.
+For example, <code class="language-plaintext highlighter-rouge">torch.compile</code> can cache different versions of compiled code optimized to different input tensor shapes.
+This can adapt a model’s execution to varying input sizes during training or inference.
+<code class="language-plaintext highlighter-rouge">torch.compile</code> can also compile partial graphs for separate sub-modules of a model that are connected by data-dependent control flow (e.g., routing in mixture of experts).
+This enables local computation graph optimizations even when a global static computation graph does not exist.</p>
+
+<p>Here are some resources for further reading.</p>
+
+<ul>
+  <li>torch.compile <a href="https://pytorch.org/tutorials/intermediate/torch_compile_tutorial.html">[tutorial]</a> <a href="https://pytorch.org/assets/pytorch2-2.pdf">[paper]</a></li>
+  <li>TorchDynamo deep dive <a href="https://pytorch.org/docs/stable/torch.compiler_dynamo_deepdive.html">[article]</a> <a href="https://www.youtube.com/watch?v=egZB5Uxki0I">[video]</a></li>
+</ul>
+
+  </div>
+
+
+
+  <div class="post-keywords"><em>Keywords:</em>
+    <ul class="list-unstyled">
+    
+      <li>
+        <a class="keywords-container" href="/tag/compilers">
+          <span class="sr-only">keyword: </span>
+          compilers
+        </a>
+      </li>
+    
+      <li>
+        <a class="keywords-container" href="/tag/jit-compiler">
+          <span class="sr-only">keyword: </span>
+          jit-compiler
+        </a>
+      </li>
+    
+    </ul>
+  </div>
+
+
+
+
+  <div class="back"> <a href="/blog"><i>Back to blog posts...</i></a> </div>
+
+</article>
+
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  </main>
+
+  <footer class="footer">
+  <a href="https://github.com/uwplse/uwplse.github.io/edit/main/_posts/2025-04-28-torchdynamo.md">Edit on GitHub</a> —
+  <a href="http://www.cs.washington.edu/">Computer Science &amp;
+    Engineering</a>
+  at the
+  <a href="http://www.washington.edu/">University of
+    Washington</a>
+</footer>
+
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-65215143-1', 'auto');
+    ga('send', 'pageview');
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document
+        .querySelectorAll("pre.highlight")
+        .forEach(codeBlock => codeBlock.setAttribute("tabindex", "0"));
+    })
+  </script>
+  
+</body>
+</html>

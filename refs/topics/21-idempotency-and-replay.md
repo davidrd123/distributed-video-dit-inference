@@ -10,6 +10,12 @@ For fault tolerance in a streaming video pipeline, operations should be idempote
 | idempotency-dist | What is Idempotency in Distributed Systems? | low | pending |
 | exactly-once | Exactly Once in Distributed Systems | low | pending |
 
+## Implementation context
+
+In TP v0, “replay” is intentionally coarse: pipeline reload and snapshot restore are blocked, so the safe recovery path for both hangs and Franken-models is restarting the `torchrun` job (v0 contract). In PP bringup, we reintroduce limited replay/idempotency via metadata: `call_id` must be monotonic, and `cache_epoch` increments on hard cuts so rank0 can drop stale results and flush bounded queues deterministically. These are the primitives needed before attempting any richer at-least-once / retry semantics.
+
+See: `refs/implementation-context.md`, `scope-drd/notes/FA4/h200/tp/explainers/07-v0-contract.md` (no reload/snapshot), `scope-drd/notes/FA4/h200/tp/pp-next-steps.md` (cache_epoch filtering), `scope-drd/notes/FA4/h200/tp/pp-topology-pilot-plan.md` (hard cut flush rules).
+
 ## Synthesis
 
 <!-- To be filled during study -->

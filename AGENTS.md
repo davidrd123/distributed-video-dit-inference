@@ -26,6 +26,7 @@ refs/
   manifest.yaml                      # master inventory of all resources
   resources/<id>.md                  # Tier 3: condensed resource cards
   topics/<nn>-<slug>.md              # per-topic synthesis docs
+  implementation-context.md          # bridge: working notes findings → load-bearing resources
 ```
 
 ## Three-tier extraction pipeline

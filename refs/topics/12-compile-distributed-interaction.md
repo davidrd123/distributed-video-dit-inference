@@ -14,6 +14,12 @@ The core challenge is that **DDP/FSDP use backward hooks for communication**, an
 | tp-tutorial | Large Scale Transformer Training with Tensor Parallel | medium | pending |
 | vllm-torch-compile | Introduction to torch.compile and How It Works with vLLM | medium | pending |
 
+## Implementation context
+
+Compile interacted catastrophically with distributed collectives until Run 12b: `torch._dynamo.disable()` on each all-reduce caused ~160 graph breaks per forward and TP=2 throughput dropped from 16 FPS (Run 7) to **9.6 FPS** (Runs 8-9b). Replacing those with functional collectives made collectives traceable and restored end-to-end performance to **24.5 FPS** (Run 12b). Current steady state in the E2E harness is `unique_graphs=12, graph_breaks=2` after removing attention-backend logger breaks (Run 14).
+
+See: `refs/implementation-context.md` → Phase 1, `scope-drd/notes/FA4/h200/tp/bringup-run-log.md` (Runs 7-14).
+
 ## Synthesis
 
 <!-- To be filled during study -->

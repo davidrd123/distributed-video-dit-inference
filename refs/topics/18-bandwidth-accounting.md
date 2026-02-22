@@ -12,6 +12,12 @@ Bandwidth accounting means computing the **theoretical minimum memory traffic** 
 | modal-roofline | What is the roofline model? (Modal GPU Glossary) | low | pending |
 | matmul-shapes | What Shapes Do Matrix Multiplications Like? | medium | pending |
 
+## Implementation context
+
+Bandwidth accounting explains two observed ceilings: (1) single-stream FPS scales with HBM bandwidth across GPUs (B200/B300 ~8 TB/s ≈ 33–34 FPS vs H200 ~4.8 TB/s ≈ 20 FPS; ratio ~0.58–0.60), and (2) TP collectives are fast enough on NVLink to be plausible (BF16 all-reduce of a ~21 MiB `[1,2160,5120]` tensor is **~0.113ms**, ~195 GB/s per rank). These numbers anchor whether a proposed optimization is compute-bound vs bandwidth/overhead-bound.
+
+See: `refs/implementation-context.md` → System summary + Phase 1, `scope-drd/notes/FA4/h200/tp/streamdiffusion-v2-analysis-opus.md` (H200 bandwidth-bound evidence), `scope-drd/notes/FA4/h200/tp/feasibility.md` (Section 1: collective bandwidth).
+
 ## Synthesis
 
 <!-- To be filled during study -->

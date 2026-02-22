@@ -12,6 +12,12 @@ NCCL's algorithm selection (ring, tree, NVLS, CollNet) is governed by message si
 | nccl-tuning | Understanding NCCL Tuning to Accelerate GPU-to-GPU Communication | medium | pending |
 | nccl-cuda-graphs | Using NCCL with CUDA Graphs | medium | pending |
 
+## Implementation context
+
+This topic directly informs the TP v0 communication budget: **80 large + 80 tiny all-reduces per chunk, ~9ms total** on 2×H200 NVLink. Each large all-reduce (`[1, 2160, 5120]` BF16, ~21 MiB) takes ~0.113ms. Understanding NCCL algorithm selection for this message size and topology is critical for diagnosing collective overhead.
+
+See: `refs/implementation-context.md` → Phase 1: TP v0, `scope-drd/notes/FA4/h200/tp/feasibility.md` Section 1-2.
+
 ## Synthesis
 
 <!-- To be filled during study -->

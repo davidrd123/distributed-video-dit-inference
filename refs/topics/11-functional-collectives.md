@@ -12,6 +12,12 @@ Standard NCCL collectives (`all_reduce`, `all_gather`) are **in-place and side-e
 | ezyang-state-of-compile | State of torch.compile for training (August 2025) | high | pending |
 | pytorch-issue-138773 | GitHub Issue #138773: functional collectives 67% slower than torch.distributed | medium | pending |
 
+## Implementation context
+
+This topic is the **single most impactful optimization** in the TP v0 bringup. Switching from `torch._dynamo.disable()`'d in-place collectives to functional collectives eliminated ~160 graph breaks per forward and unlocked compile: **9.6 → 24.5 FPS** (Run 12b). The eager-mode trap (Run 12a: funcol unconditionally in eager was 18 FPS, a regression) means the implementation must dispatch between in-place `dist.all_reduce` (eager) and `torch.distributed._functional_collectives.all_reduce` (compile).
+
+See: `refs/implementation-context.md` → Phase 1, `scope-drd/notes/FA4/h200/tp/bringup-run-log.md` Runs 8-12b.
+
 ## Synthesis
 
 <!-- To be filled during study -->

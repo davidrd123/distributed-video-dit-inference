@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#">
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Pipeline-Parallelism: Distributed Training via Model Partitioning</title>
+  <meta name="description"
+    content="Pipeline parallelism makes it possible to train large models that don’t fit into a single GPU’s memory.Example: Huggingface’s BLOOM model is a 175B parameter...">
+
+  <!-- Open graph metadata -->
+  <meta property="og:title" content="Pipeline-Parallelism: Distributed Training via Model Partitioning" />
+  <meta property="og:description"
+    content="Pipeline parallelism makes it possible to train large models that don’t fit into a single GPU’s memory.Example: Huggingface’s BLOOM model is a 175B parameter..." />
+  <meta property="og:url" content="http://siboehm.com/articles/22/pipeline-parallel-training" />
+  
+  <meta property="og:type" content="article" />
+  <meta property="article:published_time" content="2022-10-03T09:06:04+02:00" />
+  <meta property="article:author" content="Simon Boehm" />
+  
+  
+
+  
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="og:image" content="http://siboehm.com/assets/img/distributed-DNNs/PP_Twitter_header.png" />
+  <meta property="twitter:image" content="http://siboehm.com/assets/img/distributed-DNNs/PP_Twitter_header.png" />
+  
+
+  <!-- Twitter cards -->
+  <meta property="twitter:site" content="@Si_Boehm" />
+  <meta property="twitter:creator" content="@Si_Boehm" />
+
+  <link rel="stylesheet" href="/css/tufte.css">
+
+  
+  <link rel="stylesheet" href="/assets/katex/katex.min.css">
+  <script defer src="/assets/katex/katex.min.js"></script>
+  <script defer src="/assets/katex/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body)"></script>
+  
+
+  <link rel="stylesheet" href="/assets/fontello/css/fontello.css">
+
+  <link rel="canonical" href="https://siboehm.com/articles/22/pipeline-parallel-training">
+  <link rel="shortcut icon" href="/assets/img/favicon.ico">
+
+  <!-- MailerLite Universal -->
+  <script>
+    (function (w, d, e, u, f, l, n) {
+      w[f] = w[f] || function () {
+        (w[f].q = w[f].q || [])
+          .push(arguments);
+      }, l = d.createElement(e), l.async = 1, l.src = u,
+        n = d.getElementsByTagName(e)[0], n.parentNode.insertBefore(l, n);
+    })
+      (window, document, 'script', 'https://assets.mailerlite.com/js/universal.js', 'ml');
+    ml('account', '185027');
+  </script>
+  <!-- End MailerLite Universal -->
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/atom+xml" title="siboehm" href="/feed.xml">
+</head>
+
+  <body>
+    <!--- Header and nav template site-wide -->
+<header>
+    <nav class="group">
+	      
+		    
+  	    
+		    
+  	    
+		    
+  	    
+		    
+  	    
+		    
+		    
+		    <a href="/">siboehm</a>
+		    
+	      
+  	    
+		    
+		    
+		    <a href="/about/">About</a>
+		    
+	      
+  	    
+		    
+  	    
+	  </nav>
+</header>
+
+    <article class="group">
+      <h1>Pipeline-Parallelism: Distributed Training via Model Partitioning</h1>
+<div>
+    <div style="float:left; margin: auto; font-size: 1.4rem; line-height: 2rem; margin: 0 1.2rem 1.0rem 0">
+        <button class="ml-onclick-form button-14 icon-mail-alt" onclick="ml('show', 'eL1GfW', true)"> Subscribe</button>
+        <button class="button-14 icon-twitter" onclick="location.href='https://twitter.com/Si_Boehm';">Si_Boehm</button>
+        
+    </div>
+    <p style="text-align:right">
+        
+            October 2022
+        
+    </p>
+</div>
+
+<p>Pipeline parallelism makes it possible to train large models that don’t fit into a single GPU’s memory.<label for="1" class="margin-toggle sidenote-number"></label><input type="checkbox" id="1" class="margin-toggle" /><span class="sidenote">Example: Huggingface’s <a href="https://huggingface.co/bigscience/bloom">BLOOM</a> model is a 175B parameter Transformer model. Storing the weights as bfloat16 requires 350GB, but the GPUs they used to train BLOOM ‘only’ have 80GB of memory, and training requires much more memory than just loading the model weights. So their final training was distributed across 384 GPUs.</span>
+This is made possible by assigning different layers of the model to different GPUs, a process called model partitioning.
+Implemented naively, model partitioning results in low GPU utilization.
+In this post, we’ll first discuss the naive implementation of pipeline parallelism and some of its problems.
+Then, we’ll talk about GPipe and PipeDream, two more recent algorithms that alleviate some of the issues with naive pipeline parallelism.</p>
+
+<!--more-->
+
+<p>This is the second part of my series on distributed training of large-scale deep learning models. 
+The first part, which covers data-parallel training, can be found <a href="/articles/22/data-parallel-training">here</a>.</p>
+
+<h2 id="naive-model-parallelism">Naive Model Parallelism</h2>
+
+<p>Naive model parallelism is the most straightforward way of implementing pipeline-parallel training. 
+We split our model into multiple parts, and assign each one to a GPU.
+Then we run regular training on minibatches, inserting communication steps at the boundaries where we’ve split the model.</p>
+
+<p>Let’s take this 4-layer sequential model as an example:</p>
+
+\[\text{output}=\text{L}_4(\text{L}_3(\text{L}_2(\text{L}_1(\text{input}))))\]
+
+<p>We split the computation among two GPUs as follows:</p>
+<ul>
+  <li>GPU1 computes: \(\text{intermediate}=\text{L}_2(\text{L}_1(\text{input}))\)</li>
+  <li>GPU2 computes: \(\text{output}=\text{L}_4(\text{L}_3(\text{intermediate}))\)</li>
+</ul>
+
+<p>To complete a forward pass, we compute <code class="language-plaintext highlighter-rouge">itermediate</code> on GPU1 and transfer the resulting tensor to GPU2.
+GPU2 then computes the output of the model and starts the backward pass.
+For the backward pass, we send the gradients w.r.t. <code class="language-plaintext highlighter-rouge">intermediate</code> from GPU2 to GPU1.
+GPU1 then completes the backward pass based on the gradients it was sent.
+This way, the model parallel training results in the same outputs and gradients as single-node training.
+<label for="2" class="margin-toggle sidenote-number"></label><input type="checkbox" id="2" class="margin-toggle" /><span class="sidenote">Because the sending doesn’t modify any bits, naive model-parallel training is, unlike data-parallel training, bit-equal to sequential training. This makes debugging much easier.</span></p>
+
+<p>The pebble graph<label for="3" class="margin-toggle sidenote-number"></label><input type="checkbox" id="3" class="margin-toggle" /><span class="sidenote">If you’re having difficulties understanding the pebble graph, the <a href="/articles/22/data-parallel-training">post on data parallelism</a> introduced them more thoroughly.</span> below illustrates naive model parallelism.
+GPU1 performs its forward pass and caches the activations (red). 
+Then it uses MPI to send the outputs of <code class="language-plaintext highlighter-rouge">L2</code> to the next GPU, GPU2.
+GPU2 finishes the forward pass, calculates the loss using the target values, and starts the backward pass.
+Once GPU2 is finished, the gradient w.r.t. <code class="language-plaintext highlighter-rouge">L2</code>’s output is sent to GPU1, which completes the backward pass.
+Notice how we only use node-to-node communication (MPI.Send and MPI.Recv) and don’t need any collective communication primitives (so no MPI.AllReduce, as in data parallelism).</p>
+
+<p><img src="/assets/img/distributed-DNNs/PP_pebble_graph.gif" alt="pipeline parallel pebble graph" /></p>
+
+<p>By looking at the pebble graph, we can observe some inefficiencies of naive model parallelism.</p>
+<ol>
+  <li><strong>Low GPU utilization</strong>: At any given time, only one GPU is busy, while the other GPU is idle. If we added more GPUs, each one would be busy only \(\frac{1}{\text{\#GPUs}}\)% of the time (neglecting communication overhead). Low utilization suggests that there may be a way to speed up training by assigning useful work to GPUs that are currently idling.</li>
+  <li><strong>No interleaving of communication and computation</strong>: While we’re sending intermediate outputs (FWD) and gradients (BWD) over the network, no GPU is doing anything. We already saw how interleaving computation and communication brings big benefits when we discussed data-parallelism.</li>
+  <li><strong>High memory demand</strong>: GPU1 holds all activations for the whole minibatch cached until the very end. If the batch size is large, this can create memory problems. Later we’ll talk about combining data and pipeline parallelism to solve this problem, but there are other ways to lessen the memory demand as well.</li>
+</ol>
+
+<p>Let’s now look at ways to mitigate the inefficiencies of naive model parallelism.
+First up is the GPipe algorithm, which attains much higher GPU utilization compared to the naive model parallel algorithm.</p>
+
+<h2 id="the-gpipe-algorithm-splitting-minibatches-into-microbatches">The GPipe Algorithm: Splitting Minibatches into Microbatches</h2>
+
+<p><a href="https://arxiv.org/pdf/1811.06965.pdf">GPipe</a> increases efficiency by splitting each minibatch into even smaller, equal-sized microbatches.
+We can then compute the forward and backward pass independently for each microbatch.<label for="4" class="margin-toggle sidenote-number"></label><input type="checkbox" id="4" class="margin-toggle" /><span class="sidenote">As long as there is no batch norm. It’s possible to use batchnorm and GPipe by computing the normalizing statistics over the microbatch, which often works but isn’t equal to sequential training anymore.</span>
+If we sum up the gradients for each microbatch, we get back the gradient over the whole batch.<label for="5" class="margin-toggle sidenote-number"></label><input type="checkbox" id="5" class="margin-toggle" /><span class="sidenote">Because, just like for data parallel training, the gradient of a sum is the sum of the gradients of each term.</span>
+This process is called <em>gradient accumulation</em>.
+As each layer exists only on one GPU, the summing-up of microbatch-gradients can be performed locally, without any communication.<label for="6" class="margin-toggle sidenote-number"></label><input type="checkbox" id="6" class="margin-toggle" /><span class="sidenote">The local gradient accumulation is equal to sequential training mathematically speaking. Due to the non-associativity of floating-point math, the output will not be bit-equal though. However, this is seldom a problem in practice.</span></p>
+
+<p>Let’s consider a model partitioned across 4 GPUs.<label for="7" class="margin-toggle sidenote-number"></label><input type="checkbox" id="7" class="margin-toggle" /><span class="sidenote">The general problem of partitioning an arbitrary model among GPUs such that computation is balanced and communication is minimized is fairly difficult, and requires performance profiling. For Transformers is easy to solve since it consists of so-called ‘Transformer blocks’ that all have the same operations and dimensions.</span>
+For naive pipeline parallelism, the resulting schedule would look like this:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Timestep</th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GPU3</td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>FWD</td>
+      <td>BWD</td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>GPU2</td>
+      <td> </td>
+      <td> </td>
+      <td>FWD</td>
+      <td> </td>
+      <td> </td>
+      <td>BWD</td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>GPU1</td>
+      <td> </td>
+      <td>FWD</td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>BWD</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>GPU0</td>
+      <td>FWD</td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>BWD</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>As mentioned previously, at any given point in time, only one GPU is busy.
+Further, each of these timesteps would take fairly long, since the GPU has to run the forward-pass for the whole minibatch.</p>
+
+<p>With GPipe we now split our minibatch into microbatches, let’s say 4 of them.</p>
+
+<p><a name="gpipe_sched"></a></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Timestep</th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>10</th>
+      <th>11</th>
+      <th>12</th>
+      <th>13</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GPU3</td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>F1</td>
+      <td>F2</td>
+      <td>F3</td>
+      <td>F4</td>
+      <td>B4</td>
+      <td>B3</td>
+      <td>B2</td>
+      <td>B1</td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>GPU2</td>
+      <td> </td>
+      <td> </td>
+      <td>F1</td>
+      <td>F2</td>
+      <td>F3</td>
+      <td>F4</td>
+      <td> </td>
+      <td> </td>
+      <td>B4</td>
+      <td>B3</td>
+      <td>B2</td>
+      <td>B1</td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>GPU1</td>
+      <td> </td>
+      <td>F1</td>
+      <td>F2</td>
+      <td>F3</td>
+      <td>F4</td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>B4</td>
+      <td>B3</td>
+      <td>B2</td>
+      <td>B1</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>GPU0</td>
+      <td>F1</td>
+      <td>F2</td>
+      <td>F3</td>
+      <td>F4</td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>B4</td>
+      <td>B3</td>
+      <td>B2</td>
+      <td>B1</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Here <code class="language-plaintext highlighter-rouge">F1</code> means performing the forward pass of microbatch1 using the layer partition stored on the current GPU.
+Importantly, each timestep in the GPipe schedule will be shorter than each timestep in the naive model parallel schedule, since with GPipe a GPU only works on a quarter of the minibatch at a time.<label for="8" class="margin-toggle sidenote-number"></label><input type="checkbox" id="8" class="margin-toggle" /><span class="sidenote">However, splitting the minibatch into smaller microbatches will add overhead, partly because we need to launch more kernels in total. If the layers are small and the microbatches are small, there may not be enough opportunity for within-GPU parallelism to result in high CUDA core utilization.</span></p>
+
+<p>Overall, GPipe and its microbatches are a big improvement over naive pipeline parallelism since now more than one GPU is doing useful work at the same time.
+Let’s look at some of the remaining inefficiencies of GPipe and how to might address them: The interleaving of comms and compute, pipeline bubbles, and memory demand.</p>
+
+<h3 id="gpipe-interleaving-of-computation-and-communication">GPipe: Interleaving of Computation and Communication</h3>
+
+<p>Unfortunately, there is not a lot of opportunity to interleave comms and compute if the forward and backward passes take the same amount of time for each GPU.
+This can be seen in the above table since each GPU cannot start processing a given microbatch before the previous GPU has finished processing that same microbatch.
+If all stages take the same amount of time, then we’ll still get distinct times of communication and computation.</p>
+
+<p>The paper that originally introduced GPipe doesn’t cover this, but one option could be to split each minibatch in half.
+Then we could interleave communication of the first half with computation of the second half.
+Whether or not this makes sense in practice will depend on kernel and network timings.</p>
+
+<p>Here’s a sketch of an interleaved version of GPipe:</p>
+
+<p><img src="/assets/img/distributed-DNNs/interleaved-GPipe.png" alt="" /></p>
+
+<p>The arrows show the dependencies for the first half of the first microbatch.</p>
+
+<p>Let’s move on to the main inefficiency of GPipe, the size of the pipeline bubble.</p>
+
+<h3 id="gpipe-pipeline-bubbles">GPipe: Pipeline Bubbles</h3>
+<p>Bubbles are spots in the pipeline where no useful work is being done.
+They are caused by dependencies between the operations.
+For example, GPU4 cannot execute <code class="language-plaintext highlighter-rouge">F1</code> until GPU3 has executed <code class="language-plaintext highlighter-rouge">F1</code> and transmitted the result.</p>
+
+<p><img src="/assets/img/distributed-DNNs/Gpipe_bubbles.png" alt="GPipe bubbles" /></p>
+
+<p>The fraction of time wasted on the bubble depends on the pipeline-depth <code class="language-plaintext highlighter-rouge">n</code> and the number of microbatches <code class="language-plaintext highlighter-rouge">m</code>:<label for="9" class="margin-toggle sidenote-number"></label><input type="checkbox" id="9" class="margin-toggle" /><span class="sidenote">To explain the terms in the formula: The \(2mn\) term is the overall amount of useful work, and stems from each of the \(n\) nodes performing \(m\) forward and \(m\) backward passes. \(2n(m + n - 1)\) is the overall time for a single batch. During each the forward and backward pass, each node performs \(m\) items of work and waits \(n-1\) timesteps for new work to arrive.</span></p>
+
+\[1 - \frac{2nm}{2n(m+n-1)} = 1 - \frac{m}{m + n - 1}\]
+
+<p>So increasing the size of the minibatches, which increases the number of microbatches <code class="language-plaintext highlighter-rouge">m</code>, is necessary for making the bubble fraction small.<label for="10" class="margin-toggle sidenote-number"></label><input type="checkbox" id="10" class="margin-toggle" /><span class="sidenote">Some example calculations for a batch consisting of a single microbatch vs 4 microbatches:<img src="/assets/img/distributed-DNNs/Gpipe_bubble_fractions.png" alt="" /></span>
+Large minibatch sizes require careful learning rate scaling<label for="11" class="margin-toggle sidenote-number"></label><input type="checkbox" id="11" class="margin-toggle" /><span class="sidenote">See learning rate schedulers like <a href="https://arxiv.org/abs/1708.03888v3">LARS</a> and <a href="https://arxiv.org/abs/1904.00962v5">LAMB</a>.</span> and will increase the memory demand for caching the activations, which we’ll get to next.</p>
+
+<h3 id="gpipe-memory-demand">GPipe: Memory demand</h3>
+
+<p>Increasing the batch size increases the memory demand for cached activations linearly.<label for="12" class="margin-toggle sidenote-number"></label><input type="checkbox" id="12" class="margin-toggle" /><span class="sidenote">For a more detailed analysis of memory demand of NN training, see the appendix of my <a href="/_posts/22/data-parallel-training">post on data parallelism</a>.</span>
+In GPipe, we need to cache the activations for each microbatch from the time it was <code class="language-plaintext highlighter-rouge">forward</code>‘ed until the corresponding <code class="language-plaintext highlighter-rouge">backward</code>.
+To take GPU0 as an example, looking at the <a href="#gpipe_sched">table above</a>, the activations for microbatch1 are held in memory from timestep 0 until timestep 13.</p>
+
+<p>In the GPipe paper, the authors utilize gradient checkpointing<label for="13" class="margin-toggle sidenote-number"></label><input type="checkbox" id="13" class="margin-toggle" /><span class="sidenote">See also the <a href="https://arxiv.org/abs/1604.06174v2">original paper</a> on gradient checkpointing, as well as <a href="https://github.com/cybertronai/gradient-checkpointing">this excellent blogpost</a>.</span> to bring down the memory demand.
+In gradient checkpointing, instead of caching all activations necessary to compute our gradients, we recompute the activations on the fly during the backward pass.
+This lowers the memory demand but increases our computational costs.</p>
+
+<p>Let’s assume all layers have roughly the same size. 
+The memory demand for caching the activations amounts to</p>
+
+\[O(\text{batchsize} \cdot \frac{\text{\#total layers}}{\text{\#GPUs}})\]
+
+<p>for each GPU.<label for="14" class="margin-toggle sidenote-number"></label><input type="checkbox" id="14" class="margin-toggle" /><span class="sidenote">To explain the formula: For each layer, we need to cache its inputs. Assuming the layer-width is a constant, a single cached input is of size \(O(\text{batchsize})\).</span>
+Instead, we could perform gradient checkpointing and only cache the inputs on the layer boundaries (i.e. cache the tensor that has been sent to us from the previous GPU).
+This lowers the peak memory demand on each GPU to</p>
+
+\[O(\text{batchsize} + \frac{\text{\#total layers}}{\text{\#GPUs}}\frac{\text{batchsize}}{\text{\#microbatches}})\]
+
+<p>Why?
+\(O(\text{batchsize})\) is the space necessary for caching the boundary activation.
+When performing the backward pass for a given microbatch, we need to re-materialize the activations that are necessary for computing the gradients for that microbatch.
+This requires \(O(\frac{\text{batchsize}}{\text{\#microbatches}})\) space for each of the \(O(\frac{\text{\#total layers}}{\text{\#GPUs}})\) layers on each GPU.
+The following plot visualizes the memory demand of GPipe with gradient checkpointing.
+It shows two GPUs during the backward pass.
+GPU3 has recomputed the activations for microbatch 3, while GPU4 has recomputed activations for microbatch 2.
+At the GPU boundary, the activations for the whole batch stay cached from the forward until the backward pass.</p>
+
+<p><img src="/assets/img/distributed-DNNs/GPipe-gradient-checkpointing.png" alt="GPipe gradient checkpointing" /></p>
+
+<p>Next, I’ll cover PipeDream, a different algorithm for pipeline parallel training.
+PipeDream offers us another option for decreasing the memory demand of microbatch training, which is orthogonal to gradient checkpointing.</p>
+
+<h2 id="the-pipedream-algorithm-interleaving-forwards--and-backwards-passes-for-different-microbatches">The PipeDream Algorithm: Interleaving Forwards- and Backwards-Passes for Different microbatches</h2>
+
+<p><a href="https://arxiv.org/abs/1806.03377">PipeDream</a> starts the backward pass for a microbatch as soon as the final pipeline stage has completed the corresponding forward pass.
+We can discard the cached activation for the m’th microbatch as soon as we perform the corresponding backward pass.
+With PipeDream, this backward pass happens earlier than in GPipe, which lessens the memory demand.</p>
+
+<p>Below is a plot of the PipeDream schedule, with 4 GPUs and 8 microbatches.<label for="15" class="margin-toggle sidenote-number"></label><input type="checkbox" id="15" class="margin-toggle" /><span class="sidenote">Figure taken from the <a href="https://arxiv.org/abs/2104.04473">Megatron LM paper</a>. Strictly speaking, this schedule is called PipeDream Flush 1F1B, which I’ll explain later.</span>
+Blue boxes are forward passes, numbered with their microbatch id, while the backward passes are in green.</p>
+
+<p><img src="/assets/img/distributed-DNNs/PipeDream_schedule.png" alt="PipeDream schedule" /></p>
+
+<p>Let’s think about memory demand for a second.
+For both GPipe and PipeDream, the memory demand for caching activations can be formalized as (w/o gradient checkpointing)</p>
+
+\[O(\text{\#max microbatches in flight}\cdot \text{microbatch-size} \cdot \frac{\text{\#total layers}}{\text{\#GPUs}})\]
+
+<p>With the above PipeDream schedule, we have at most as many microbatches in flight<label for="16" class="margin-toggle sidenote-number"></label><input type="checkbox" id="16" class="margin-toggle" /><span class="sidenote">A microbatch is <em>in-flight</em> if we performed &gt;1 forward pass for it, but haven’t completed all the backward passes yet.</span> as the pipeline is deep.<label for="17" class="margin-toggle sidenote-number"></label><input type="checkbox" id="17" class="margin-toggle" /><span class="sidenote">The <em>pipeline depth</em> is the total number of GPUs that process a microbatch until all gradients for that microbatch have been computed.</span> <label for="18" class="margin-toggle sidenote-number"></label><input type="checkbox" id="18" class="margin-toggle" /><span class="sidenote">This becomes obvious when looking at GPU1 in the above plot. During the steady state, GPU1 <code class="language-plaintext highlighter-rouge">forward</code>’s a new microbatch only after completing a <code class="language-plaintext highlighter-rouge">backward</code> pass. The steady state is the time of peak memory usage, and happens after the so-called warmup phase: <img src="/assets/img/distributed-DNNs/Pipedream_steady_state.png" alt="Pipedream steady state" /></span>
+Contrast this with GPipe, where all microbatches are in flight at some point during the schedule, resulting in a higher memory demand for caching activations.
+Using the above example, with PipeDream we’d have a maximum of 4 microbatches in flight, while with GPipe it’d be 8 microbatches,<label for="19" class="margin-toggle sidenote-number"></label><input type="checkbox" id="19" class="margin-toggle" /><span class="sidenote">As we have 8 microbatches per batch in this example, GPipe will first compute the FWD pass for all microbatches before starting the first BWD pass. Look at the above <a href="#gpipe_sched">GPipe table</a> for reference, but keep in mind that the table assumes 4 microbatches per batch.</span> doubling the memory demand for cached activations.</p>
+
+<p>In terms of bubble fraction, there is no difference between PipeDream and GPipe.
+The bubble is a result of the inherent dependencies between the operations before on the microbatches, which PipeDream doesn’t change.<label for="20" class="margin-toggle sidenote-number"></label><input type="checkbox" id="20" class="margin-toggle" /><span class="sidenote">Visually, looking at the above PipeDream plot if you shift the blue forward passes left and the green backward passes right, you get GPipe. This explains why the bubble fraction is the same.</span></p>
+
+<p>There are a lot of variations of the PipeDream schedule, and I cannot say that I’ve grokked all of them.
+The above schedule is called <code class="language-plaintext highlighter-rouge">1F1B</code> because during the steady state each node is alternating between performing a forward and a backward pass.
+Notice how the above schedule is still sequentially consistent.</p>
+
+<p>In the <a href="https://arxiv.org/abs/1806.03377">original PipeDream paper</a> as well as in the <a href="https://arxiv.org/abs/2104.04473">Megatron LM paper</a> there are many more variations.
+By avoiding the pipeline flush<label for="21" class="margin-toggle sidenote-number"></label><input type="checkbox" id="21" class="margin-toggle" /><span class="sidenote">Flushing a pipeline means not scheduling any new operations until all currently scheduled operations are done processing. Once the pipeline is flushed, we know that our gradients (accumulated over the microbatches) are sequentially consistent. Then we perform the optimizer step.</span> at the end of processing each batch, one can increase efficiency by decreasing the bubble fraction.
+However, this means the algorithm isn’t sequentially consistent anymore, which may hurt convergence speed.
+A slower convergence will force you to train for longer, so non-sequentially consistent PipeDream schedules may not actually be useful for lessening training time and cost.
+I’m not sure how widely used the non-sequentially consistent versions of PipeDream are as a result.</p>
+
+<p>Let’s briefly look at the volume of networked communication that’s necessary for implementing pipeline parallelism.
+This analysis is the same for GPipe and PipeDream.</p>
+
+<h3 id="pipeline-parallelism-communication-volume">Pipeline parallelism: Communication Volume</h3>
+
+<p>For simplicity, let’s assume a model with only dense layers, which all have equal dimension N.
+During the forward pass, each GPU will send and receive data of size \(\text{batchsize} \cdot N\).
+The same holds for the backwards pass, bringing our total communication volume to \((\text{\#GPUs} - 1) \cdot 2\cdot\text{batchsize} \cdot N\) floats.<label for="22" class="margin-toggle sidenote-number"></label><input type="checkbox" id="22" class="margin-toggle" /><span class="sidenote">The -1 terms comes from the initial GPU not having to receive and the last GPU not having to send anything.</span></p>
+
+<p>Compare this to data parallelism, where each GPU has to AllReduce the gradients for all its layers.
+In our dense model example, using Ring AllReduce, each GPU needs to transfer roughly \(2 \cdot \frac{\text{\#layers} \cdot N^2}{\text{\#GPUs}}\) floats.
+Depending on the configuration of your model and training setup, data parallelism may be more communication intensive.
+However, as we saw we can interleave the data parallel communication quite well, which isn’t possible with pipeline parallelism.</p>
+
+<p>So far, we have looked at three ways of implementing pipeline parallelism: naive model parallelism, GPipe, and PipeDream.
+Next, I’ll show how pipeline parallelism can be combined with data parallelism, allowing one to use even bigger batchsizes without running out of memory.</p>
+
+<h2 id="combining-data-and-pipeline-parallelism">Combining Data and Pipeline Parallelism</h2>
+
+<p>Data and pipeline parallelism are orthogonal and can both be used at the same time, as long as the batchsize is big enough to result in a sensible microbatchsize.</p>
+<ul>
+  <li>For pipeline parallelism, each GPU needs to communicate with the next pipeline stage (during FWD) as well as with the previous pipeline stage (during BWD).</li>
+  <li>For data parallelism, each GPU needs to communicate with all other GPUs that are assigned the same model layers. We need to AllReduce the gradients among all layer replicas after the pipeline has been flushed.<label for="23" class="margin-toggle sidenote-number"></label><input type="checkbox" id="23" class="margin-toggle" /><span class="sidenote">We can interleave the AllReduce with the backward pass of the final microbatch to reduce training time, just as in regular data parallel training.</span></li>
+</ul>
+
+<p>In practice, the orthogonal communication partners for pipeline and data parallelism are implemented using <a href="https://mpitutorial.com/tutorials/introduction-to-groups-and-communicators/">MPI Communicators</a>.
+These form subgroups of all GPUs and allow performing collective communication only within the subgroup.
+Any given GPU-X will be part of two communicators, one containing all GPUs that hold the same layer slice as GPU-X (data parallelism), and one containing the GPUs that hold the other layer slices of GPU-X’s model replica (pipeline parallelism).
+See the below plot for an illustration:</p>
+
+<p><img src="/assets/img/distributed-DNNs/DP_and_PP.png" alt="Data parallelism and Pipeline parallelism" /></p>
+
+<p>Combining different degrees of data and pipeline parallelism for a given pool of GPUs requires a modular software architecture, which I’ll cover next.</p>
+
+<h2 id="pipeline-parallelism-implementation-of-gpipe">Pipeline Parallelism: Implementation of GPipe</h2>
+<p>The below code snippets are taken from my implementation of data and pipeline parallelism in my <a href="https://github.com/siboehm/shallowspeed">ShallowSpeed</a> library.</p>
+
+<p>Contrary to data parallelism, pipeline parallelism requires no collective communication and therefore no explicit synchronization between workers.
+Microsoft’s <a href="https://github.com/microsoft/DeepSpeed">DeepSpeed</a> library uses a software design where each GPU contains a single worker, that processes instructions as given by the schedule.
+The DeepSpeed worker model is attractive since the schedules are static.
+This means each worker’s schedule is computed when the worker is started, and then executed repeatedly for each minibatch, requiring no communication about scheduling among the workers during training.
+PyTorch’s <a href="https://pytorch.org/docs/stable/pipeline.html">Pipeline</a> design is quite different, using queues for communicating among the workers, where workers forward tasks to each other.</p>
+
+<p>For the GPipe implementation in my <a href="https://github.com/siboehm/shallowspeed">ShallowSpeed</a> library, I followed the worker model.</p>
+
+<p>Before starting the processing of a minibatch, we first zero out the current gradients.
+Once the minibatch is done processing, we update the weights through an optimizer step.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">minibatch_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">yield</span> <span class="p">[</span><span class="n">ZeroGrad</span><span class="p">()]</span>
+
+    <span class="c1"># STAGE 1: First, we FWD all microbatches
+</span>    <span class="k">for</span> <span class="n">microbatch_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">num_micro_batches</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="bp">self</span><span class="p">.</span><span class="n">steps_FWD_microbatch</span><span class="p">(</span><span class="n">microbatch_id</span><span class="p">)</span>
+
+    <span class="c1"># at this position, all microbatches are in flight and
+</span>    <span class="c1"># memory demand is highest
+</span>
+    <span class="c1"># STAGE 2: Then, we BWD all microbatches
+</span>    <span class="k">for</span> <span class="n">microbatch_id</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">num_micro_batches</span><span class="p">)):</span>
+        <span class="k">yield</span> <span class="k">from</span> <span class="bp">self</span><span class="p">.</span><span class="n">steps_BWD_microbatch</span><span class="p">(</span><span class="n">microbatch_id</span><span class="p">)</span>
+
+    <span class="c1"># updating the weights is the last step of processing any batch
+</span>    <span class="k">yield</span> <span class="p">[</span><span class="n">OptimizerStep</span><span class="p">()]</span>
+</code></pre></div></div>
+
+<p>The steps of the schedule are implemented as a <a href="https://wiki.python.org/moin/Generators">Python generator</a>.
+Let’s look at the steps necessary for <code class="language-plaintext highlighter-rouge">forward</code>-ing a microbatch:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">steps_FWD_microbatch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">microbatch_id</span><span class="p">):</span>
+    <span class="n">cmds</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">is_first_stage</span><span class="p">:</span>
+        <span class="c1"># first pipeline stage loads data from disk
+</span>        <span class="n">cmds</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">LoadMicroBatchInput</span><span class="p">(</span><span class="n">microbatch_id</span><span class="o">=</span><span class="n">microbatch_id</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># all other stages receive activations from prev pipeline stage
+</span>        <span class="n">cmds</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">RecvActivations</span><span class="p">())</span>
+
+    <span class="n">cmds</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">Forward</span><span class="p">(</span><span class="n">microbatch_id</span><span class="o">=</span><span class="n">microbatch_id</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="p">.</span><span class="n">is_last_stage</span><span class="p">:</span>
+        <span class="c1"># all but the last pipeline stage send their output to next stage
+</span>        <span class="n">cmds</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">SendActivations</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">cmds</span>
+</code></pre></div></div>
+
+<p>We pass the microbatch id to all operations that need to store into the activation cache.
+This is because, for some microbatch-X, we need to be able to retrieve the activations cached during microbatch-X FWD during the microbatch-X BWD pass.</p>
+
+<p>Finally, let’s look at the steps of the backward pass for a single microbatch:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">steps_BWD_microbatch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">microbatch_id</span><span class="p">):</span>
+    <span class="n">cmds</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">is_last_stage</span><span class="p">:</span>
+        <span class="c1"># last pipeline stage loads data from disk
+</span>        <span class="n">cmds</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">LoadMicroBatchTarget</span><span class="p">(</span><span class="n">microbatch_id</span><span class="o">=</span><span class="n">microbatch_id</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># all other stages wait to receive grad from prev stage
+</span>        <span class="n">cmds</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">RecvOutputGrad</span><span class="p">())</span>
+
+    <span class="c1"># the first microBatch is the lasted one that goes through backward pass
+</span>    <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">is_first_microbatch</span><span class="p">(</span><span class="n">microbatch_id</span><span class="p">):</span>
+        <span class="c1"># interleaved backprop and AllReduce during last microBatch of BWD
+</span>        <span class="n">cmds</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">BackwardGradAllReduce</span><span class="p">(</span><span class="n">microbatch_id</span><span class="o">=</span><span class="n">microbatch_id</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cmds</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">BackwardGradAcc</span><span class="p">(</span><span class="n">microbatch_id</span><span class="o">=</span><span class="n">microbatch_id</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="p">.</span><span class="n">is_first_stage</span><span class="p">:</span>
+        <span class="c1"># all but last pipeline stage send their input grad to prev stage
+</span>        <span class="n">cmds</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">SendInputGrad</span><span class="p">())</span>
+    <span class="k">yield</span> <span class="n">cmds</span>
+</code></pre></div></div>
+
+<h2 id="conclusion-and-summary">Conclusion and Summary</h2>
+
+<p>That concludes the introduction to pipeline parallelism.
+Pipeline parallelism is a way of training large models that do not fit into a single GPU’s memory, by partitioning the model’s layers across GPUs.
+We perform GPU-to-GPU communication between the model partitions during the forward pass (to send activations) and the backward pass (to send gradients).
+We saw how naive model parallelism suffers from poor GPU utilization.
+This is alleviated by GPipe, which splits minibatches into smaller microbatches, keeping multiple GPUs busy at any given time.
+We saw how PipeDream, another algorithm for pipeline parallelism, achieves a smaller memory footprint than GPipe by starting backward passes earlier.
+Pipeline parallelism can be combined with data parallelism to further decrease the memory demand for each worker.</p>
+
+<p>To get a better understanding of pipeline parallelism, check out the <a href="https://arxiv.org/pdf/1811.06965.pdf">GPipe</a> and <a href="https://cs.stanford.edu/~matei/papers/2019/sosp_pipedream.pdf">PipeDream</a> papers.
+The PipeDream paper also explains their profiling strategy for fairly partitioning arbitrary models among GPUs.
+This <a href="https://arxiv.org/abs/2104.04473">Megatron-LM</a> is another great read. It talks about combining data parallelism, PipeDream, and tensor parallelism efficiently while also preserving sequential consistency.</p>
+
+<p>I implemented GPipe-parallel training on CPU from scratch for <a href="https://github.com/siboehm/shallowspeed">ShallowSpeed</a>.
+I tried to make the code as readable as possible, feel free to play around with it.</p>
+
+<h2 id="further-links">Further links</h2>
+<ul>
+  <li>Lilian Weng’s <a href="https://lilianweng.github.io/posts/2021-09-25-train-large/">post about training models on many GPUs</a>.</li>
+  <li>Huggingface’s <a href="https://huggingface.co/blog/bloom-megatron-deepspeed">post about the tech behind BLOOM training</a>.</li>
+</ul>
+
+<h2 id="appendix">Appendix</h2>
+
+<h3 id="general-hardware-setting">General Hardware Setting</h3>
+
+<p>It’s important to keep in mind the hardware systems that these models are trained on.
+Normal GPU clusters used for training consist of multiple compute nodes that are connected using either <a href="https://en.wikipedia.org/wiki/100_Gigabit_Ethernet">fast ethernet</a> or a specialized communication backend like <a href="https://en.wikipedia.org/wiki/InfiniBand">InfiniBand</a>. 
+Each compute node will contain multiple GPUs.
+The GPUs communicate with the CPU and CPU RAM via <a href="https://en.wikipedia.org/wiki/PCI_Express">PCIe</a>.
+The GPUs within a single compute node are commonly connected via a fast interconnect like Nvidia’s <a href="https://en.wikipedia.org/wiki/NVLink">NVLink</a>.</p>
+
+<p><img src="/assets/img/distributed-DNNs/distributed-computing-hardware.png" alt="distributed training hardware configuration" /></p>
+
+<p>This hierarchy is important to keep in mind when evaluating different training distribution schemes since GPUs within the same compute node can communicate much faster than GPUs located on different nodes.<label for="24" class="margin-toggle sidenote-number"></label><input type="checkbox" id="24" class="margin-toggle" /><span class="sidenote">As a concrete example, BLOOM was trained on 48 compute nodes, with 8 GPUs each (<a href="https://huggingface.co/blog/bloom-megatron-deepspeed#overview">source</a>).</span>
+Rough estimates for the bandwidth at each level (these are all a bit optimistic, real bandwidth will be lower rather than higher):<label for="25" class="margin-toggle sidenote-number"></label><input type="checkbox" id="25" class="margin-toggle" /><span class="sidenote">These are just rough numbers, rounded so that they’re easier to memorize. What matters is the order-of-magnitude, as the actual value will depend strongly on the cluster setup. For reference, look at the Wikipedia for <a href="https://en.wikipedia.org/wiki/NVLink">NVLink</a> and <a href="https://en.wikipedia.org/wiki/InfiniBand">InfiniBand</a>.</span></p>
+<ul>
+  <li>NVLink (GPU to GPU): ~450GB/s up and down, making for a total 900GB/s of bandwidth.</li>
+  <li>PCIe (GPU Mem to CPU RAM): ~25GB/s up and down (for a 16x PCIe 4.0 connection).</li>
+  <li>Ethernet (Node to Node, within same datacenter): ~10GB/s. The alternative is InfiniBand, which is faster at ~50GB/s.
+For NVLink and PCIe, the bandwidth scales linearly with the number of lanes connected.</li>
+</ul>
+
+<h3 id="distributed-training-glossary">Distributed Training Glossary</h3>
+<ul>
+  <li><em>Strong scaling</em><label for="26" class="margin-toggle sidenote-number"></label><input type="checkbox" id="26" class="margin-toggle" /><span class="sidenote">Visual comparison of strong vs weak scaling:<img src="/assets/img/distributed-DNNs/strong-vs-weak-scaling.png" alt="Strong vs weak scaling" /></span> answers the question of how fast the training time decreases if we add more GPUs, while keeping the model size constant. Example: If you’re wondering how fast you could train your ResNet50 if you had 10 GPUs instead of 1, then you care about strong scaling.</li>
+  <li><em>Weak scaling</em> answers the question of how long training takes if we add more GPUs while keeping the model size per GPU constant. Example: You suspect your model is performing poorly because it is too small, but your GPU’s memory is completely full. Weak scaling characteristics will tell you how much longer it will take to train a model of twice the size on 2 GPUs.</li>
+  <li>I’ll call a distributed algorithm <em>sequentially consistent</em> if the resulting gradients are the same as if we had calculated them using sequential training on a single machine.<label for="27" class="margin-toggle sidenote-number"></label><input type="checkbox" id="27" class="margin-toggle" /><span class="sidenote">As I mentioned in my post on data parallelism, sequential consistency doesn’t mean the results will be equal in practice, due to non-associativity of floating point math.</span></li>
+  <li><em>Statistical efficiency</em> determines how much some distributed training algorithm impacts the final accuracy of your model. If the algorithm is <em>sequentially consistent</em>, it will have perfect statistical efficiency.</li>
+  <li><em>Algorithmic efficiency</em> determines how much computation / memory / time some distributed algorithm will consume.<label for="28" class="margin-toggle sidenote-number"></label><input type="checkbox" id="28" class="margin-toggle" /><span class="sidenote">These are super vague definitions, but I still think they’re useful for classifying the different pipeline parallel algorithms.</span></li>
+</ul>
+
+
+
+
+    </article>
+    <span class="print-footer">Pipeline-Parallelism: Distributed Training via Model Partitioning - October 3, 2022 - Simon Boehm</span>
+    <footer>
+<hr class="slender">
+
+<div class="ml-embedded" data-form="GPOGwY"></div>
+
+<div class="credits">
+    <a class="icon-github-squared" href="https://github.com/siboehm" style="color:black; font-size:x-large"></a>
+    <span>&nbsp;</span>
+    <a class="icon-twitter-squared" href="https://twitter.com/si_boehm" style="color:black; font-size:x-large"></a>
+    <span>&nbsp;&nbsp;</span>
+    <a href="/imprint.html" style="color:black; text-decoration: underline">Imprint</a>
+</div>
+</footer>
+
+  </body>
+</html>

@@ -996,7 +996,7 @@ resources:
   - id: ezyang-blog
     title: "Edward Yang's blog"
     urls:
-      - https://blog.ezyang.com/category/pytorch/
+      - https://blog.ezyang.com/categories/pytorch/
     type: blog
     topics: [meta]
     priority: medium

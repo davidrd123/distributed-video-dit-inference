@@ -12,6 +12,12 @@ KV caches store the key/value projections from previous tokens to avoid recomput
 | vllm-anatomy | Inside vLLM: Anatomy of a High-Throughput LLM Inference System | medium | pending |
 | vllm-distributed | vLLM Distributed Inference Blog Post | medium | pending |
 
+## Implementation context
+
+The Scope KV-cache is a **fixed-size ring buffer** (~32K tokens, head-sharded in TP mode) with eviction and recompute. The cache lifecycle (hard cut, recompute, soft transition via `kv_cache_attention_bias`) is a major coupling point: recompute depends on `decoded_frame_buffer`, which is why v0 workers run the full pipeline. The `cache_epoch` counter in `PPEnvelopeV1` tracks hard-cut generations. The `SCOPE_KV_CACHE_RECOMPUTE_EVERY=2` experiment (Run 11) was a dead end — quality degradation with no net FPS gain.
+
+See: `refs/implementation-context.md` → Phase 2-3, `scope-drd/notes/FA4/h200/tp/explainers/05-kv-cache-head-sharding.md`.
+
 ## Synthesis
 
 <!-- To be filled during study -->

@@ -12,6 +12,12 @@ The VAE decoder is often the **latency bottleneck** in video generation pipeline
 | seedance | Seedance 1.0 | medium | pending |
 | improved-video-vae | Improved Video VAE for Latent Video Diffusion Model | low | link_only |
 
+## Implementation context
+
+Block profiling shows VAE decode is already a material slice of wall time in TP v0: **107ms/chunk (16.5%)** at 320×576 (Run 10b), and decode+recompute totals **33%** of measured GPU time. This motivates two parallel threads: v1.1 “generator-only workers” (avoid duplicated decode on worker ranks), and (if TTFF/latency is a priority) StreamDiffusionV2’s “Stream-VAE” idea (chunked 3D conv with cached features; reported ~30% of pipeline time). The parked async-decode-overlap plan estimates only a ~2–8% ceiling (~0.5 FPS) unless recompute is rare.
+
+See: `refs/implementation-context.md` → Phase 2, `scope-drd/notes/FA4/h200/tp/bringup-run-log.md` (Run 10b), `scope-drd/notes/FA4/h200/tp/v1.1-generator-only-workers.md` (v1.1 rationale), `scope-drd/notes/FA4/h200/tp/streamdiffusion-v2-analysis-opus.md` (Stream-VAE), `scope-drd/notes/FA4/h200/tp/async-decode-overlap-scoping.md` (gain ceiling).
+
 ## Synthesis
 
 <!-- To be filled during study -->

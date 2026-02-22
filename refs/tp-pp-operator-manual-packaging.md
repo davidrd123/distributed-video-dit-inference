@@ -31,6 +31,10 @@ The library already helps as “physics + failure-mode backing” (NCCL/CUDA/Dyn
 4) **KV-cache lifecycle (TP + PP coupling)**  
    Cache reset/recompute/advance is a lockstep state machine. It’s also the reason v0 workers run the full pipeline and the main semantic coupling that can collapse overlap.
 
+## Operator test matrix (definition of done)
+
+- `refs/operator-test-matrix.md` — the shared “break-it tests” suite: anti-stranding, plan/call-count mismatches, wrong-group collectives, epoch fencing, watchdog exit, and compile regression gates.
+
 ## Operator-manual topic standard (opinionated + test-driven)
 
 For the operator-surface topics below, standardize the `## Synthesis` section to include the same substructure (even if headings are short):

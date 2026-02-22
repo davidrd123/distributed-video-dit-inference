@@ -10,6 +10,12 @@ Last updated: 2026-02-22
 
 ---
 
+## 0a) Socratic study agenda (when you're *learning*, not looking things up)
+
+The library now has 21 drafted topic syntheses and 16 condensed resource cards — but reading them cold is the wrong move. Start with the **[Study Agenda](study-agenda.md)**: 6 guided sessions that build the mental models in dependency order (deadlocks → funcol/compile → envelope contracts → KV cache → backpressure/shutdown → drift detection). Each session is a Socratic walkthrough, not a reading assignment.
+
+---
+
 ## 0) Crosswalks (when you're editing code, not “studying”)
 
 - Working on the v1.1 “generator-only workers” scaffold? Start with `refs/v1.1-generator-only-workers-crosswalk.md` — section-by-section pointers into the topics/resources that matter *before* you change code.

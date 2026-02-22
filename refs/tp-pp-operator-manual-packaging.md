@@ -146,3 +146,15 @@ Update this table as units complete (keep it short; links only):
 |---|---|---|---|---|
 | 2026-02-22 | — | Initial plan doc created | codex | Snapshot + assignments |
 | 2026-02-22 | C1 | Crosswalk first pass | codex | `refs/v1.1-generator-only-workers-crosswalk.md` |
+
+## Deep research queue (5 Pro via repo prompt)
+
+These are intended to be runnable **in parallel** on another machine.
+
+| Date | Ask file | What it covers | Status |
+|---|---|---|---|
+| 2026-02-22 | `deep-research/2026-02-22/ask-5pro-tp-v11-envelope-contract.md` | TP v1.1 envelope contract audit | ready |
+| 2026-02-22 | `deep-research/2026-02-22/ask-5pro-pp-rank0-out-of-mesh.md` | PP bringup contracts + deadlocks + overlap proof | ready |
+| 2026-02-22 | `deep-research/2026-02-22/ask-5pro-kv-cache-lifecycle-and-decoupling.md` | KV-cache lifecycle + recompute decoupling | ready |
+| 2026-02-22 | `deep-research/2026-02-22/ask-5pro-compile-distributed-hardening.md` | torch.compile + distributed ship checklist + regression suite | ready |
+| 2026-02-22 | `deep-research/2026-02-22/ask-5pro-external-patterns-and-resources.md` | external patterns/resources to import | ready |

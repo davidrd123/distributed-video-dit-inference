@@ -591,10 +591,11 @@ resources:
     type: docs
     topics: [14]
     priority: high
-    status: converted
+    status: condensed
     local_paths:
       - sources/pytorch-pipelining-api/raw/page.html
       - sources/pytorch-pipelining-api/full.md
+      - refs/resources/pytorch-pipelining-api.md
     notes: "ScheduleGPipe, Schedule1F1B, ScheduleInterleaved1F1B, ScheduleInterleavedZeroBubble, ScheduleZBVZeroBubble"
 
   # ============================================================
@@ -867,11 +868,12 @@ resources:
     type: paper
     topics: [22]
     priority: high
-    status: converted
+    status: condensed
     local_paths:
       - sources/pagedattention/raw/paper.pdf
       - sources/pagedattention/raw/abstract.html
       - sources/pagedattention/full.md
+      - refs/resources/pagedattention.md
     notes: "Kwon et al., SOSP 2023. OS virtual memory analogy, block tables, non-contiguous allocation, copy-on-write sharing"
 
   - id: continuous-batching
@@ -914,11 +916,12 @@ resources:
     type: paper
     topics: [22, 24]
     priority: high
-    status: converted
+    status: condensed
     local_paths:
       - sources/causvid/raw/paper.pdf
       - sources/causvid/raw/abstract.html
       - sources/causvid/full.md
+      - refs/resources/causvid.md
     notes: "CausVid. Causal DiT framing — converts bidirectional video diffusion to autoregressive with KV caching. Blueprint for AR Wan 2.1. Referenced in StreamDiffusionV2 source (causvid/ directory). 14.6MB PDF."
 
   # ============================================================
@@ -993,7 +996,7 @@ resources:
     type: paper
     topics: [24]
     priority: high
-    status: converted
+    status: condensed
     local_paths:
       - sources/streamdiffusionv2/raw/page.html
       - sources/streamdiffusionv2/raw/repo/
@@ -1001,6 +1004,7 @@ resources:
       - sources/streamdiffusionv2/raw/arxiv-eprint.tar.gz
       - sources/streamdiffusionv2/full.md
       - sources/streamdiffusionv2/full-paper.md
+      - refs/resources/streamdiffusionv2.md
     notes: "Feng et al., 2025. SLO-aware batching, block scheduler, sink-token rolling KV cache, motion-aware noise. 58.28 FPS with 14B model on 4xH100. Most directly relevant system. full.md is repo structured dump (9597 lines); full-paper.md is the paper conversion."
 
   - id: diffusion-video-survey
@@ -1021,11 +1025,12 @@ resources:
     type: paper
     topics: [24]
     priority: high
-    status: converted
+    status: condensed
     local_paths:
       - sources/pipedit/raw/paper.pdf
       - sources/pipedit/raw/abstract.html
       - sources/pipedit/full.md
+      - refs/resources/pipedit.md
     notes: "PipeSP (pipelined sequence parallelism), DeDiVAE (decoupled diffusion/VAE), attention co-processing. Directly addresses pipeline-parallel DiT inference"
 
   - id: dit-paper

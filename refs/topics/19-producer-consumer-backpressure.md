@@ -103,6 +103,7 @@ Increasing in-flight depth can improve throughput by reducing bubbles, but it al
 - Hard cuts without epoch-tagging and queue flush semantics are correctness bugs: stale results can arrive late and be decoded after a reset.
 - Depth > 2 can hide scheduling problems: throughput may look better while latency and memory balloon.
 - Recompute coupling (R0a) can reintroduce serialization if building envelope `k+1` depends on decoding `k`; overlap must be re-validated when recompute is enabled.
+- **Classic “we thought we overlapped but didn’t” signature**: `t_mesh_idle_ms` tracks rank0 decode time and both queues stay near 0. This usually means rank0 is sending `env[k+1]` *after* decoding `res[k]`, serializing the mesh. Fix: send `env[k+1]` before decoding `res[k]` (Stage 0 must behave like a producer even while it is consuming Stage 1 results). See: `deep-research/2026-02-22/pp-rank0-out-of-mesh/reply.md` (“Scheduling bug signature”).
 
 ### Experiments to run
 

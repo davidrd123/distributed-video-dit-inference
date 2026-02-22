@@ -59,6 +59,9 @@ TP example: `scope-drd/notes/FA4/h200/tp/explainers/03-broadcast-envelope.md` de
   - `NOOP` means “no payload; loop back immediately.”
   - `SHUTDOWN` means “no payload; exit cleanly.”
   This is how you avoid allocating/receiving tensors when nothing should be sent.
+  - **Policy**: validate/serialize/spec everything *before* emitting the “payload follows” commitment. This applies equally to:
+    - rank0 sending a p2p PP envelope header to the leader, and
+    - the leader starting any `mesh_pg` broadcast loop (leader is a “sender” to the mesh). See: `deep-research/2026-02-22/pp-rank0-out-of-mesh/reply.md` (“Anti-stranding protocol ordering”).
 
 - **Monotonic identifiers**:
   - **`call_id`**: globally monotonic across *all actions* (TP and PP are converging on this). Used for ordering checks and to prevent “stale work” from being mistaken as current work.
@@ -180,6 +183,13 @@ TP example: `scope-drd/notes/FA4/h200/tp/explainers/03-broadcast-envelope.md` de
 - **Version drift / plan mismatch**:
   - If one side expects a different schema/plan (e.g., generator-only vs full pipeline), you can hit collectives in different orders and hang.
   - Fix: version fields + plan id in every message and env parity checks at init; reject mismatches before any collectives.
+
+- **Leader “throws and disappears” can strand the mesh** (PP multi-rank):
+  - If the leader enters a `mesh_pg` broadcast and then throws (or exits) before completing the broadcast, non-leader mesh ranks can block indefinitely waiting for the rest of the payload.
+  - Policy: leader must fully receive + validate the envelope *before* starting any `mesh_pg` broadcast; if invalid, the leader should broadcast a **terminal action** (`SHUTDOWN` or an explicit `ERROR` action/version) so non-leaders can exit cleanly rather than strand. See: `deep-research/2026-02-22/pp-rank0-out-of-mesh/reply.md` (“Invalid envelope policy”).
+
+- **Make “commitment points” visible in logs**:
+  - Log `(call_id, chunk_index, cache_epoch, action, version)` at each commitment point: header send, mesh broadcast start, and the first collective boundary in Phase B. When something wedges, these log lines localize which boundary stranded peers. See: `deep-research/2026-02-22/pp-rank0-out-of-mesh/reply.md` (“commitment point” note).
 
 - **Out-of-order headers**:
   - If `call_id` goes backwards, you’re in undefined state. Continuing risks using stale tensors or misordered collective entry.

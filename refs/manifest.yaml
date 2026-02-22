@@ -1,0 +1,1044 @@
+# Distributed Video DiT Inference — Resource Manifest
+# Generated from distributed_video_dit_inference.md
+# Phase 1: ~15 high-priority resources for immediate ingestion
+# Status: pending | fetched | extracted | summarized | link_only
+
+resources:
+
+  # ============================================================
+  # Topic 1: NCCL internals
+  # ============================================================
+
+  - id: nccl-user-guide
+    title: "NCCL User Guide"
+    urls:
+      - https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/index.html
+      - https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html
+    type: docs
+    topics: [1]
+    priority: high
+    status: pending
+    local_paths: []
+    notes: "Covers communicators, collectives, CUDA stream semantics, group calls, algorithm selection, env vars (NCCL_DEBUG, NCCL_ALGO, NCCL_PROTO)"
+
+  - id: scaling-dl-nccl
+    title: "Scaling Deep Learning Training with NCCL"
+    urls:
+      - https://developer.nvidia.com/blog/scaling-deep-learning-training-nccl/
+    type: blog
+    topics: [1]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Architecture overview of multi-GPU/multi-node communication, NVLink/PCIe/InfiniBand support, low-latency protocols"
+
+  - id: nccl-tuning
+    title: "Understanding NCCL Tuning to Accelerate GPU-to-GPU Communication"
+    urls:
+      - https://developer.nvidia.com/blog/understanding-nccl-tuning-to-accelerate-gpu-to-gpu-communication/
+    type: blog
+    topics: [1]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "CTA allocation, protocol selection (LL vs Simple), tuner plugins. Closest public docs to NCCL internal algorithm decisions"
+
+  - id: nccl-cuda-graphs
+    title: "Using NCCL with CUDA Graphs"
+    urls:
+      - https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/cudagraph.html
+    type: docs
+    topics: [1, 6]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Requirements and patterns for capturing NCCL operations inside CUDA graphs"
+
+  # ============================================================
+  # Topic 2: Deadlock patterns in multi-group distributed code
+  # ============================================================
+
+  - id: pytorch-distributed-api
+    title: "PyTorch Distributed API Reference"
+    urls:
+      - https://docs.pytorch.org/docs/stable/distributed.html
+    type: docs
+    topics: [2, 3]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "init_process_group, process group creation, backend selection, timeout semantics (default 10 min for NCCL). Also covers destroy_process_group for topic 3"
+
+  - id: pytorch-dist-tutorial
+    title: "Writing Distributed Applications with PyTorch"
+    urls:
+      - https://docs.pytorch.org/tutorials/intermediate/dist_tuto.html
+    type: docs
+    topics: [2]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Hands-on walkthrough of point-to-point and collective communication, backends comparison, process group setup"
+
+  - id: nccl-fault-tolerance
+    title: "Building Scalable and Fault-Tolerant NCCL Applications"
+    urls:
+      - https://developer.nvidia.com/blog/building-scalable-and-fault-tolerant-nccl-applications
+    type: blog
+    topics: [2]
+    priority: low
+    status: pending
+    local_paths: []
+    notes: "Communicator management, dynamic rescaling, fault tolerance, what happens when a rank fails mid-collective"
+
+  # ============================================================
+  # Topic 3: Graceful shutdown and draining
+  # ============================================================
+
+  - id: pytorch-issue-115388
+    title: "GitHub Issue #115388: destroy_process_group() hangs after CUDA graph capture"
+    urls:
+      - https://github.com/pytorch/pytorch/issues/115388
+    type: code
+    topics: [3]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Documents ncclCommDestroy hang when collectives captured into CUDA graphs. Critical for inference workloads"
+
+  - id: pytorch-issue-167775
+    title: "GitHub Issue #167775: Graceful Ctrl+C handling from torchrun"
+    urls:
+      - https://github.com/pytorch/pytorch/issues/167775
+    type: code
+    topics: [3]
+    priority: low
+    status: pending
+    local_paths: []
+    notes: "Active discussion on multi-GPU shutdown coordination under signal handling"
+
+  - id: kill-pytorch-dist
+    title: "Kill PyTorch Distributed Training Processes"
+    urls:
+      - https://leimao.github.io/blog/Kill-PyTorch-Distributed-Training-Processes/
+    type: blog
+    topics: [3]
+    priority: low
+    status: pending
+    local_paths: []
+    notes: "Practical patterns for fully releasing resources in distributed training, multi-node termination"
+
+  # ============================================================
+  # Topic 4: Determinism across ranks
+  # ============================================================
+
+  - id: pytorch-reproducibility
+    title: "PyTorch Reproducibility Guide"
+    urls:
+      - https://docs.pytorch.org/docs/stable/notes/randomness.html
+    type: docs
+    topics: [4]
+    priority: low
+    status: pending
+    local_paths: []
+    notes: "Manual seeding, torch.use_deterministic_algorithms(), cudnn.deterministic, lists all affected operations"
+
+  - id: pytorch-deterministic-api
+    title: "torch.use_deterministic_algorithms API"
+    urls:
+      - https://docs.pytorch.org/docs/stable/generated/torch.use_deterministic_algorithms.html
+    type: docs
+    topics: [4]
+    priority: low
+    status: pending
+    local_paths: []
+    notes: "Complete list of operations with deterministic overrides, Inductor no-autotune mode, Triton config selection"
+
+  - id: fp-non-assoc-reproducibility
+    title: "Impacts of floating-point non-associativity on reproducibility for HPC and deep learning"
+    urls:
+      - https://arxiv.org/abs/2408.05148
+    type: paper
+    topics: [4]
+    priority: low
+    status: pending
+    local_paths: []
+    notes: "Rigorous study on how inter-chip communication introduces variation in distributed settings"
+
+  # ============================================================
+  # Topic 5: CUDA streams
+  # ============================================================
+
+  - id: pytorch-cuda-semantics
+    title: "PyTorch CUDA Semantics"
+    urls:
+      - https://docs.pytorch.org/docs/stable/notes/cuda.html
+    type: docs
+    topics: [5, 6, 7]
+    priority: high
+    status: pending
+    local_paths: []
+    notes: "Comprehensive treatment of streams, events, caching allocator, CUDA graphs, memory management. Referenced across topics 5-7"
+
+  - id: cuda-async-execution
+    title: "CUDA Programming Guide: Asynchronous Execution"
+    urls:
+      - https://docs.nvidia.com/cuda/cuda-programming-guide/02-basics/asynchronous-execution.html
+    type: docs
+    topics: [5]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Authoritative NVIDIA reference on stream ordering, events, callbacks, synchronization primitives"
+
+  - id: leimao-cuda-stream
+    title: "CUDA Stream"
+    urls:
+      - https://leimao.github.io/blog/CUDA-Stream/
+    type: blog
+    topics: [5]
+    priority: low
+    status: pending
+    local_paths: []
+    notes: "Clear explanation of serial vs concurrent stream models, overlapping compute with memory copy, stream sync patterns"
+
+  # ============================================================
+  # Topic 6: CUDA graphs
+  # ============================================================
+
+  - id: cuda-graphs-guide
+    title: "CUDA Programming Guide: CUDA Graphs"
+    urls:
+      - https://docs.nvidia.com/cuda/cuda-programming-guide/04-special-topics/cuda-graphs.html
+    type: docs
+    topics: [6]
+    priority: high
+    status: pending
+    local_paths: []
+    notes: "Graph definition vs execution, stream capture, memory allocations within graphs, instantiation, dependency management"
+
+  - id: torch-compile-api
+    title: "torch.compile API"
+    urls:
+      - https://docs.pytorch.org/docs/stable/generated/torch.compile.html
+    type: docs
+    topics: [6]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "mode='reduce-overhead' uses CUDA graphs under the hood, triton.cudagraphs option"
+
+  # ============================================================
+  # Topic 7: GPU memory management
+  # ============================================================
+
+  - id: pytorch-cuda-module
+    title: "torch.cuda Module Reference"
+    urls:
+      - https://docs.pytorch.org/docs/stable/cuda.html
+    type: docs
+    topics: [7]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "memory_allocated(), memory_reserved(), memory_stats(), MemPool, CUDA Sanitizer"
+
+  # ============================================================
+  # Topic 8: Kernel launch overhead
+  # ============================================================
+
+  - id: making-dl-go-brrrr
+    title: "Making Deep Learning Go Brrrr From First Principles"
+    urls:
+      - https://horace.io/brrr_intro.html
+    type: blog
+    topics: [8, 16]
+    priority: high
+    status: pending
+    local_paths: []
+    notes: "Definitive blog post on overhead-bound, memory-bound, compute-bound regimes. Explains Python dispatch overhead and operator fusion. Also primary roofline resource (topic 16)"
+
+  - id: gpu-mode-lecture-6
+    title: "GPU MODE Lecture 6: Optimizing Optimizers in PyTorch"
+    urls:
+      - https://www.youtube.com/@GPUMODE
+    type: video
+    topics: [8]
+    priority: low
+    status: link_only
+    local_paths: []
+    notes: "Jane Xu. Kernel launch overhead, kernel fusion, multi-tensor apply. Channel link only — specific video URL not provided"
+
+  - id: pytorch-internals-ezyang
+    title: "PyTorch internals"
+    urls:
+      - https://blog.ezyang.com/2019/05/pytorch-internals/
+    type: blog
+    topics: [8]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Edward Yang deep dive into PyTorch dispatch mechanism, tensor storage, C++ code layout. Full Python-to-GPU path"
+
+  # ============================================================
+  # Topic 9: How Dynamo tracing works
+  # ============================================================
+
+  - id: dynamo-deep-dive
+    title: "Dynamo Deep-Dive"
+    urls:
+      - https://docs.pytorch.org/docs/stable/torch.compiler_dynamo_deepdive.html
+    type: docs
+    topics: [9]
+    priority: high
+    status: pending
+    local_paths: []
+    notes: "Most comprehensive official resource: PEP 523, VariableTracker system, guard generation, continuation functions, SymInt for dynamic shapes"
+
+  - id: torchdynamo-uwplse
+    title: "How does torch.compile work?"
+    urls:
+      - https://uwplse.org/2025/04/28/torchdynamo.html
+    type: blog
+    topics: [9]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "UW PLSE blog (Megan Frisella). Pedagogical explanation with diagrams of TorchDynamo architecture, graph extraction, guard functions"
+
+  - id: torch-compile-missing-manual
+    title: "torch.compile: the missing manual"
+    urls:
+      - https://docs.google.com/document/d/1y5CRfMLdwEoF1nTk9q8qEu1mgMUuUtvhklPKJ2emLU8/edit
+    type: docs
+    topics: [9]
+    priority: medium
+    status: link_only
+    local_paths: []
+    notes: "Edward Yang Google Doc — auth required. Debugging knowledge from Meta PT2 deployments: graph break patterns, recompilation debugging, distributed pitfalls"
+
+  - id: torch-compile-programming-model
+    title: "torch.compile Programming Model"
+    urls:
+      - https://docs.pytorch.org/docs/stable/user_guide/torch_compiler/compile/programming_model.html
+    type: docs
+    topics: [9]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Graph breaks, guards, recompilations, dynamic shapes, debugging with TORCH_LOGS"
+
+  # ============================================================
+  # Topic 10: Inductor fusion rules
+  # ============================================================
+
+  - id: torchinductor-design
+    title: "TorchInductor: a PyTorch-native Compiler with Define-by-Run IR and Symbolic Shapes"
+    urls:
+      - https://dev-discuss.pytorch.org/t/torchinductor-a-pytorch-native-compiler-with-define-by-run-ir-and-symbolic-shapes/747
+    type: blog
+    topics: [10]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Jason Ansel foundational Inductor design doc. Loop-level IR, TensorBox/StorageBox, Triton and C++ backends, breadth-first fusion"
+
+  - id: inductor-config
+    title: "TorchInductor config.py"
+    urls:
+      - https://github.com/pytorch/pytorch/blob/main/torch/_inductor/config.py
+    type: code
+    topics: [10]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Definitive reference for fusion knobs: epilogue_fusion, prologue_fusion, pattern_matcher, score_fusion_memory_threshold, benchmark_harness"
+
+  - id: pytorch2-asplos
+    title: "PyTorch 2: Faster Machine Learning Through Dynamic Python (ASPLOS 2024)"
+    urls:
+      - https://docs.pytorch.org/assets/pytorch2-2.pdf
+    type: paper
+    topics: [10]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Inductor lowering (433 operators), Scheduler.score_fusion, persistent vs loop reductions in Triton codegen, template epilogue fusions"
+
+  - id: inductor-fusion-discussion
+    title: "Inductor scheduler source and fusion discussion"
+    urls:
+      - https://dev-discuss.pytorch.org/t/disabling-codegen-specific-fusions-in-torchinductor-for-per-op-kernel-generation/3226
+    type: blog
+    topics: [10]
+    priority: low
+    status: pending
+    local_paths: []
+    notes: "Jason Ansel: fusions always happen in the scheduler via can_fuse heuristics. Points to scheduler.py for flush boundaries"
+
+  # ============================================================
+  # Topic 11: Functional collectives and Dynamo
+  # ============================================================
+
+  - id: funcol-rfc-93173
+    title: "RFC #93173: PT2-Friendly Traceable, Functional Collective Communication APIs"
+    urls:
+      - https://github.com/pytorch/pytorch/issues/93173
+    type: code
+    topics: [11]
+    priority: high
+    status: pending
+    local_paths: []
+    notes: "Foundational design doc. Why c10d APIs break tracing, functional semantics, AsyncTensor subclass approach"
+
+  - id: funcol-source
+    title: "_functional_collectives.py source"
+    urls:
+      - https://github.com/pytorch/pytorch/blob/main/torch/distributed/_functional_collectives.py
+    type: code
+    topics: [11]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "AsyncCollectiveTensor, traceable_collective_remaps, _c10d_functional op registration, wait_tensor"
+
+  - id: ezyang-state-of-compile
+    title: "State of torch.compile for training (August 2025)"
+    urls:
+      - https://blog.ezyang.com/2025/08/state-of-torch-compile-august-2025/
+    type: blog
+    topics: [11, 12]
+    priority: high
+    status: pending
+    local_paths: []
+    notes: "Most comprehensive treatment of functional collectives in context. DTensor compilation, SimpleFSDP, async TP as compiler pass, comparison with JAX"
+
+  - id: pytorch-issue-138773
+    title: "GitHub Issue #138773: functional collectives 67% slower than torch.distributed"
+    urls:
+      - https://github.com/pytorch/pytorch/issues/138773
+    type: code
+    topics: [11]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Performance analysis showing CPU overhead from extra copies/wrapping for traceability. Benchmark code and profiler traces"
+
+  # ============================================================
+  # Topic 12: Compile + distributed interaction
+  # ============================================================
+
+  - id: compiled-autograd-tutorial
+    title: "Compiled Autograd Tutorial"
+    urls:
+      - https://docs.pytorch.org/tutorials/intermediate/compiled_autograd_tutorial.html
+    type: docs
+    topics: [12]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "compiled_autograd=True unifies backward graphs despite forward graph breaks, enabling DDP/FSDP communication capture"
+
+  - id: ezyang-ways-to-compile
+    title: "Ways to use torch.compile"
+    urls:
+      - https://blog.ezyang.com/2024/11/ways-to-use-torch-compile/
+    type: blog
+    topics: [12]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Practical analysis: small/medium/large scale training, load-bearing compilation, torchtitan/torchtune, complexity budget"
+
+  - id: torch-compiler-faq-dist
+    title: "torch.compiler FAQ: Distributed Section"
+    urls:
+      - https://docs.pytorch.org/docs/stable/user_guide/torch_compiler/torch.compiler_faq.html
+    type: docs
+    topics: [12]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Why distributed code is hard for Dynamo, AOTAutograd hook problem, step-by-step debugging (eager -> aot_eager -> full compile)"
+
+  - id: tp-tutorial
+    title: "Large Scale Transformer Training with Tensor Parallel"
+    urls:
+      - https://docs.pytorch.org/tutorials/intermediate/TP_tutorial.html
+    type: docs
+    topics: [12]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "ColwiseParallel, RowwiseParallel, SequenceParallel using DTensor and DeviceMesh. DTensor enables compile compatibility for TP"
+
+  - id: vllm-torch-compile
+    title: "Introduction to torch.compile and How It Works with vLLM"
+    urls:
+      - https://blog.vllm.ai/2025/08/20/torch-compile.html
+    type: blog
+    topics: [12]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Practical case study of compile + tensor parallelism with functional collectives in production inference"
+
+  # ============================================================
+  # Topic 13: Classic PP (GPipe, PipeDream)
+  # ============================================================
+
+  - id: gpipe
+    title: "GPipe: Efficient Training of Giant Neural Networks using Pipeline Parallelism"
+    urls:
+      - https://arxiv.org/abs/1811.06965
+    type: paper
+    topics: [13]
+    priority: high
+    status: pending
+    local_paths: []
+    notes: "Huang et al., 2018. Foundational synchronous PP paper. Micro-batch splitting, re-materialization (activation checkpointing)"
+
+  - id: pipedream
+    title: "PipeDream: Generalized Pipeline Parallelism for DNN Training"
+    urls:
+      - https://arxiv.org/abs/1806.03377
+    type: paper
+    topics: [13]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Narayanan et al., 2019. Introduces 1F1B schedule and asynchronous weight updates with weight stashing. Up to 5x faster than DP"
+
+  - id: pipedream-2bw
+    title: "Memory-Efficient Pipeline-Parallel DNN Training (PipeDream-2BW)"
+    urls:
+      - https://arxiv.org/abs/2006.09503
+    type: paper
+    topics: [13]
+    priority: high
+    status: pending
+    local_paths: []
+    notes: "Narayanan et al., 2020. PipeDream-Flush (synchronous 1F1B), double-buffered weight updates. The 1F1B schedule most modern systems implement"
+
+  - id: pp-siboehm
+    title: "Pipeline-Parallelism: Distributed Training via Model Partitioning"
+    urls:
+      - https://siboehm.com/articles/22/pipeline-parallel-training
+    type: blog
+    topics: [13]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Simon Boehm. Excellent educational post with clear diagrams: naive PP, GPipe, PipeDream, pipeline bubbles, gradient accumulation"
+
+  # ============================================================
+  # Topic 14: Activation memory in PP
+  # ============================================================
+
+  - id: megatron-ptdp
+    title: "Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM"
+    urls:
+      - https://arxiv.org/abs/2104.04473
+    type: paper
+    topics: [14]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Narayanan et al., 2021. PTD-P paper. Interleaved PP (virtual stages) reducing bubble fraction. Detailed activation memory analysis"
+
+  - id: zero-bubble-pp
+    title: "Zero Bubble Pipeline Parallelism"
+    urls:
+      - https://arxiv.org/abs/2401.10241
+    type: paper
+    topics: [14]
+    priority: high
+    status: pending
+    local_paths: []
+    notes: "Qi et al., 2024. Zero bubbles by splitting backward into B and W phases. 23-31% throughput improvement over 1F1B"
+
+  - id: pytorch-pipelining-api
+    title: "PyTorch torch.distributed.pipelining API"
+    urls:
+      - https://docs.pytorch.org/docs/stable/distributed.pipelining.html
+    type: docs
+    topics: [14]
+    priority: high
+    status: pending
+    local_paths: []
+    notes: "ScheduleGPipe, Schedule1F1B, ScheduleInterleaved1F1B, ScheduleInterleavedZeroBubble, ScheduleZBVZeroBubble"
+
+  # ============================================================
+  # Topic 15: Pipeline scheduling theory
+  # ============================================================
+
+  - id: jax-scaling-book
+    title: "How to Parallelize a Transformer for Training (JAX Scaling Book)"
+    urls:
+      - https://jax-ml.github.io/scaling-book/training/
+    type: docs
+    topics: [15]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "All parallelism strategies with roofline analysis for communication bottlenecks. Pipeline bubble derivations, micro-batching tradeoffs"
+
+  - id: megatron-trillion-params
+    title: "Scaling Language Model Training to a Trillion Parameters Using Megatron"
+    urls:
+      - https://developer.nvidia.com/blog/scaling-language-model-training-to-a-trillion-parameters-using-megatron/
+    type: blog
+    topics: [15]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "3D parallelism analysis, interleaved pipeline scheduling, throughput measurements, practical bubble fraction reduction"
+
+  - id: megatron-pp-schedules
+    title: "Megatron-LM Pipeline Parallel Schedules source"
+    urls:
+      - https://github.com/NVIDIA/Megatron-LM/blob/main/megatron/core/pipeline_parallel/schedules.py
+    type: code
+    topics: [15]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Reference implementation. forward_backward_pipelining_with_interleaving shows 1F1B and interleaved schedule micro-batch ordering"
+
+  # ============================================================
+  # Topic 16: Roofline model applied to transformers
+  # ============================================================
+
+  - id: roofline-paper
+    title: "Roofline: An Insightful Visual Performance Model for Multicore Architectures"
+    urls:
+      - https://dl.acm.org/doi/10.1145/1498765.1498785
+    type: paper
+    topics: [16]
+    priority: medium
+    status: link_only
+    local_paths: []
+    notes: "Williams, Waterman, Patterson, 2009. Original roofline model paper. ACM paywalled"
+
+  - id: nvidia-gpu-perf-guide
+    title: "NVIDIA GPU Performance Background User's Guide"
+    urls:
+      - https://docs.nvidia.com/deeplearning/performance/dl-performance-gpu-background/index.html
+    type: docs
+    topics: [16, 18]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Arithmetic intensity, V100 ridge point ~40-139 ops/byte, SM architecture, wave quantization, tail effects. Also covers topic 18"
+
+  - id: gpu-mode-lecture-8
+    title: "GPU MODE Lecture 8: CUDA Performance Checklist"
+    urls:
+      - https://www.youtube.com/@GPUMODE
+    type: video
+    topics: [16]
+    priority: low
+    status: link_only
+    local_paths: []
+    notes: "Mark Saroufim. Roofline model, memory coalescing, occupancy, Nsight Compute profiling. Channel link only"
+
+  # ============================================================
+  # Topic 17: Reading Nsight / torch.profiler traces
+  # ============================================================
+
+  - id: pytorch-profiler-tensorboard
+    title: "PyTorch Profiler with TensorBoard"
+    urls:
+      - https://docs.pytorch.org/tutorials/intermediate/tensorboard_profiler_tutorial.html
+    type: docs
+    topics: [17]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "TensorBoard plugin integration, GPU utilization views, memory curves, kernel view, operator view"
+
+  - id: profiling-torch-compile
+    title: "Profiling torch.compile performance"
+    urls:
+      - https://docs.pytorch.org/docs/stable/user_guide/torch_compiler/torch.compiler_profiling_torch_compile.html
+    type: docs
+    topics: [17]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Profiling compiled models, CompiledFunction events, Triton kernels, torch-compiled regions in traces"
+
+  - id: gpu-mode-lecture-1
+    title: "GPU MODE Lecture 1: How to Profile CUDA Kernels in PyTorch"
+    urls:
+      - https://www.youtube.com/watch?v=LuhJEEJQgUM
+    type: video
+    topics: [17]
+    priority: low
+    status: link_only
+    local_paths: []
+    notes: "Mark Saroufim. Practical walkthrough of Nsight Compute profiling, reading kernel statistics, identifying bottlenecks"
+
+  - id: nsight-roofline
+    title: "NVIDIA Nsight Compute: Roofline Analysis"
+    urls:
+      - https://developer.nvidia.com/blog/accelerating-hpc-applications-with-nsight-compute-roofline-analysis/
+    type: blog
+    topics: [17]
+    priority: low
+    status: pending
+    local_paths: []
+    notes: "Hierarchical roofline analysis in Nsight Compute to identify compute- vs memory-bound kernels"
+
+  # ============================================================
+  # Topic 18: Bandwidth accounting from first principles
+  # ============================================================
+
+  - id: modal-memory-bandwidth
+    title: "What is memory bandwidth? (Modal GPU Glossary)"
+    urls:
+      - https://modal.com/gpu-glossary/perf/memory-bandwidth
+    type: docs
+    topics: [18]
+    priority: low
+    status: pending
+    local_paths: []
+    notes: "Concise definition with NVIDIA data center GPU bandwidth table (Ampere through Blackwell). B200 = 8 TB/s HBM3e"
+
+  - id: modal-roofline
+    title: "What is the roofline model? (Modal GPU Glossary)"
+    urls:
+      - https://modal.com/gpu-glossary/perf/roofline-model
+    type: docs
+    topics: [18]
+    priority: low
+    status: pending
+    local_paths: []
+    notes: "How to apply the roofline model to specific GPU architectures"
+
+  - id: matmul-shapes
+    title: "What Shapes Do Matrix Multiplications Like?"
+    urls:
+      - https://www.thonking.ai/p/what-shapes-do-matrix-multiplications
+    type: blog
+    topics: [18]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Horace He. How matmul performance varies with input shapes on GPUs. Directly applicable to DiT FFN and attention"
+
+  # ============================================================
+  # Topic 19: Producer-consumer with backpressure
+  # ============================================================
+
+  - id: backpressure-explained
+    title: "Backpressure explained — the resisted flow of data through software"
+    urls:
+      - https://medium.com/@jayphelps/backpressure-explained-the-flow-of-data-through-software-2350b3e77ce7
+    type: blog
+    topics: [19]
+    priority: low
+    status: pending
+    local_paths: []
+    notes: "Jay Phelps. Canonical backpressure explainer: control the producer, buffer, or drop"
+
+  - id: dist-systems-young-bloods
+    title: "Notes on Distributed Systems for Young Bloods"
+    urls:
+      - https://www.somethingsimilar.com/2013/01/14/notes-on-distributed-systems-for-young-bloods/
+    type: essay
+    topics: [19]
+    priority: low
+    status: pending
+    local_paths: []
+    notes: "Jeff Hodges classic essay. Backpressure section covers practical implications for production systems"
+
+  - id: warpstream-rejection
+    title: "Dealing with rejection (in distributed systems)"
+    urls:
+      - https://www.warpstream.com/blog/dealing-with-rejection-in-distributed-systems
+    type: blog
+    topics: [19]
+    priority: low
+    status: pending
+    local_paths: []
+    notes: "WarpStream. Resource-based limits, Goldilocks zone of queue depth, circuit breaker patterns"
+
+  # ============================================================
+  # Topic 20: Message framing and versioning
+  # ============================================================
+
+  - id: message-framing
+    title: "Message Framing"
+    urls:
+      - https://blog.stephencleary.com/2009/04/message-framing.html
+    type: blog
+    topics: [20]
+    priority: low
+    status: pending
+    local_paths: []
+    notes: "Stephen Cleary. Classic TCP message framing explainer: length prefixing vs delimiters, partial receives"
+
+  - id: framing-textbook
+    title: "Framing (Computer Networks: A Systems Approach)"
+    urls:
+      - https://book.systemsapproach.org/direct/framing.html
+    type: docs
+    topics: [20]
+    priority: low
+    status: pending
+    local_paths: []
+    notes: "Peterson & Davie. Byte-oriented, bit-oriented, count-based framing from canonical networking textbook. Free online"
+
+  - id: protobuf-guide
+    title: "Protocol Buffers Language Guide (proto3)"
+    urls:
+      - https://protobuf.dev/programming-guides/proto3/
+    type: docs
+    topics: [20]
+    priority: low
+    status: pending
+    local_paths: []
+    notes: "Schema evolution standard. Wire-safe vs wire-unsafe changes, field numbering, reserved fields"
+
+  # ============================================================
+  # Topic 21: Idempotency and replay
+  # ============================================================
+
+  - id: idempotency-dist
+    title: "What is Idempotency in Distributed Systems?"
+    urls:
+      - https://blog.algomaster.io/p/idempotency-in-distributed-systems
+    type: blog
+    topics: [21]
+    priority: low
+    status: pending
+    local_paths: []
+    notes: "AlgoMaster. Idempotency keys, HTTP method idempotency, state management patterns"
+
+  - id: exactly-once
+    title: "Exactly Once in Distributed Systems"
+    urls:
+      - https://serverless-architecture.io/blog/exactly-once-in-distributed-systems/
+    type: blog
+    topics: [21]
+    priority: low
+    status: pending
+    local_paths: []
+    notes: "Why exactly-once is hard, at-least-once + idempotency achieves it in practice"
+
+  # ============================================================
+  # Topic 22: KV cache management in streaming inference
+  # ============================================================
+
+  - id: pagedattention
+    title: "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+    urls:
+      - https://arxiv.org/abs/2309.06180
+    type: paper
+    topics: [22]
+    priority: high
+    status: pending
+    local_paths: []
+    notes: "Kwon et al., SOSP 2023. OS virtual memory analogy, block tables, non-contiguous allocation, copy-on-write sharing"
+
+  - id: continuous-batching
+    title: "Continuous Batching from First Principles"
+    urls:
+      - https://huggingface.co/blog/continuous_batching
+    type: blog
+    topics: [22]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "HuggingFace. Derives continuous batching from attention and KV caching fundamentals, mixing prefill/decode"
+
+  - id: vllm-anatomy
+    title: "Inside vLLM: Anatomy of a High-Throughput LLM Inference System"
+    urls:
+      - https://blog.vllm.ai/2025/09/05/anatomy-of-vllm.html
+    type: blog
+    topics: [22]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "vLLM V1: scheduling, paged attention, continuous batching, prefix caching, disaggregated prefill/decode"
+
+  - id: vllm-distributed
+    title: "vLLM Distributed Inference Blog Post"
+    urls:
+      - https://blog.vllm.ai/2025/02/17/distributed-inference.html
+    type: blog
+    topics: [22]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Distributed serving architecture, tensor/pipeline parallelism configuration"
+
+  # ============================================================
+  # Topic 23: VAE latency and chunking for video
+  # ============================================================
+
+  - id: cogvideox-vae
+    title: "AutoencoderKLCogVideoX (Diffusers)"
+    urls:
+      - https://huggingface.co/docs/diffusers/en/api/models/autoencoderkl_cogvideox
+    type: docs
+    topics: [23]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "CogVideoX 3D VAE: enable_tiling(), enable_slicing(), tile overlap blending, configurable tile dimensions"
+
+  - id: lightx2v-vae
+    title: "VAE System and Video Encoding (LightX2V)"
+    urls:
+      - https://deepwiki.com/ModelTC/lightx2v/4.5-vae-system
+    type: docs
+    topics: [23]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Streaming VAE decode: CausalConv3d temporal caching (CACHE_T=2), frame-by-frame decoding, tiling, CPU offloading, distributed VAE"
+
+  - id: seedance
+    title: "Seedance 1.0"
+    urls:
+      - https://arxiv.org/abs/2506.09113
+    type: paper
+    topics: [23]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "ByteDance, 2025. Thin VAE decoder for 2x speedup, hybrid parallelism for distributed VAE, async offloading, temporally-causal compression"
+
+  - id: improved-video-vae
+    title: "Improved Video VAE for Latent Video Diffusion Model"
+    urls: []
+    type: paper
+    topics: [23]
+    priority: low
+    status: link_only
+    local_paths: []
+    notes: "Wu et al., CVPR 2025. Dual-branch keyframe temporal compression, 3D causal VAE. No direct URL yet — check https://cvpr.thecvf.com/ when proceedings publish"
+
+  # ============================================================
+  # Topic 24: Video DiT scheduling
+  # ============================================================
+
+  - id: streamdiffusion
+    title: "StreamDiffusion: A Pipeline-level Solution for Real-time Interactive Generation"
+    urls:
+      - https://arxiv.org/abs/2312.12491
+      - https://github.com/cumulo-autumn/StreamDiffusion
+    type: paper
+    topics: [24]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Kodaira et al., 2023. Stream Batch, Residual CFG (2.05x speedup), Stochastic Similarity Filter. 91.07 fps on RTX 4090"
+
+  - id: streamdiffusionv2
+    title: "StreamDiffusionV2"
+    urls:
+      - https://streamdiffusionv2.github.io/
+      - https://github.com/chenfengxu714/StreamDiffusionV2
+    type: paper
+    topics: [24]
+    priority: high
+    status: pending
+    local_paths: []
+    notes: "Feng et al., 2025. SLO-aware batching, block scheduler, sink-token rolling KV cache, motion-aware noise. 58.28 FPS with 14B model on 4xH100. Most directly relevant system"
+
+  - id: diffusion-video-survey
+    title: "Diffusion Models for Video Generation"
+    urls:
+      - https://lilianweng.github.io/posts/2024-04-12-diffusion-video/
+    type: blog
+    topics: [24]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Lilian Weng. Comprehensive survey: cascaded pipelines, temporal super-resolution, Make-A-Video, Video LDM, SVD, Sora-class architectures"
+
+  - id: pipedit
+    title: "PipeDiT: Accelerating DiT in Video Generation with Pipelining and Decoupling"
+    urls:
+      - https://arxiv.org/abs/2511.12056
+    type: paper
+    topics: [24]
+    priority: high
+    status: pending
+    local_paths: []
+    notes: "PipeSP (pipelined sequence parallelism), DeDiVAE (decoupled diffusion/VAE), attention co-processing. Directly addresses pipeline-parallel DiT inference"
+
+  - id: dit-paper
+    title: "Scalable Diffusion Models with Transformers (DiT)"
+    urls:
+      - https://arxiv.org/abs/2212.09748
+    type: paper
+    topics: [24]
+    priority: high
+    status: pending
+    local_paths: []
+    notes: "Peebles & Xie, ICCV 2023. Foundational DiT paper. Replaces U-Net with transformers in latent diffusion. The architecture the system will run"
+
+  # ============================================================
+  # Meta-resources (topic: [meta])
+  # ============================================================
+
+  - id: ezyang-blog
+    title: "Edward Yang's blog"
+    urls:
+      - https://blog.ezyang.com/category/pytorch/
+    type: blog
+    topics: [meta]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Most authoritative source on PyTorch compiler and distributed internals. Start with 'State of torch.compile' and 'Ways to use torch.compile'"
+
+  - id: pytorch-dev-podcast
+    title: "PyTorch Developer Podcast"
+    urls:
+      - https://podcasts.apple.com/us/podcast/pytorch-developer-podcast/id1566080008
+    type: podcast
+    topics: [meta]
+    priority: low
+    status: link_only
+    local_paths: []
+    notes: "Edward Yang. 10-20 min episodes on compiler collectives, TORCH_TRACE, higher-order operators, tensor subclasses, compiled autograd"
+
+  - id: gpu-mode-lectures
+    title: "GPU MODE lecture series"
+    urls:
+      - https://www.youtube.com/@GPUMODE
+      - https://github.com/gpu-mode/lectures
+    type: lecture
+    topics: [meta]
+    priority: medium
+    status: link_only
+    local_paths: []
+    notes: "92+ lectures: CUDA fundamentals, profiling, Flash Attention, ring attention, quantization, Triton. GitHub repo has notes and code"
+
+  - id: ezyang-parallelism-mesh-zoo
+    title: "The Parallelism Mesh Zoo"
+    urls:
+      - https://blog.ezyang.com/2025/08/the-parallelism-mesh-zoo/
+    type: blog
+    topics: [meta]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "All parallelization strategies through device meshes: DP, FSDP, HSDP, TP, SP, CP, PP, EP. Where pipeline parallelism fits in multi-dim parallelism"
+
+  - id: megatron-lm-repo
+    title: "Megatron-LM repository"
+    urls:
+      - https://github.com/NVIDIA/Megatron-LM
+    type: code
+    topics: [meta]
+    priority: medium
+    status: pending
+    local_paths: []
+    notes: "Reference implementation for large-scale distributed training with 3D parallelism. Most production-hardened PP schedules and parallel state management"

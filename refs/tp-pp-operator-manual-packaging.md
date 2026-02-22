@@ -50,15 +50,13 @@ Wording correction that prevents real confusion:
 ## Status snapshot (this repo)
 
 Topic docs (`refs/topics/*.md`) current counts:
-- `draft`: 18
-- `stub`: 6
+- `draft`: 20
+- `stub`: 4
 
 Remaining `stub` topic files:
 - `refs/topics/10-inductor-fusion-rules.md`
 - `refs/topics/17-reading-profiler-traces.md`
 - `refs/topics/18-bandwidth-accounting.md`
-- `refs/topics/22-kv-cache-management.md`
-- `refs/topics/23-vae-latency-chunking.md`
 - `refs/topics/24-video-dit-scheduling.md`
 
 High-leverage “authoritative basics” (fetched but not converted/condensed yet):
@@ -80,7 +78,7 @@ Rule: **one agent edits one file per unit** unless explicitly coordinating.
 | A4 | `refs/topics/03-graceful-shutdown.md` | crash > hang | draft | — | Ensure shutdown protocol + watchdog/heartbeat + anti-stranding tie-in |
 | A5 | `refs/topics/04-determinism-across-ranks.md` | drift detection | draft | — | Needs operator-manual standardization (contract + tripwires + break-it tests + instrumentation) |
 | A6 | `refs/topics/21-idempotency-and-replay.md` | epochs/flush/drop | draft | — | Ensure cache_epoch + monotonic IDs + bounded reordering policy |
-| A7 | `refs/topics/22-kv-cache-management.md` | KV lifecycle | stub | — | Must become first-class operator manual (TP lockstep + PP recompute coupling) |
+| A7 | `refs/topics/22-kv-cache-management.md` | KV lifecycle | draft | — | Must remain aligned with v1.1/PP field names + recompute coupling |
 | A8 | `refs/topics/24-video-dit-scheduling.md` | PP scheduling | stub | — | Should connect bubble math + `max_outstanding` + PP overlap gating |
 
 ### B) Convert + condense “authoritative basics” (so topics can cite canon)
@@ -94,7 +92,7 @@ Rule: **one agent edits one file per unit** unless explicitly coordinating.
 
 | Unit | File | Status | Owner | Notes |
 |---|---|---|---|---|
-| C1 | (new) crosswalk doc | todo | — | Map `scope-drd/notes/FA4/h200/tp/v1.1-generator-only-workers.md` sections → operator-manual topics/claims |
+| C1 | `refs/v1.1-generator-only-workers-crosswalk.md` | done | codex | Map v1.1 scaffold sections → operator-manual topics/claims |
 | C2 | (optional) prompt pack text | todo | — | A copy/paste-able prompt that references the “pack” file list below |
 
 ## “Repo prompt pack” (for 5 Pro on the web)
@@ -151,6 +149,7 @@ Update this table as units complete (keep it short; links only):
 | 2026-02-22 | — | Initial plan doc created | codex | Snapshot + assignments |
 | 2026-02-22 | C1 | Crosswalk first pass | codex | `refs/v1.1-generator-only-workers-crosswalk.md` |
 | 2026-02-22 | DR | Integrated 5Pro replies (compile + KV) | codex | Updated topics 04/09/11/12/21/22 |
+| 2026-02-22 | A2/A3 | Distilled PP group rulebook + overlap proof recipe | codex | `refs/topics/02-deadlock-patterns.md`, `refs/topics/19-producer-consumer-backpressure.md` |
 
 ## Deep research queue (5 Pro via repo prompt)
 
@@ -158,11 +157,11 @@ These are intended to be runnable **in parallel** on another machine.
 
 | Date | Ask file | What it covers | Status |
 |---|---|---|---|
-| 2026-02-22 | `deep-research/2026-02-22/ask-5pro-tp-v11-envelope-contract.md` | TP v1.1 envelope contract audit | ready |
-| 2026-02-22 | `deep-research/2026-02-22/ask-5pro-pp-rank0-out-of-mesh.md` | PP bringup contracts + deadlocks + overlap proof | ready |
+| 2026-02-22 | `deep-research/2026-02-22/ask-5pro-tp-v11-envelope-contract.md` | TP v1.1 envelope contract audit | received |
+| 2026-02-22 | `deep-research/2026-02-22/ask-5pro-pp-rank0-out-of-mesh.md` | PP bringup contracts + deadlocks + overlap proof | received |
 | 2026-02-22 | `deep-research/2026-02-22/ask-5pro-kv-cache-lifecycle-and-decoupling.md` | KV-cache lifecycle + recompute decoupling | received |
 | 2026-02-22 | `deep-research/2026-02-22/ask-5pro-compile-distributed-hardening.md` | torch.compile + distributed ship checklist + regression suite | received |
-| 2026-02-22 | `deep-research/2026-02-22/ask-5pro-external-patterns-and-resources.md` | external patterns/resources to import | ready |
+| 2026-02-22 | `deep-research/2026-02-22/ask-5pro-external-patterns-and-resources.md` | external patterns/resources to import | received |
 
 ## Prior art coverage (so we don’t re-ask the same thing)
 

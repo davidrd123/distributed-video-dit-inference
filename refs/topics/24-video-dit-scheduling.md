@@ -11,6 +11,7 @@ Video DiT scheduling determines how denoising steps are ordered and parallelized
 | streamdiffusionv2 | StreamDiffusionV2 | high | fetched |
 | diffusion-video-survey | Diffusion Models for Video Generation | medium | pending |
 | pipedit | PipeDiT: Accelerating DiT in Video Generation with Pipelining and Decoupling | high | converted |
+| causvid | From Slow Bidirectional to Fast Autoregressive Video Diffusion Models | high | converted |
 | dit-paper | Scalable Diffusion Models with Transformers (DiT) | high | condensed |
 
 ## Implementation context

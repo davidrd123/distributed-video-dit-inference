@@ -8,6 +8,7 @@ KV caches store the key/value projections from previous tokens to avoid recomput
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
 | pagedattention | Efficient Memory Management for Large Language Model Serving with PagedAttention | high | pending |
+| causvid | From Slow Bidirectional to Fast Autoregressive Video Diffusion Models | high | converted |
 | continuous-batching | Continuous Batching from First Principles | medium | pending |
 | vllm-anatomy | Inside vLLM: Anatomy of a High-Throughput LLM Inference System | medium | pending |
 | vllm-distributed | vLLM Distributed Inference Blog Post | medium | pending |

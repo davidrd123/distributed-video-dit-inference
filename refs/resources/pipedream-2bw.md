@@ -7,7 +7,7 @@
 | Topics | 13 |
 | Authors | Narayanan et al. |
 | Year | 2021 |
-| Status | stub |
+| Status | condensed |
 
 ## Why it matters
 
@@ -83,3 +83,5 @@ Introduces PipeDream-2BW (double-buffered weight updates) and PipeDream-Flush, a
 - [zero-bubble-pp](zero-bubble-pp.md) -- further improves on 1F1B by splitting backward into B and W
 - [pytorch-pipelining-api](pytorch-pipelining-api.md) -- Schedule1F1B implements the 1F1B schedule from this paper
 - [pipedit](pipedit.md) -- applies pipeline parallelism to DiT inference
+- [streamdiffusionv2](streamdiffusionv2.md) -- PP + Stream Batch inference system that implements the "fill the pipeline" insight
+- [dit-paper](dit-paper.md) -- uniform block stack amenable to balanced PP partitioning

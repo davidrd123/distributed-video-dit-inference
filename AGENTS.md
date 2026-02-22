@@ -213,7 +213,7 @@ Multiple agents work on this repo concurrently. Uncommitted changes from other a
 1. **Never `git checkout -- <file>` on files you didn't create or modify.** This permanently wipes uncommitted changes with no undo. It has already destroyed populated Tier 3 cards.
 2. **Never `git stash` and `git stash pop`** unless you are certain the stash contains only your own changes. Stash pop restores old versions of files, overwriting edits made since the stash was created.
 3. **If you see uncommitted changes from other agents, leave them alone.** They are in-flight work.
-4. **Don't change the `Status` field in resource card frontmatter** (`refs/resources/*.md`). When drafting a new card, set Status to `stub`. The user changes it to `condensed` after review. This is just about the one metadata field — populate everything else in the card normally.
+4. **Don't change the `Status` field on your own initiative.** When drafting a new card, set Status to `stub`. The default is that the user marks it `condensed` after review. However, **if the user explicitly asks you to mark a card as `condensed`, do it** — that's the user exercising their review authority, not you acting unilaterally.
 5. **Don't modify `refs/manifest.yaml`** unless your task explicitly says to.
 6. **Commit early and often** rather than accumulating large uncommitted diffs. This reduces the blast radius if something goes wrong.
 

@@ -50,6 +50,7 @@ Opus PDF page reading burned **45% of 5-hour budget in 40 minutes** doing B2 (3 
 | 2026-02-22 | opus1 | B2: gpipe, zero-bubble-pp, pipedream-2bw → Tier 2 | 3 papers via PDF page reading. 45% of 5hr quota in 40min — reassigning pipedit to GPT 5.2. |
 | 2026-02-22 | gpt-xhigh | pipedit → Tier 2 | 10pp + supplementary, dense tables preserved as monospaced blocks. Spot-checked by opus2 — numbers match PDF. |
 | 2026-02-22 | — | **Batch B2 complete, all Phase 1 Tier 2 done** | 15/15 Phase 1 resources at Tier 2+. Next: Track C (Tier 3 condensation). |
+| 2026-02-22 | opus3 | Created `refs/reading-guide.md` | Bringup-synced study guide (spine + phases + topic index). Derived from GPT-5.2 integrated learning path, reconciled with canonical catalog. Identified 3 manifest candidates (Wan 2.1, CausVid, SDv2 arxiv). |
 | | | | |
 
 ---
@@ -224,6 +225,37 @@ After each batch:
 - For repos: `full.md` has `## File:` headings matching the file tree
 - For Tier 3: `refs/resources/<id>.md` has filled claims with `Evidence:` citations pointing to `full.md` headings
 - Tier 3 actionables reference specific working notes findings (not generic statements)
+
+## Key artifacts and their roles
+
+| Artifact | Role | Consumers |
+|---|---|---|
+| `distributed_video_dit_inference.md` | **Canonical catalog** — exhaustive resource list (24 topics, ~85 resources). Read-only. | Manifest derivation, agents adding resources |
+| `refs/manifest.yaml` | **Status tracking** — source of truth for resource pipeline state | All agents |
+| `refs/reading-guide.md` | **Study guide** — spine (~15 resources) + bringup-synced reading order + topic index | Human learner, study sequencing |
+| `PLAN.md` | **Agent coordination** — tracks, assignments, progress | All agents |
+
+The reading guide is *not* a replacement for the catalog — it's a curated subset with phase-specific sequencing. The catalog remains the place to look when the reading guide says "see canonical catalog for full list."
+
+## Manifest candidates (from reading guide reconciliation)
+
+These resources appeared in the GPT-5.2 integrated learning path but are not in the manifest. Evaluate for addition.
+
+**Strong candidates (Phase 1):**
+- **Wan 2.1** (arxiv 2503.20314) — the target model. Referenced in PipeDiT bibliography; the canonical catalog never links to it.
+- **CausVid** (arxiv 2412.07772) — causal DiT framing + KV cache/recompute. Directly relevant to PP0+recompute phase. URL found in StreamDiffusionV2 source.
+- **StreamDiffusionV2 arxiv** (arxiv 2511.07399) — the actual paper. Manifest currently has project page + GitHub only; add arxiv URL.
+
+**Phase 2 candidates (supplemental):**
+- Merlyn Wang "NCCL Allreduce" — ring all-reduce intuition
+- Zach DeVito caching allocator writeup — deeper than PyTorch docs
+- NERSC roofline guide — pedagogical complement to NVIDIA's denser doc
+- DDIA (schema evolution chapters) — relevant to PPEnvelope versioning
+- Patterns of Distributed Systems / Idempotent Receiver (Fowler) — distributed patterns
+
+## Cleanup
+
+- [ ] Delete `distributed_video_dit_inference_integrated_learning_path.md` (superseded by `refs/reading-guide.md`)
 
 ## What NOT to do yet
 

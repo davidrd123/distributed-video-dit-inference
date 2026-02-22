@@ -77,7 +77,7 @@ TP example: `scope-drd/notes/FA4/h200/tp/explainers/03-broadcast-envelope.md` de
 - **`tensor_specs` manifest**:
   - A list describing each tensor field (`key`, `shape`, `dtype`, and any indexing for list entries) in a deterministic order.
   - Receiver allocates tensors from specs (no ad-hoc “infer shape locally”), then receives tensors in exactly that order.
-  - Deterministic ordering matters for debuggability and for “update” style refactors later.
+  - Deterministic ordering matters for debuggability and for “update” style refactors later (practical rule: sort by `(key, index)` where `index` is the list position for list-valued tensor fields).
 
 - **Ban nested tensors in meta**:
   - TP v0 explicitly fails fast if tensors appear inside nested objects (to avoid “tensor falls through pickled object path” and device/lifetime footguns). See `scope-drd/notes/FA4/h200/tp/explainers/03-broadcast-envelope.md`.
@@ -116,11 +116,12 @@ TP example: `scope-drd/notes/FA4/h200/tp/explainers/03-broadcast-envelope.md` de
 
 **Header schema (TP + PP)**
 
-1. **Include explicit version fields**: `tp_envelope_version` / `pp_envelope_version` in meta (and ideally in the header for early reject). Reject unknown versions immediately (crash > hang).
+1. **Include explicit version fields**: `tp_envelope_version` / `pp_envelope_version` in meta (and ideally in the fixed header for early reject). Reject unknown versions immediately (crash > hang).
 2. **Action is the first discriminant**: `NOOP/INFER/SHUTDOWN` must be in the fixed header. Receiver behavior:
    - `NOOP`: no payload; loop.
    - `SHUTDOWN`: no payload; exit cleanly.
    - `INFER`: payload must follow.
+   - **Recommended for p2p framing**: include `n_specs` / `n_tensors` (and/or meta byte length) in the fixed header and assert it before allocating/receiving.
 3. **Enforce monotonic IDs**:
    - `call_id` strictly monotonic across all actions.
    - `chunk_index` monotonic for `INFER` only (can reset on hard cut if that’s your contract, but then `cache_epoch` must also bump).
@@ -134,14 +135,14 @@ TP example: `scope-drd/notes/FA4/h200/tp/explainers/03-broadcast-envelope.md` de
 5. **Ban nested tensors**:
    - Extract tensors only from top-level fields; fail fast if a tensor appears in nested meta structures (TP v0 already does this).
 6. **`tensor_specs` is the manifest**:
-   - Generate specs deterministically (stable key order; stable ordering for list-valued tensors).
+   - Generate specs deterministically (sort by `(key, index)`; stable ordering for list-valued tensors).
    - Receiver allocates tensors strictly from specs; no “infer my own shapes.”
 
 **Anti-stranding ordering (most important)**
 
 7. **Validate/pickle/spec BEFORE sending the header** (sender-side preflight):
    - `validate_before_send()` (schema + required fields by action/version).
-   - Serialize meta bytes (catch pickle/JSON errors).
+   - Serialize the *exact* meta/spec object you will send (catch pickle/JSON errors before any header commitment).
    - Build `tensor_specs` and preflight dtype support (catch unsupported dtype before header; see FM-07 in the deadlock audit).
    - Materialize/normalize tensors (device, dtype casting, contiguity) and gather them in spec order.
    - **Only then** send header → meta/specs → tensors.

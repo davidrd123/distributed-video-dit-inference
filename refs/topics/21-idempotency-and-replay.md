@@ -118,6 +118,11 @@ In Scope, we intentionally handle this differently for TP v0 vs PP:
   - Reject out-of-order envelopes (TP v0 already uses “reject out-of-order call_ids” as an ordering corruption tripwire). (`scope-drd/notes/FA4/h200/tp/explainers/07-v0-contract.md`)
   - Do not apply cache mutations twice for the same `call_id`/`chunk_index` unless you explicitly implement “return cached result” semantics.
 
+- **Make dedupe/retry policy explicit (don’t “implicitly replay”)**
+  - Baseline (bringup-safe): **drop duplicates** (rank0 drops duplicate results; Stage 1 drops duplicate envelopes) and log with IDs/epoch.
+  - If you want “retry”, bound it: only within the same `cache_epoch`, only within a short wall-clock window, and only if Stage 1 can guarantee the same starting cache state (or can return a cached result keyed by `(cache_epoch, call_id, chunk_index)`).
+  - If you can’t guarantee the same starting state, treat it as unrecoverable: crash and restart (TP v0 posture). (`scope-drd/notes/FA4/h200/tp/explainers/06-failure-modes.md`, `scope-drd/notes/FA4/h200/tp/explainers/07-v0-contract.md`, `scope-drd/notes/FA4/h200/tp/pp-topology-pilot-plan.md`)
+
 ### Gotchas and failure modes
 
 - **Duplicate envelope is not automatically safe**: even if compute is deterministic, Stage 1 cache state advances; replaying without guarding side effects can double-advance cache and silently corrupt downstream outputs.
@@ -139,3 +144,6 @@ In Scope, we intentionally handle this differently for TP v0 vs PP:
 
 - **Retry after timeout (at-least-once simulation)**: simulate a lost message by timing out waiting for a result and resending the same envelope.
   - Expected: Stage 1 handles the duplicate safely (drop or return cached result); rank0 emits at most one output for that `call_id`/`chunk_index`; logs show the retry and the dedupe. (`scope-drd/notes/FA4/h200/tp/pp-topology-pilot-plan.md`)
+
+- **Out-of-order `call_id` / `chunk_index` regression**: send a header/result with a decreased `call_id` or `chunk_index`.
+  - Expected: receiver treats it as ordering corruption and crashes (crash > hang), rather than attempting to “replay” old work into current cache state. (`scope-drd/notes/FA4/h200/tp/explainers/07-v0-contract.md`, `scope-drd/notes/FA4/h200/tp/pp0-bringup-runbook.md`)

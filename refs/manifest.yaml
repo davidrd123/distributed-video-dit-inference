@@ -17,10 +17,9 @@ resources:
     type: docs
     topics: [1]
     priority: high
-    status: pending
+    status: fetched
     local_paths: []
     notes: "Covers communicators, collectives, CUDA stream semantics, group calls, algorithm selection, env vars (NCCL_DEBUG, NCCL_ALGO, NCCL_PROTO)"
-
   - id: scaling-dl-nccl
     title: "Scaling Deep Learning Training with NCCL"
     urls:
@@ -176,7 +175,7 @@ resources:
     type: docs
     topics: [5, 6, 7]
     priority: high
-    status: pending
+    status: fetched
     local_paths: []
     notes: "Comprehensive treatment of streams, events, caching allocator, CUDA graphs, memory management. Referenced across topics 5-7"
 
@@ -213,7 +212,7 @@ resources:
     type: docs
     topics: [6]
     priority: high
-    status: pending
+    status: fetched
     local_paths: []
     notes: "Graph definition vs execution, stream capture, memory allocations within graphs, instantiation, dependency management"
 
@@ -294,7 +293,7 @@ resources:
     type: docs
     topics: [9]
     priority: high
-    status: pending
+    status: fetched
     local_paths: []
     notes: "Most comprehensive official resource: PEP 523, VariableTracker system, guard generation, continuation functions, SymInt for dynamic shapes"
 
@@ -390,7 +389,7 @@ resources:
     type: code
     topics: [11]
     priority: high
-    status: pending
+    status: fetched
     local_paths: []
     notes: "Foundational design doc. Why c10d APIs break tracing, functional semantics, AsyncTensor subclass approach"
 
@@ -412,7 +411,7 @@ resources:
     type: blog
     topics: [11, 12]
     priority: high
-    status: pending
+    status: fetched
     local_paths: []
     notes: "Most comprehensive treatment of functional collectives in context. DTensor compilation, SimpleFSDP, async TP as compiler pass, comparison with JAX"
 
@@ -497,7 +496,7 @@ resources:
     type: paper
     topics: [13]
     priority: high
-    status: pending
+    status: fetched
     local_paths: []
     notes: "Huang et al., 2018. Foundational synchronous PP paper. Micro-batch splitting, re-materialization (activation checkpointing)"
 
@@ -519,7 +518,7 @@ resources:
     type: paper
     topics: [13]
     priority: high
-    status: pending
+    status: fetched
     local_paths: []
     notes: "Narayanan et al., 2020. PipeDream-Flush (synchronous 1F1B), double-buffered weight updates. The 1F1B schedule most modern systems implement"
 
@@ -556,7 +555,7 @@ resources:
     type: paper
     topics: [14]
     priority: high
-    status: pending
+    status: fetched
     local_paths: []
     notes: "Qi et al., 2024. Zero bubbles by splitting backward into B and W phases. 23-31% throughput improvement over 1F1B"
 
@@ -567,7 +566,7 @@ resources:
     type: docs
     topics: [14]
     priority: high
-    status: pending
+    status: fetched
     local_paths: []
     notes: "ScheduleGPipe, Schedule1F1B, ScheduleInterleaved1F1B, ScheduleInterleavedZeroBubble, ScheduleZBVZeroBubble"
 
@@ -841,7 +840,7 @@ resources:
     type: paper
     topics: [22]
     priority: high
-    status: pending
+    status: fetched
     local_paths: []
     notes: "Kwon et al., SOSP 2023. OS virtual memory analogy, block tables, non-contiguous allocation, copy-on-write sharing"
 
@@ -949,7 +948,7 @@ resources:
     type: paper
     topics: [24]
     priority: high
-    status: pending
+    status: fetched
     local_paths: []
     notes: "Feng et al., 2025. SLO-aware batching, block scheduler, sink-token rolling KV cache, motion-aware noise. 58.28 FPS with 14B model on 4xH100. Most directly relevant system"
 
@@ -971,7 +970,7 @@ resources:
     type: paper
     topics: [24]
     priority: high
-    status: pending
+    status: fetched
     local_paths: []
     notes: "PipeSP (pipelined sequence parallelism), DeDiVAE (decoupled diffusion/VAE), attention co-processing. Directly addresses pipeline-parallel DiT inference"
 
@@ -982,8 +981,12 @@ resources:
     type: paper
     topics: [24]
     priority: high
-    status: pending
-    local_paths: []
+    status: condensed
+    local_paths:
+      - sources/dit-paper/raw/paper.pdf
+      - sources/dit-paper/raw/abstract.html
+      - sources/dit-paper/full.md
+      - refs/resources/dit-paper.md
     notes: "Peebles & Xie, ICCV 2023. Foundational DiT paper. Replaces U-Net with transformers in latent diffusion. The architecture the system will run"
 
   # ============================================================

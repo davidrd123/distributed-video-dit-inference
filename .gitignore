@@ -1,3 +1,4 @@
 # Sibling repo checkout (not part of this reference library repo).
+# Can be a real directory (nested) or a local symlink to a sibling checkout.
 scope-drd/
-
+scope-drd

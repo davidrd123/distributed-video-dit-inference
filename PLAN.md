@@ -92,10 +92,8 @@ These override the original CLAUDE.md definitions where they conflict. Update CL
 
 ## Task flow (4 tracks, partially parallel)
 
-### Track A: Implementation context expansion (Codex)
-**Dependencies**: None (can start immediately)
-**Effort**: ~1 Codex session
-**What**: Add implementation context sections to remaining ~17 topic stubs, expand bridge doc with medium-priority resources. **Scope guard**: wiring, pointers, and TODOs only — do NOT rewrite actionables in completed cards (that's Track C work).
+### Track A: Implementation context expansion — DONE
+**Status**: Complete. All 25 topic stubs have populated `## Implementation context` sections (topics 1-10,17 have brief paragraphs; topics 11-24 have 5-8 lines with specific working notes findings). Bridge doc (`refs/implementation-context.md`, 259 lines) is complete. Remaining work: `## Synthesis` sections are intentionally empty — that's Track D.
 
 ### Track B: Tier 2 extraction (batched by type)
 **Dependencies**: None (can start immediately, parallel with Track A)
@@ -188,20 +186,20 @@ Week 4:
 
 | Track | Agent | Why |
 |---|---|---|
-| Track A (context expansion) | **gpt-xhigh** | Reading + targeted edits across many files; no deep judgment |
+| Track A (context expansion) | **DONE** | All 25 topic stubs + bridge doc populated. |
 | Track B, B1 (HTML Tier 2) | **DONE** | Completed by opus (2026-02-22). |
 | Track B, B3 (repo Tier 2) | **DONE** | Completed by gpt-xhigh+opus (2026-02-22). |
 | Track B, B2 (Paper Tier 2) | **DONE** | Completed by opus (4 papers) + gpt-xhigh (pipedit). All 5 B2 papers at Tier 2. |
-| Track C (Tier 3) | **opus**, user reviews each card | Requires project-specific judgment, working notes integration |
-| Track D (topic synthesis) | User + **opus** | Highest-judgment work; user's understanding matters most |
+| Track C (Tier 3) | **Any agent**, user reviews each card | Any model can draft cards when asked. Quality gate is user review, not model selection. |
+| Track D (topic synthesis) | User + **any agent** | Highest-judgment work; user's understanding matters most |
 
 ### Track C review workflow
-Opus writes each Tier 3 card, presents it to the user for review. User can:
-- Approve → mark `condensed` in manifest
-- Request changes → Opus revises
-- Add context → user provides working notes details Opus missed
+Any agent can write a Tier 3 card when asked. The quality gate is **user review**, not model assignment. Workflow:
+- Agent writes the card, referencing `full.md` + `refs/implementation-context.md` for grounding
+- Agent presents card to user for review — do **not** mark `condensed` in manifest
+- User can: approve → mark `condensed` | request changes → agent revises | add context
 
-This keeps cards grounded but doesn't block Tier 2 extraction (which runs ahead).
+This keeps cards grounded without bottlenecking on a specific model.
 
 ## CLAUDE.md updates needed (prerequisite for Track B) — DONE (opus1, 2026-02-22)
 

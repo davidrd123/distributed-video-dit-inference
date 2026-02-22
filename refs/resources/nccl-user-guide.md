@@ -5,7 +5,7 @@
 | Source | https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/index.html, https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html |
 | Type | docs |
 | Topics | 1 |
-| Status | extracted |
+| Status | condensed |
 
 ## Why it matters
 

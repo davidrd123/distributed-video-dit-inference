@@ -7,7 +7,7 @@
 | Topics | 24 |
 | Authors | William Peebles, Saining Xie |
 | Year | 2023 (ICCV) |
-| Status | extracted |
+| Status | condensed |
 
 ## Why it matters
 

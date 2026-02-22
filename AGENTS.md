@@ -200,6 +200,17 @@ These notes capture what we learned doing the `making-dl-go-brrrr` and `dit-pape
 - Don't collapse Tier 1 and Tier 2 into one step — keep the raw artifact separate from the markdown conversion
 - Don't clone full git history for repo resources — fetch specific files/directories
 
+## Multi-agent git safety
+
+Multiple agents work on this repo concurrently. Uncommitted changes from other agents may be in the working tree. Follow these rules to avoid destroying work:
+
+1. **Never `git checkout -- <file>` on files you didn't create or modify.** This permanently wipes uncommitted changes with no undo. It has already destroyed populated Tier 3 cards.
+2. **To keep your diff clean, use `git add <only-your-files>` and `git commit`.** Don't reset other files to clean your working tree.
+3. **If you see uncommitted changes from other agents, leave them alone.** They are in-flight work.
+4. **Never touch the `Status` field in resource cards** (`refs/resources/*.md`). Status is set during user review (`extracted` → `condensed`), not during drafting. Set status to `extracted` when creating a new card; never change an existing status.
+5. **Never `git stash` and `git stash pop`** unless you are certain the stash contains only your own changes. Stash pop restores old versions of files, overwriting edits made since the stash was created.
+6. **Commit early and often** rather than accumulating large uncommitted diffs. This reduces the blast radius if something goes wrong.
+
 ## Contributing to this document
 
 This file is a living document. If you discover techniques, flags, or workflows that improve extraction quality, **add them here** (e.g., refining the PDF recipe, noting a tool that works well for a specific source type). Keep additions targeted and note what you tested. This builds institutional memory across agents and sessions.

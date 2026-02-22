@@ -6,7 +6,7 @@
 | Type | blog |
 | Topics | 8, 16 |
 | Author | Horace He |
-| Status | extracted |
+| Status | condensed |
 
 ## Why it matters
 

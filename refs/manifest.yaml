@@ -17,7 +17,7 @@ resources:
     type: docs
     topics: [1]
     priority: high
-    status: converted
+    status: condensed
     local_paths:
       - sources/nccl-user-guide/raw/page.html
       - sources/nccl-user-guide/raw/subpages/

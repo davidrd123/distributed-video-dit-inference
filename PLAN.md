@@ -130,30 +130,34 @@ Each paper gets `conversion_notes:` in frontmatter noting any equation/table art
 
 Tier 3 requires project-specific judgment — reading `full.md` and writing actionables grounded in the working notes. User reviews every card before marking `condensed`.
 
-Order by PP bringup urgency (from `implementation-context.md`):
+Order by bringup phase (synced with `refs/reading-guide.md`):
 
-**Wave C1 — PP-critical (first):**
-1. `streamdiffusionv2` — most load-bearing for PP bringup
-2. `gpipe` — foundational PP concept
-3. `funcol-rfc-93173` — compile-aware collectives for mesh_pg
+**Wave C1 — PP0 foundations (contracts work, no overlap, no TP):**
+1. `nccl-user-guide` — group-call ordering, env vars, troubleshooting. PP0 hang prevention.
+2. `pytorch-cuda-semantics` — streams/events mental model for P2P transport
+3. `making-dl-go-brrrr` *(sharpen existing card)* — performance mental model grounds everything
 
-**Wave C2 — Compile/Dynamo + infra (second):**
-4. `dynamo-deep-dive` — graph breaks, SymInt, guards
-5. `ezyang-state-of-compile` — compile + distributed story
-6. `nccl-user-guide` — algorithm selection, env vars, debugging
-7. `pytorch-cuda-semantics` — stream ordering for collectives
+**Wave C2 — PP0+overlap + PP0+recompute (streams, KV cache):**
+4. `cuda-graphs-guide` — CUDAGraph capture for overlap phase
+5. `causvid` — causal DiT framing + cache/recompute (PP0+recompute blocker)
+6. `streamdiffusionv2` — rolling caches, Stream Batch, most load-bearing system reference
+7. `pagedattention` — KV-cache-as-memory-management patterns
 
-**Wave C3 — PP infrastructure (third):**
-8. `pytorch-pipelining-api` — PP schedule API
-9. `pagedattention` — KV-cache lifecycle patterns
-10. `cuda-graphs-guide` — CUDAGraph capture (v2.0 roadmap)
+**Wave C3 — PP1 (TP inside mesh, compile survives):**
+8. `funcol-rfc-93173` — compile-aware collectives for mesh_pg
+9. `dynamo-deep-dive` — graph breaks, SymInt, guards
+10. `ezyang-state-of-compile` — compile + distributed interaction
 
-**Wave C4 — Scheduling theory (fourth):**
-11. `pipedream-2bw` — 1F1B schedule
-12. `zero-bubble-pp` — advanced PP scheduling
-13. `pipedit` — pipelined sequence parallelism
+**Wave C4 — PP scheduling theory + API:**
+11. `gpipe` — foundational PP concept
+12. `pipedream-2bw` — 1F1B schedule
+13. `zero-bubble-pp` — advanced PP scheduling (F/B/W split)
+14. `pipedit` — pipelined sequence parallelism for DiT
+15. `pytorch-pipelining-api` — PP schedule API
 
-Also in Wave C1: sharpen actionables in the 2 already-completed cards (`making-dl-go-brrrr`, `dit-paper`) using `implementation-context.md` guide table.
+Also in Wave C1: sharpen `dit-paper` actionables using `implementation-context.md` guide table.
+
+Note: `causvid` needs Tier 3 stub created first (Track H item).
 
 ### Track D: Topic synthesis docs (last, after C)
 **Dependencies**: Tier 3 cards for the topic's resources must exist
@@ -164,22 +168,16 @@ Fill in the synthesis sections of `refs/topics/*.md` — mental model, key conce
 ## Execution order
 
 ```
-Week 1:
-  Track A (Codex): implementation context expansion      ─── can start now
-  Batch B1 (Codex): small/easy + infra docs (7 resources) ─ can start now, parallel
-  Batch B3 (Codex): streamdiffusionv2 repo structured dump ─ can start now, parallel
+Tracks A+B: DONE (all 15 Phase 1 resources at Tier 2+)
 
-Week 2:
-  Batch B2 (Opus): 5 papers via PDF page reading
-  Wave C1 (Opus + user review): condense streamdiffusionv2, gpipe, funcol-rfc
-    + sharpen making-dl-go-brrrr + dit-paper actionables
-
-Week 3:
-  Wave C2 (Opus + user review): condense dynamo, ezyang, nccl-user-guide, pytorch-cuda-semantics
-
-Week 4:
-  Wave C3+C4 (Opus + user review): condense remaining 6 cards
-  Track D: begin topic synthesis for PP-critical topics (13, 11, 16, 24, 22)
+Next:
+  Wave C1 (any agent + user review): nccl-user-guide, pytorch-cuda-semantics
+    + sharpen making-dl-go-brrrr + dit-paper
+  Wave C2 (any agent + user review): cuda-graphs-guide, causvid, streamdiffusionv2, pagedattention
+  Wave C3 (any agent + user review): funcol-rfc, dynamo-deep-dive, ezyang
+  Wave C4 (any agent + user review): gpipe, pipedream-2bw, zero-bubble-pp, pipedit, pipelining-api
+  Track D: topic synthesis for PP-critical topics (13, 11, 16, 24, 22)
+  Track H: ongoing housekeeping (check at session start)
 ```
 
 ## Assignment guidance

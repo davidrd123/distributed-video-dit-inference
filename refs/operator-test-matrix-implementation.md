@@ -33,7 +33,11 @@ Implement in increasing-risk tranches:
    - Uses real CUDA tensors and NCCL collectives.
    - Proves “crash > hang” under realistic transport.
 
-3. **Tranche 2: PP1 (rank0-out-of-mesh + `mesh_pg`)**
+3. **Tranche 2: PP0 overlap + epoch fencing**
+   - Requires PP0 machinery (rank0↔rank1 p2p) plus bounded queues (`D_in/D_out`) and acceptance rules (`cache_epoch`/monotonic IDs).
+   - Proves overlap/backpressure and “drop stale results” behavior in the simplest PP topology.
+
+4. **Tranche 3: PP1 (rank0-out-of-mesh + `mesh_pg`)**
    - Requires PP1 machinery (leader broadcast + terminal action + wrong-group guards).
    - Add once PP0 is rock solid.
 
@@ -71,7 +75,9 @@ Legend:
 | O-01 D sweep | 2 | `scripts/operator_matrix/o_pp0_d_sweep.py` | overlap/buffer depth effects | PP0 overlap instrumentation | This becomes meaningful once PP0 overlap is implemented. |
 | O-02 overlap signature | 2 | `scripts/operator_matrix/o_pp0_overlap_signature.py` | `t_mesh_idle_ms` and OverlapScore | PP0 metric plumbing | Requires the timestamping described in `pp0-bringup-runbook.md`. |
 | O-03 recompute coupling delta | 2 | `scripts/operator_matrix/o_pp0_recompute_coupling_delta.py` | R1 vs R0a overlap delta | PP0 R0a implemented | Captures the “does recompute re-serialize us?” question. |
-| OM-07/08/09 PP1-only rows | 3 | (future) `scripts/operator_matrix/pp1_*.py` | leader terminal broadcast, wrong-group guard, epoch dropping | PP1 required | Don’t block Tranche 0/1 on these; they want mesh_pg + leader broadcast semantics. |
+| OM-09 epoch fence / stale drop | 2 | `scripts/operator_matrix/om_pp0_epoch_fence_drop.py` | drop stale results after hard cut | PP0 queueing + acceptance rules | This is PP0: it requires `cache_epoch` filtering and `D_out>1` to create the “late result arrives after epoch bump” scenario. |
+| OM-07 PP leader safety | 3 | (future) `scripts/operator_matrix/pp1_leader_terminal_bcast.py` | leader validate-before-bcast + terminal action | PP1 required | Requires mesh leader broadcast + terminal action path. |
+| OM-08 wrong group collective | 3 | (future) `scripts/operator_matrix/pp1_wrong_group_guard.py` | wrong-group detection before NCCL call | PP1 required | Requires `mesh_pg` vs `world_pg` plumbing and explicit group handles in wrappers. |
 
 ## Dependency order (recommended)
 
@@ -81,11 +87,10 @@ Legend:
 4. Plan/call-count mismatch tests (OM-03/OM-10).
 5. Drift tripwires (OM-11/OM-12).
 6. Orphan/shutdown hygiene (OM-13).
-7. PP overlap tests (O-*) only after PP0 overlap instrumentation exists.
+7. PP0 epoch/overlap tests (OM-09 + O-*) only after PP0 queueing/metrics exist.
 
 ## Notes (what not to overbuild)
 
 - Don’t implement a heavy DSL for the runner; keep it as “list of test invocations + timeouts + summary.”
 - Prefer **CPU/gloo** versions of tests first. The operator value is “it crashes fast,” not “it’s the fastest GPU test suite.”
 - Keep the test hooks small and explicit; every hook is a future footgun unless it is parity-gated and isolated.
-

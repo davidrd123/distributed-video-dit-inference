@@ -10,6 +10,10 @@ Last updated: 2026-02-22
 
 ---
 
+## 0) Crosswalks (when you're editing code, not “studying”)
+
+- Working on the v1.1 “generator-only workers” scaffold? Start with `refs/v1.1-generator-only-workers-crosswalk.md` — section-by-section pointers into the topics/resources that matter *before* you change code.
+
 ## 1) The Spine (~15 load-bearing resources)
 
 These are the beams. Everything else is lookup.
@@ -133,6 +137,7 @@ This matches your actual phases. Don't read everything up front; read just enoug
 ### Phase PP1 — TP only inside the mesh (rank0 excluded), compile survives
 
 **Read (minimum):**
+- If you're touching the v1.1 “generator-only workers” path: skim `refs/v1.1-generator-only-workers-crosswalk.md` first (it’s the fastest way to rehydrate the invariants).
 - Functional collectives RFC + implementation
 - Dynamo deep dive + FAQ (graph breaks, guards, explain)
 - DTensor / TP tutorial (if migrating toward DeviceMesh/DTensor idioms)

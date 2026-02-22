@@ -100,6 +100,8 @@ The key operational takeaway is: **KV cache management is not a local optimizati
 
 #### Minimal deterministic contract (TP v1.1 + PP)
 
+*Distilled from `deep-research/2026-02-22/kv-cache-lifecycle/reply.md` §Minimal deterministic contract. Source citations: `scope-drd/notes/FA4/h200/tp/explainers/06-failure-modes.md`, `scope-drd/notes/FA4/h200/tp/pp-topology-pilot-plan.md`, `scope-drd/notes/FA4/h200/tp/explainers/05-kv-cache-head-sharding.md`.*
+
 The “operator manual” framing: KV-cache lifecycle must be an explicit distributed **contract**. If it isn’t, you will either (a) hang (call-count mismatch) or (b) drift silently (Franken-model).
 
 **Canonical field mapping (naming drift is not allowed):**
@@ -132,7 +134,54 @@ The “operator manual” framing: KV-cache lifecycle must be an explicit distri
 
 #### Cache lifecycle sketch (state machine)
 
-Treat the lifecycle as a small state machine driven by the per-chunk plan:
+*Distilled from `deep-research/2026-02-22/kv-cache-lifecycle/reply.md` §Cache lifecycle state machine. Source citations: `scope-drd/notes/FA4/h200/tp/explainers/05-kv-cache-head-sharding.md`, `scope-drd/notes/FA4/h200/tp/explainers/06-failure-modes.md`, `scope-drd/notes/FA4/h200/tp/pp-topology-pilot-plan.md`.*
+
+**State variables** — these define KV-cache lifecycle across chunks:
+
+| State variable | Meaning | Owner in TP | Owner in PP | Must match across ranks |
+|---|---|---|---|---|
+| `cache_epoch` | hard-cut generation counter | rank0 + workers | rank0 + mesh | yes |
+| `call_id` | monotonic message id | rank0 + workers | rank0 + mesh | yes |
+| `chunk_index` | monotonic chunk id | rank0 + workers | rank0 + mesh | yes |
+| `current_start_frame` | where this chunk starts in stream | rank0 + workers | rank0 decides, mesh executes | yes |
+| `init_cache` | "hard cut" flag | broadcast | in envelope | yes |
+| `reset_kv_cache` | explicit KV reset decision | broadcast | in envelope | yes |
+| `reset_crossattn_cache` | explicit cross-attn reset decision | broadcast | in envelope | yes |
+| `do_kv_recompute` | whether recompute generator call runs | broadcast | in envelope | yes |
+| `num_denoise_steps` | denoise steps this chunk | broadcast | in envelope | yes |
+| `expected_generator_calls` | `(do_kv_recompute?1:0)+num_denoise_steps` | broadcast | in envelope | yes |
+| `kv_cache_attention_bias` | soft forgetting scalar | broadcast | in envelope | yes |
+| `denoising_step_list` | actual timestep schedule | broadcast or derived | in envelope (preferred) | yes |
+| `global_end_index`, `local_end_index` (per layer) | ring-buffer indices | derived | derived | yes (derived) |
+| `decoded_frame_buffer` | decoded pixels for recompute anchor | pipeline state | rank0-only | no — must feed override |
+
+Notes: `global_end_index`/`local_end_index` are not broadcast but must be deterministically derived from `current_start_frame` and token counts. In PP, the decoded buffer is rank0-only; the only safe way to use it for recompute is to produce an explicit override tensor (R0a). (`scope-drd/notes/FA4/h200/tp/explainers/05-kv-cache-head-sharding.md`)
+
+**Per-chunk phases** — the cleanest way to reason about "what runs where":
+
+```
+Phase A  (rank0 control plane)
+  - decide lifecycle actions: init/reset/recompute/steps/bias
+  - materialize generator inputs: latents_in, conditioning_embeds, step_list
+  - if recompute scheduled and using R0a: materialize context_frames_override
+  - preflight: validate contract + dtype/specs BEFORE sending header
+
+Phase B  (generator lockstep)
+  - apply reset decisions
+  - optional recompute call (uses context frames)
+  - denoise loop calls (N steps)
+  - update KV indices and context buffers
+  - advance current_start_frame deterministically
+
+Phase C  (rank0 post)
+  - decode latents_out
+  - update decoded_frame_buffer
+  - (R0a) VAE re-encode anchor for next chunk's override
+```
+
+TP v0 runs A/B/C on every rank (wasteful but simple). TP v1.1 moves A and C to rank0 but keeps B lockstep. PP moves A and C to rank0, and B to mesh only.
+
+**State transitions** — treat these as the only lifecycle transitions that exist; everything else is a bug:
 
 - **RESET (hard cut)**: `init_cache=True` (and explicit reset bits) starts a new epoch (`cache_epoch += 1` in PP). All indices are reinitialized.
 - **STEADY**: each chunk appends tokens, advances indices deterministically from `current_start_frame` and token counts.
@@ -159,6 +208,8 @@ Operational note: in TP v0/v1.1, state-machine alignment comes from lockstep exe
 
 #### Failure modes: what hangs vs what silently drifts
 
+*Distilled from `deep-research/2026-02-22/kv-cache-lifecycle/reply.md` §Divergence hazards. Source citations: `scope-drd/notes/FA4/h200/tp/explainers/06-failure-modes.md`, `scope-drd/notes/FA4/h200/tp/explainers/02-deadlock-patterns.md`, `scope-drd/notes/FA4/h200/tp/pp-topology-pilot-plan.md`.*
+
 The hazards that cause hangs are the ones that matter at 2am; the rest will silently ruin output if you don’t have digests/fingerprints.
 
 | Hazard | Failure class | Typical cause | Tripwire | Where to assert |
@@ -175,6 +226,8 @@ The hazards that cause hangs are the ones that matter at 2am; the rest will sile
 | Non-deterministic meta encoding | false positive trips | JSON key order, float formatting | canonical meta serialization | digest implementation |
 
 #### Tripwire checklist (where to assert)
+
+*Distilled from `deep-research/2026-02-22/kv-cache-lifecycle/reply.md` §Tripwire checklist. Source citations: `scope-drd/notes/FA4/h200/tp/explainers/06-failure-modes.md`, `scope-drd/notes/FA4/h200/tp/explainers/02-deadlock-patterns.md`, `scope-drd/notes/FA4/h200/tp/pp0-bringup-runbook.md`.*
 
 **Rank0 preflight (before sending any header that commits the receiver):**
 - Validate schema: version, plan, required fields present.
@@ -208,6 +261,8 @@ The hazards that cause hangs are the ones that matter at 2am; the rest will sile
 This is cheaper than full tensor digests and catches “lockstep but state drifted” bugs earlier than subjective output inspection. (Motivated by `scope-drd/notes/FA4/h200/tp/explainers/06-failure-modes.md` Franken-model class.)
 
 #### Break-it tests (minimal, high value)
+
+*Distilled from `deep-research/2026-02-22/kv-cache-lifecycle/reply.md` §Break-it tests. Source citations: `scope-drd/notes/FA4/h200/tp/explainers/06-failure-modes.md`, `scope-drd/notes/FA4/h200/tp/pp-topology-pilot-plan.md`, `scope-drd/notes/FA4/h200/tp/pp0-bringup-runbook.md`.*
 
 1. **Plan mismatch**: set `SCOPE_TP_PLAN` (or PP enable) differently across ranks → must fail at init via env parity (no hang).
 2. **Generator-call count mismatch**: force `do_kv_recompute=True` on rank0 but false on worker/mesh → must fail-fast via `expected_generator_calls` assert (not hang).

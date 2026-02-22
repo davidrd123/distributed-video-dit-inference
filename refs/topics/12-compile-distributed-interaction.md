@@ -99,6 +99,8 @@ Finally, our PP design introduces an important nuance: **rank0-out-of-mesh** mea
 
 #### P0 ship checklist (TP=2 + compile)
 
+*Distilled from `deep-research/2026-02-22/compile-distributed-hardening/reply.md` §P0 Ship Checklist. Source citations: `scope-drd/notes/FA4/h200/tp/bringup-run-log.md` Runs 8–12b, `scope-drd/notes/FA4/h200/tp/explainers/06-failure-modes.md`, `scope-drd/notes/FA4/h200/tp/research-program.md`.*
+
 These are “stop the line” constraints if we want to keep the Run-12b baseline stable.
 
 - **No rank divergence around collectives**: inside a collective group, ranks must execute the same collectives, in the same order, with compatible tensors (shape/dtype/device). If not, the expected outcomes are NCCL hang or Franken-model.
@@ -108,6 +110,8 @@ These are “stop the line” constraints if we want to keep the Run-12b baselin
 - **Regression canary stays green**: `scope-drd/scripts/tp_compile_repro.py` Mode C invariants (no breaks / one graph) are treated as a daily gate.
 
 #### Rank-parity invariants (what to pin, where)
+
+*Distilled from `deep-research/2026-02-22/compile-distributed-hardening/reply.md` §1 Rank-parity invariants. Source citations: `scope-drd/notes/FA4/h200/tp/explainers/06-failure-modes.md`, `scope-drd/notes/FA4/h200/tp/runtime-checklist.md`, `scope-drd/notes/FA4/h200/tp/bringup-run-log.md`.*
 
 In distributed compile, compilation happens per-process but correctness is cross-process. The operator rule is: **pin anything that changes graphs or kernel selection at init, and carry anything that changes per-call control flow in the envelope**.
 
@@ -122,6 +126,8 @@ In distributed compile, compilation happens per-process but correctness is cross
 
 #### Triage flow (graph breaks vs recompiles vs divergence)
 
+*Distilled from `deep-research/2026-02-22/compile-distributed-hardening/reply.md` §2 Graph breaks and guard churn triage. Source citations: `refs/resources/dynamo-deep-dive.md`, `refs/resources/ezyang-state-of-compile.md`, `scope-drd/notes/FA4/h200/tp/research-program.md`.*
+
 1. If it’s **hung** (GPUs idle, last log near a collective/broadcast): treat as collective ordering mismatch until proven otherwise.
 2. If it’s **slow**, start with `TORCH_LOGS=graph_breaks`:
    - If breaks appear in `tp_compile_repro.py` “0-break mode”, treat as regression (often a stray disable wrapper or a Python side effect inside the compiled region).
@@ -129,6 +135,8 @@ In distributed compile, compilation happens per-process but correctness is cross
 4. In distributed mode, **rank-asymmetric breaks or recompiles are correctness bugs**, not “just perf.” Fix parity before tuning kernels.
 
 #### Code-review contract: compiled distributed region
+
+*Distilled from `deep-research/2026-02-22/compile-distributed-hardening/reply.md` §3 Compiled distributed region contract. Source citations: `scope-drd/notes/FA4/h200/tp/explainers/06-failure-modes.md`, `refs/resources/funcol-rfc-93173.md`, `scope-drd/notes/FA4/h200/tp/explainers/02-deadlock-patterns.md`.*
 
 Do:
 - Treat compiled distributed code as SPMD inside its process group (same inputs/branches/collectives).
@@ -145,6 +153,8 @@ Don’t:
 
 #### Warmup protocol (operator checklist)
 
+*Distilled from `deep-research/2026-02-22/compile-distributed-hardening/reply.md` §4 Warmup protocol. Source citations: `scope-drd/notes/FA4/h200/tp/bringup-run-log.md` Known Issue 2, `scope-drd/notes/FA4/h200/tp/session-state.md`.*
+
 Warmup exists to eliminate startup divergence and make the first “real” inference hit steady-state compiled graphs.
 
 - Warmup must run through the same TP broadcast path as inference (rank0 drives; workers follow).
@@ -153,6 +163,8 @@ Warmup exists to eliminate startup divergence and make the first “real” infe
 - After warmup, perform a **rank-symmetric compile health gather**: all-gather per-rank `graph_breaks` / `unique_graphs` (or equivalent counters) and crash if they differ across TP ranks when compile is enabled. This turns “rank diverged during compile” into a fast error instead of a later NCCL hang.
 
 #### Minimal daily regression suite (break-it tests)
+
+*Distilled from `deep-research/2026-02-22/compile-distributed-hardening/reply.md` §5 Minimal daily regression suite. Source citations: `scope-drd/notes/FA4/h200/tp/research-program.md`, `scope-drd/notes/FA4/h200/tp/explainers/06-failure-modes.md`, `refs/resources/dynamo-deep-dive.md`.*
 
 These catch parity bugs, graph fragmentation, guard churn, hangs, and drift early.
 

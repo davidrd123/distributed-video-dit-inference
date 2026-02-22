@@ -55,6 +55,7 @@ Finally, our PP design introduces an important nuance: **rank0-out-of-mesh** mea
 ### Key concepts
 
 - **Rank-symmetry contract**: for all ranks in a given collective group, ensure the same collective sequence/order and compatible tensor metadata (shape/dtype), and avoid rank-dependent branches inside compiled regions.
+- **Effective backend parity (not just requested backend parity)**: if a setting can resolve dynamically (e.g., `SCOPE_KV_BIAS_BACKEND=auto`), treat the *resolved* backend choice as part of the distributed contract: log it on every rank and assert it matches across ranks at startup (and ideally whenever it can change). “Auto” must never silently resolve to different kernels across ranks.
 - **Graph breaks vs recompiles (Dynamo mechanics)**:
   - A **graph break** splits execution into multiple compiled segments with eager Python in between.
   - A **recompile** happens when a **guard fails** (e.g., a shape/value changes) and Dynamo emits a new specialization.
@@ -93,6 +94,76 @@ Finally, our PP design introduces an important nuance: **rank0-out-of-mesh** mea
 - **Prefer regional compilation**: compile the per-block/per-stage forward where shapes are stable; keep control-plane and highly dynamic logic eager.
 - **Establish a deterministic warmup**: run a fixed-shape warmup phase on all symmetric ranks before measuring/serving so compilation and caches are initialized in a known-safe regime.
 - **Failure-mode hygiene**: use conservative timeouts during bringup and ensure “all ranks fail together” behavior (to avoid stranding peers at collectives).
+
+#### P0 ship checklist (TP=2 + compile)
+
+These are “stop the line” constraints if we want to keep the Run-12b baseline stable.
+
+- **No rank divergence around collectives**: inside a collective group, ranks must execute the same collectives, in the same order, with compatible tensors (shape/dtype/device). If not, the expected outcomes are NCCL hang or Franken-model.
+- **No collective-induced graph fragmentation**: the TP compiled region must not wrap collectives in `torch._dynamo.disable()` / `torch.compiler.disable()`; that was the Run 8–9b cliff (~160 breaks/forward).
+- **Crash > hang, drift must trip**: keep watchdog/heartbeat available for orphaned workers; keep input digest + shard fingerprints available to catch envelope/weight drift.
+- **Warmup in lockstep** when compile is enabled: warmup must run through the same TP broadcast path as “real” inference, with production shapes/flags.
+- **Regression canary stays green**: `scope-drd/scripts/tp_compile_repro.py` Mode C invariants (no breaks / one graph) are treated as a daily gate.
+
+#### Rank-parity invariants (what to pin, where)
+
+In distributed compile, compilation happens per-process but correctness is cross-process. The operator rule is: **pin anything that changes graphs or kernel selection at init, and carry anything that changes per-call control flow in the envelope**.
+
+| Category | Enforce at init (env parity / startup assert) | Enforce per call (envelope / plan) | Notes |
+|---|---|---|---|
+| Topology | `WORLD_SIZE`, `SCOPE_TENSOR_PARALLEL`, role/plan (`SCOPE_TP_PLAN`, `SCOPE_PP_ENABLED`) | `action` (`INFER/NOOP/SHUTDOWN`) | “Wrong group membership” is instant deadlock risk. |
+| Pipeline identity + weights | pipeline id frozen; reload disabled for TP v0 | `cache_epoch` / `control_epoch` (if used) | Periodic shard fingerprint is the drift backstop. |
+| Compile mode | `SCOPE_TP_ALLOW_COMPILE`, `SCOPE_COMPILE_KREA_PIPELINE`, `SCOPE_TORCH_COMPILE_FULLGRAPH` (if used) | warmup calls treated as planned | Do not let some ranks compile while others don’t. |
+| Kernel/backend selection | `SCOPE_KV_BIAS_BACKEND` (pin during bringup); any attention backend flags | (log only) | If you allow `auto`, assert the **effective** backend matches across ranks. |
+| Optional phases that change call graph | feature flags that add/remove ops | `do_kv_recompute`, `num_denoise_steps`, `expected_generator_calls`, `init_cache` | Anything that changes call-count must be explicit. |
+| Drift tripwires | parity-check enabling digest/fingerprint so ranks don’t diverge on safety | per-call digests (bringup) | Sampling cadence can be tuned later. |
+
+#### Triage flow (graph breaks vs recompiles vs divergence)
+
+1. If it’s **hung** (GPUs idle, last log near a collective/broadcast): treat as collective ordering mismatch until proven otherwise.
+2. If it’s **slow**, start with `TORCH_LOGS=graph_breaks`:
+   - If breaks appear in `tp_compile_repro.py` “0-break mode”, treat as regression (often a stray disable wrapper or a Python side effect inside the compiled region).
+3. If break count is stable but perf jitters or `unique_graphs` grows: switch to `TORCH_LOGS=recompiles,guards` to find guard churn.
+4. In distributed mode, **rank-asymmetric breaks or recompiles are correctness bugs**, not “just perf.” Fix parity before tuning kernels.
+
+#### Code-review contract: compiled distributed region
+
+Do:
+- Treat compiled distributed code as SPMD inside its process group (same inputs/branches/collectives).
+- Gate functional collectives to compile mode; eager should use in-place c10d collectives for performance.
+- Keep the compiled region tensor-pure: no prints/logging/host callbacks; don’t thread `ProcessGroup` / `Work` objects through traced code.
+- Make optional phases explicit in the per-call plan and assert `observed_generator_calls == expected_generator_calls`.
+- Validate before committing peers to blocking (anti-stranding: preflight before sending `INFER` header / entering broadcast loops).
+
+Don’t:
+- Add conditional collectives behind per-rank flags unless the flag is parity-checked and treated as part of the plan.
+- Wrap TP collectives in `torch._dynamo.disable()` / `torch.compiler.disable()` inside compiled hot paths.
+- Rely on rank-dependent dynamic shapes or data-dependent branches inside compiled distributed regions.
+- Introduce runtime weight mutation (runtime LoRA scale updates, reload) without explicit cross-rank synchronization; TP v0’s posture is “forbid.”
+
+#### Warmup protocol (operator checklist)
+
+Warmup exists to eliminate startup divergence and make the first “real” inference hit steady-state compiled graphs.
+
+- Warmup must run through the same TP broadcast path as inference (rank0 drives; workers follow).
+- Warmup must use fixed shapes/flags matching the production mode you intend to serve.
+- Warmup should be excluded from input-digest checks (Scope uses `chunk_index=-1`) but still must run in lockstep.
+- After warmup, perform a **rank-symmetric compile health gather**: all-gather per-rank `graph_breaks` / `unique_graphs` (or equivalent counters) and crash if they differ across TP ranks when compile is enabled. This turns “rank diverged during compile” into a fast error instead of a later NCCL hang.
+
+#### Minimal daily regression suite (break-it tests)
+
+These catch parity bugs, graph fragmentation, guard churn, hangs, and drift early.
+
+1. TP control-plane smoke (no hangs): `SCOPE_TENSOR_PARALLEL=2 uv run torchrun --nproc_per_node=2 scripts/tp_smoke_control_plane.py`
+2. Env parity mismatch fails fast (not hang): intentionally mismatch a TP-critical env var on rank1.
+3. Compile repro break gate: `uv run torchrun --nproc_per_node=2 scripts/tp_compile_repro.py` (Mode C “0 breaks, 1 graph”).
+4. Fullgraph “first break census” (diagnostic-only): `SCOPE_TORCH_COMPILE_FULLGRAPH=1` should fail at known KV slicing site; any earlier failure is regression.
+5. Guard stability: `TORCH_LOGS=recompiles,guards` on repeated fixed-shape runs; expect no recompiles after warmup.
+6. One-dimension variation (synchronized): vary one “should-be-static” dimension identically across ranks; expect at most one synchronized recompile.
+7. Worker orphan test: enable heartbeat + watchdog; kill rank0; worker should exit within watchdog window (crash > hang).
+8. Anti-stranding preflight test: inject non-picklable meta; sender must fail pre-header; receiver must not hang.
+9. Input digest mismatch test: perturb broadcast tensor on rank0 only; expect crisp digest mismatch crash.
+10. Shard fingerprint mutation test: mutate weight shard on one rank (test-only); expect fingerprint mismatch crash.
 
 ### Gotchas and failure modes
 

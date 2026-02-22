@@ -40,6 +40,7 @@ An answer is only “good” if it is **Scope-shaped** and operational:
 - **Break-it tests**: each ask should return 4–10 intentional violations with expected failure signatures (“crash quickly; no multi-minute hang”).
 - **“Where to assert”** is explicit (rank0 preflight vs mesh leader vs worker).
 - **Anchored to our notes** (file paths + run numbers) and consistent with the existing 5 Pro audit history in `scope-drd/notes/FA4/h200/tp/5pro/`.
+- **Delta-first**: if a point is already covered in prior 5 Pro threads (especially #10 and #13), don’t re-derive it — either (a) refine it into a reusable checklist/break-it test, or (b) explicitly state “unchanged” and move on.
 
 ## Prior art / continuity (why this works)
 
@@ -55,4 +56,3 @@ Use those as “tone and rigor” calibration: P0/P1 blockers, concrete schemas,
 
 - This repo is intentionally **not** asking Deep Research to propose a brand-new architecture; it’s asking for operator-manual scaffolding that makes safe iteration faster.
 - If an output suggests adding new external sources, capture them as candidates (later) rather than immediately modifying `refs/manifest.yaml` during an active multi-agent sprint.
-

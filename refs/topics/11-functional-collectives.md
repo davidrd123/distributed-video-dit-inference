@@ -78,6 +78,10 @@ Functional collectives are the “make distributed ops look like normal tensor o
   - Where: `_maybe_all_reduce()` in `scope-drd/src/scope/core/tensor_parallel/linear.py` (and analogous reductions in RMSNorm).
   - Why: avoid the eager regression trap (Run 12a).
 
+- **Never “escape hatch” collectives with `torch._dynamo.disable()` inside a compiled TP region**:
+  - That pattern forces a graph break per collective and recreates the Run 8–9b fragmentation cliff.
+  - If a collective isn’t traceable, the fix is “make it traceable” (funcol) or “move it out of the compiled region,” not “disable tracing at the callsite.”
+
 - **Treat funcol as pure “Tensor → Tensor”**:
   - Always assign/return the output tensor from `all_reduce` (and from `wait_tensor` if used).
   - Don’t assume the original tensor was mutated in-place.

@@ -87,6 +87,7 @@ In Scope, we intentionally handle this differently for TP v0 vs PP:
 - **Define the interface as a replay boundary**:
   - Stage 0 → Stage 1: envelope is the only authority on “what to run” (don’t let mesh infer reset decisions).
   - Stage 1 → Stage 0: result is accepted only if its IDs/epoch match the current expected stream.
+  - Operational rule: **accept results only if `(cache_epoch, call_id, chunk_index)` match expectations**; on hard cut, increment `cache_epoch`, flush bounded queues, and drop stale results.
   See: `scope-drd/notes/FA4/h200/tp/pp-topology-pilot-plan.md`.
 
 - **Envelope must include (at minimum)**:

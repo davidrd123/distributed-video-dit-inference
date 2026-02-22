@@ -92,6 +92,15 @@ Use this as a “bringup/debug mode” checklist; relax knobs only once you’ve
 - **Backend parity:** pin/validate kernel/backend choices across ranks (don’t allow one rank to “auto” into a different backend).
 - **RNG contract is explicit:** either broadcast randomness tensors, or lockstep generator state derived from broadcast meta (seed, step index, etc.). Don’t mix.
 
+**A2. Cache lifecycle determinism is not bitwise determinism**
+
+In TP/PP streaming inference, the highest-leverage “determinism” is usually not float-level reproducibility; it’s **KV-cache lifecycle integrity** (reset/recompute/advance). The operator goal is: prevent hangs and Franken-models via explicit contracts + tripwires.
+
+- Make cache lifecycle explicit in the per-call contract: `init_cache`, reset bits, `do_kv_recompute`, `expected_generator_calls`, `cache_epoch`, `current_start_frame`, `kv_cache_attention_bias`, and (ideally) `denoising_step_list`.
+- Add a cheap **scalar state digest** every N chunks (N=64/128): all_gather and compare `cache_epoch`, `current_start_frame`, `do_kv_recompute`, `num_denoise_steps`, `kv_cache_attention_bias`.
+- Treat backend pinning (e.g., `SCOPE_KV_BIAS_BACKEND`) as a **correctness contract**, not a perf setting.
+- Optional “belt + suspenders”: a tiny “KV lifecycle digest” that hashes only scalars + a couple representative cache index values and all_gathers it every 128 chunks.
+
 **B. Input digest (catch envelope/payload mismatches)**
 
 - Enable: `SCOPE_TP_INPUT_DIGEST=1`

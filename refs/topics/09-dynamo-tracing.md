@@ -81,6 +81,7 @@ Use this as the “first 10 minutes” playbook whenever compile performance reg
 - **Track steady-state health metrics**: our current steady state is `graph_breaks=2` and `unique_graphs=12–14`; increases are “guilty until proven innocent” (see Implementation context; and `ezyang-state-of-compile` actionables).
 - **Use `fullgraph=True` during development of hot paths**: this is the fastest way to force yourself to remove/relocate the break source rather than “living with” a silent fallback (see `ezyang-state-of-compile` claim 4).
 - **Separate breaks from recompiles**: if break count is stable but performance jitters, check `TORCH_LOGS=recompiles` / `TORCH_LOGS=guards` for dynamic-shape/flag churn (see `dynamo-deep-dive` claim 4; `ezyang-state-of-compile` claim 3).
+- **In distributed, treat rank-asymmetric breaks/recompiles as correctness bugs**: a “harmless” divergence in guard/break behavior can become a collective-ordering hang later (see `ezyang-state-of-compile` claim 10).
 - **For TP+compile, assume collectives are suspect until proven traceable**: if a collective is wrapped in `torch._dynamo.disable()` or threads non-tensor objects through traced code, you’re likely forcing breaks (see `funcol-rfc-93173` claim 1 and claim 4–5). Our measured outcome was ~160 breaks/forward pre-funcol → 2 breaks steady-state post-funcol (Implementation context).
 
 ### Gotchas and failure modes

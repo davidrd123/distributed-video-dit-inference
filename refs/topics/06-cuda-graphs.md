@@ -7,8 +7,8 @@ CUDA graphs eliminate kernel launch overhead by recording a sequence of GPU oper
 <!-- Resource IDs from manifest belonging to this topic -->
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| cuda-graphs-guide | CUDA Programming Guide: CUDA Graphs | high | pending |
-| pytorch-cuda-semantics | PyTorch CUDA Semantics | high | pending |
+| cuda-graphs-guide | CUDA Programming Guide: CUDA Graphs | high | converted |
+| pytorch-cuda-semantics | PyTorch CUDA Semantics | high | converted |
 | torch-compile-api | torch.compile API | medium | pending |
 | nccl-cuda-graphs | Using NCCL with CUDA Graphs | medium | pending |
 

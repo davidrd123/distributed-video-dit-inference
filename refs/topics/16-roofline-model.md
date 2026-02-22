@@ -7,7 +7,7 @@ The roofline model plots achievable FLOPS against **arithmetic intensity** (FLOP
 <!-- Resource IDs from manifest belonging to this topic -->
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| making-dl-go-brrrr | Making Deep Learning Go Brrrr From First Principles | high | pending |
+| making-dl-go-brrrr | Making Deep Learning Go Brrrr From First Principles | high | condensed |
 | roofline-paper | Roofline: An Insightful Visual Performance Model for Multicore Architectures | medium | link_only |
 | nvidia-gpu-perf-guide | NVIDIA GPU Performance Background User's Guide | medium | pending |
 | gpu-mode-lecture-8 | GPU MODE Lecture 8: CUDA Performance Checklist | low | link_only |
@@ -19,6 +19,10 @@ The roofline model explains why the system is **memory-bandwidth-bound on H200**
 Block profiling (Run 10b): decode + recompute = 33% of wall time. These blocks are not TP-sharded, making them pure "overhead-bound" work on worker ranks.
 
 See: `refs/implementation-context.md` → Phase 2, `scope-drd/notes/FA4/h200/tp/streamdiffusion-v2-analysis-opus.md`.
+
+Relevant Scope artifacts:
+- `scope-drd/scripts/bench_nccl_collectives.py` (collective microbenchmarks used to ground bandwidth claims)
+- `scope-drd/scripts/gemm_shape_census.py` (token/matmul shape census for roofline-style reasoning)
 
 ## Synthesis
 

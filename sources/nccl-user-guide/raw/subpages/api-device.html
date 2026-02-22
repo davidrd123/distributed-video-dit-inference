@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en-US">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Device API &mdash; NCCL 2.29.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/theme_overrides.css?v=8eabb79f" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=324d1df1"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Migrating from NCCL 1 to NCCL 2" href="../nccl1.html" />
+    <link rel="prev" title="NCCL API Supported Flags" href="flags.html" />
+  <script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" > 
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NCCL
+          </a>
+              <div class="version">
+                <a href="https://docs.nvidia.com/deeplearning/sdk/nccl-archived/index.html">2.29</a>
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+    .wy-side-nav-search, .wy-nav-top {
+      background: #76b900;
+    }
+    .wy-side-nav-search a:link, .wy-nav-top a:link {
+      color: #fff;
+    }
+    .wy-side-nav-search a:visited, .wy-nav-top a:visited {
+      color: #fff;
+    }
+    .wy-side-nav-search a:hover, .wy-nav-top a:hover {
+      color: #fff;
+    }
+    .wy-menu-vertical a:link, .wy-menu-vertical a:visited {
+      color: #d9d9d9
+    }
+    .wy-menu-vertical a:active {
+      background-color: #76b900
+    }
+    .wy-side-nav-search>div.version {
+      color: rgba(0, 0, 0, 0.3)
+    }
+  </style>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview of NCCL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../setup.html">Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Using NCCL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../usage/communicators.html">Creating a Communicator</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../usage/communicators.html#creating-a-communicator-with-options">Creating a communicator with options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/communicators.html#creating-a-communicator-using-multiple-nccluniqueids">Creating a communicator using multiple ncclUniqueIds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/communicators.html#shrinking-a-communicator">Shrinking a communicator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/communicators.html#growing-a-communicator">Growing a communicator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/communicators.html#creating-more-communicators">Creating more communicators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/communicators.html#using-multiple-nccl-communicators-concurrently">Using multiple NCCL communicators concurrently</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/communicators.html#finalizing-a-communicator">Finalizing a communicator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/communicators.html#destroying-a-communicator">Destroying a communicator</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../usage/communicators.html#error-handling-and-communicator-abort">Error handling and communicator abort</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../usage/communicators.html#asynchronous-errors-and-error-handling">Asynchronous errors and error handling</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../usage/communicators.html#fault-tolerance">Fault Tolerance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage/communicators.html#quality-of-service">Quality of Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage/collectives.html">Collective Operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../usage/collectives.html#allreduce">AllReduce</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/collectives.html#broadcast">Broadcast</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/collectives.html#reduce">Reduce</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/collectives.html#allgather">AllGather</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/collectives.html#reducescatter">ReduceScatter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/collectives.html#alltoall">AlltoAll</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/collectives.html#gather">Gather</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/collectives.html#scatter">Scatter</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../usage/data.html">Data Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage/streams.html">CUDA Stream Semantics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../usage/streams.html#mixing-multiple-streams-within-the-same-ncclgroupstart-end-group">Mixing Multiple Streams within the same ncclGroupStart/End() group</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../usage/groups.html">Group Calls</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../usage/groups.html#management-of-multiple-gpus-from-one-thread">Management Of Multiple GPUs From One Thread</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/groups.html#aggregated-operations-2-2-and-later">Aggregated Operations (2.2 and later)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/groups.html#group-operation-ordering-semantics">Group Operation Ordering Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/groups.html#nonblocking-group-operation">Nonblocking Group Operation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../usage/p2p.html">Point-to-point communication</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../usage/p2p.html#two-sided-communication">Two-sided communication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../usage/p2p.html#sendrecv">Sendrecv</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../usage/p2p.html#one-to-all-scatter">One-to-all (scatter)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../usage/p2p.html#all-to-one-gather">All-to-one (gather)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../usage/p2p.html#all-to-all">All-to-all</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../usage/p2p.html#neighbor-exchange">Neighbor exchange</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/p2p.html#one-sided-communication">One-sided communication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../usage/p2p.html#putsignal-and-waitsignal">PutSignal and WaitSignal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../usage/p2p.html#barrier">Barrier</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../usage/p2p.html#id1">All-to-all</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../usage/threadsafety.html">Thread Safety</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage/inplace.html">In-place Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage/cudagraph.html">Using NCCL with CUDA Graphs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage/bufferreg.html">User Buffer Registration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../usage/bufferreg.html#nvlink-sharp-buffer-registration">NVLink Sharp Buffer Registration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/bufferreg.html#ib-sharp-buffer-registration">IB Sharp Buffer Registration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/bufferreg.html#general-buffer-registration">General Buffer Registration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/bufferreg.html#buffer-registration-and-pxn">Buffer Registration and PXN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/bufferreg.html#memory-allocator">Memory Allocator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/bufferreg.html#window-registration">Window Registration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/bufferreg.html#zero-cta-optimization">Zero-CTA Optimization</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../usage/deviceapi.html">Device-Initiated Communication</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../usage/deviceapi.html#device-api">Device API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/deviceapi.html#requirements">Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/deviceapi.html#host-side-setup">Host-Side Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/deviceapi.html#simple-lsa-kernel">Simple LSA Kernel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/deviceapi.html#multimem-device-kernel">Multimem Device Kernel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/deviceapi.html#thread-groups">Thread Groups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/deviceapi.html#teams">Teams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/deviceapi.html#host-accessible-device-pointer-functions">Host-Accessible Device Pointer Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/deviceapi.html#gin-device-kernel">GIN Device Kernel</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">NCCL API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="comms.html">Communicator Creation and Management Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclgetlasterror">ncclGetLastError</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclgeterrorstring">ncclGetErrorString</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclgetversion">ncclGetVersion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclgetuniqueid">ncclGetUniqueId</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcomminitrank">ncclCommInitRank</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcomminitall">ncclCommInitAll</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcomminitrankconfig">ncclCommInitRankConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcomminitrankscalable">ncclCommInitRankScalable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcommsplit">ncclCommSplit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcommshrink">ncclCommShrink</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcommgetuniqueid">ncclCommGetUniqueId</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcommgrow">ncclCommGrow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcommfinalize">ncclCommFinalize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcommrevoke">ncclCommRevoke</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcommdestroy">ncclCommDestroy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcommabort">ncclCommAbort</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcommgetasyncerror">ncclCommGetAsyncError</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcommcount">ncclCommCount</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcommcudevice">ncclCommCuDevice</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcommuserrank">ncclCommUserRank</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcommregister">ncclCommRegister</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcommderegister">ncclCommDeregister</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcommwindowregister">ncclCommWindowRegister</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclcommwindowderegister">ncclCommWindowDeregister</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclmemalloc">ncclMemAlloc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comms.html#ncclmemfree">ncclMemFree</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="colls.html">Collective Communication Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="colls.html#ncclallreduce">ncclAllReduce</a></li>
+<li class="toctree-l3"><a class="reference internal" href="colls.html#ncclbroadcast">ncclBroadcast</a></li>
+<li class="toctree-l3"><a class="reference internal" href="colls.html#ncclreduce">ncclReduce</a></li>
+<li class="toctree-l3"><a class="reference internal" href="colls.html#ncclallgather">ncclAllGather</a></li>
+<li class="toctree-l3"><a class="reference internal" href="colls.html#ncclreducescatter">ncclReduceScatter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="colls.html#ncclalltoall">ncclAlltoAll</a></li>
+<li class="toctree-l3"><a class="reference internal" href="colls.html#ncclgather">ncclGather</a></li>
+<li class="toctree-l3"><a class="reference internal" href="colls.html#ncclscatter">ncclScatter</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="group.html">Group Calls</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="group.html#ncclgroupstart">ncclGroupStart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="group.html#ncclgroupend">ncclGroupEnd</a></li>
+<li class="toctree-l3"><a class="reference internal" href="group.html#ncclgroupsimulateend">ncclGroupSimulateEnd</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="p2p.html">Point To Point Communication Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="p2p.html#two-sided-point-to-point-operations">Two-Sided Point-to-Point Operations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="p2p.html#ncclsend">ncclSend</a></li>
+<li class="toctree-l4"><a class="reference internal" href="p2p.html#ncclrecv">ncclRecv</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="p2p.html#one-sided-point-to-point-operations-rma">One-Sided Point-to-Point Operations (RMA)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="p2p.html#ncclputsignal">ncclPutSignal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="p2p.html#ncclsignal">ncclSignal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="p2p.html#ncclwaitsignal">ncclWaitSignal</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="types.html">Types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="types.html#ncclcomm-t">ncclComm_t</a></li>
+<li class="toctree-l3"><a class="reference internal" href="types.html#ncclresult-t">ncclResult_t</a></li>
+<li class="toctree-l3"><a class="reference internal" href="types.html#nccldatatype-t">ncclDataType_t</a></li>
+<li class="toctree-l3"><a class="reference internal" href="types.html#ncclredop-t">ncclRedOp_t</a></li>
+<li class="toctree-l3"><a class="reference internal" href="types.html#ncclscalarresidence-t">ncclScalarResidence_t</a></li>
+<li class="toctree-l3"><a class="reference internal" href="types.html#ncclconfig-t">ncclConfig_t</a></li>
+<li class="toctree-l3"><a class="reference internal" href="types.html#ncclsiminfo-t">ncclSimInfo_t</a></li>
+<li class="toctree-l3"><a class="reference internal" href="types.html#ncclwindow-t">ncclWindow_t</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ops.html">User Defined Reduction Operators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ops.html#ncclredopcreatepremulsum">ncclRedOpCreatePreMulSum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ops.html#ncclredopdestroy">ncclRedOpDestroy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="flags.html">NCCL API Supported Flags</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="flags.html#window-registration-flags">Window Registration Flags</a></li>
+<li class="toctree-l3"><a class="reference internal" href="flags.html#nccl-communicator-cta-policy-flags">NCCL Communicator CTA Policy Flags</a></li>
+<li class="toctree-l3"><a class="reference internal" href="flags.html#communicator-shrink-flags">Communicator Shrink Flags</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Device API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#host-side-setup">Host-Side Setup</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#nccldevcomm">ncclDevComm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#nccldevcommcreate">ncclDevCommCreate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#nccldevcommdestroy">ncclDevCommDestroy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#nccldevcommrequirements">ncclDevCommRequirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ncclcommqueryproperties">ncclCommQueryProperties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ncclcommproperties-t">ncclCommProperties_t</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ncclgintype-t">ncclGinType_t</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#lsa">LSA</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#nccllsabarriersession">ncclLsaBarrierSession</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ncclgetpeerpointer">ncclGetPeerPointer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ncclgetlsapointer">ncclGetLsaPointer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ncclgetlocalpointer">ncclGetLocalPointer</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#multimem">Multimem</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ncclgetlsamultimempointer">ncclGetLsaMultimemPointer</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#host-accessible-device-pointer-functions">Host-Accessible Device Pointer Functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ncclgetlsamultimemdevicepointer">ncclGetLsaMultimemDevicePointer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ncclgetmultimemdevicepointer">ncclGetMultimemDevicePointer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ncclgetlsadevicepointer">ncclGetLsaDevicePointer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ncclgetpeerdevicepointer">ncclGetPeerDevicePointer</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#gin">GIN</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ncclgin">ncclGin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#signals-and-counters">Signals and Counters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ncclginbarriersession">ncclGinBarrierSession</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../nccl1.html">Migrating from NCCL 1 to NCCL 2</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../nccl1.html#initialization">Initialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nccl1.html#communication">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nccl1.html#counts">Counts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nccl1.html#in-place-usage-for-allgather-and-reducescatter">In-place usage for AllGather and ReduceScatter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nccl1.html#allgather-arguments-order">AllGather arguments order</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nccl1.html#datatypes">Datatypes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nccl1.html#error-codes">Error codes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#communicator-creation-and-destruction-examples">Communicator Creation and Destruction Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../examples.html#example-1-single-process-single-thread-multiple-devices">Example 1: Single Process, Single Thread, Multiple Devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples.html#example-2-one-device-per-process-or-thread">Example 2: One Device per Process or Thread</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples.html#example-3-multiple-devices-per-thread">Example 3: Multiple Devices per Thread</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples.html#example-4-multiple-communicators-per-device">Example 4: Multiple communicators per device</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#communication-examples">Communication Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../examples.html#example-1-one-device-per-process-or-thread">Example 1: One Device per Process or Thread</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples.html#example-2-multiple-devices-per-thread">Example 2: Multiple Devices per Thread</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mpi.html">NCCL and MPI</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../mpi.html#api">API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../mpi.html#using-multiple-devices-per-process">Using multiple devices per process</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mpi.html#reducescatter-operation">ReduceScatter operation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mpi.html#send-and-receive-counts">Send and Receive counts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mpi.html#other-collectives-and-point-to-point-operations">Other collectives and point-to-point operations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mpi.html#in-place-operations">In-place operations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../mpi.html#using-nccl-within-an-mpi-program">Using NCCL within an MPI Program</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../mpi.html#mpi-progress">MPI Progress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mpi.html#inter-gpu-communication-with-cuda-aware-mpi">Inter-GPU Communication with CUDA-aware MPI</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../env.html">Environment Variables</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../env.html#system-configuration">System configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-socket-ifname">NCCL_SOCKET_IFNAME</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#values-accepted">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-socket-family">NCCL_SOCKET_FAMILY</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id2">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-socket-retry-cnt">NCCL_SOCKET_RETRY_CNT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id3">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-socket-retry-sleep-msec">NCCL_SOCKET_RETRY_SLEEP_MSEC</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id4">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-socket-poll-timeout-msec">NCCL_SOCKET_POLL_TIMEOUT_MSEC</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id5">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-socket-nthreads">NCCL_SOCKET_NTHREADS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id6">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-nsocks-perthread">NCCL_NSOCKS_PERTHREAD</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id7">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-cross-nic">NCCL_CROSS_NIC</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id8">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-hca">NCCL_IB_HCA</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id9">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-timeout">NCCL_IB_TIMEOUT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id10">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-retry-cnt">NCCL_IB_RETRY_CNT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id11">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-gid-index">NCCL_IB_GID_INDEX</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id12">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-addr-family">NCCL_IB_ADDR_FAMILY</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id13">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-addr-range">NCCL_IB_ADDR_RANGE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id14">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-roce-version-num">NCCL_IB_ROCE_VERSION_NUM</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id15">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-sl">NCCL_IB_SL</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id16">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-tc">NCCL_IB_TC</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id17">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-fifo-tc">NCCL_IB_FIFO_TC</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id18">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-return-async-events">NCCL_IB_RETURN_ASYNC_EVENTS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id19">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-oob-net-enable">NCCL_OOB_NET_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id20">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-oob-net-ifname">NCCL_OOB_NET_IFNAME</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id21">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-uid-stagger-threshold">NCCL_UID_STAGGER_THRESHOLD</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id22">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-uid-stagger-rate">NCCL_UID_STAGGER_RATE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id23">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-net">NCCL_NET</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id24">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-net-plugin">NCCL_NET_PLUGIN</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id25">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-tuner-plugin">NCCL_TUNER_PLUGIN</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id26">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-profiler-plugin">NCCL_PROFILER_PLUGIN</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id27">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-env-plugin">NCCL_ENV_PLUGIN</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id28">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ignore-cpu-affinity">NCCL_IGNORE_CPU_AFFINITY</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id29">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-conf-file">NCCL_CONF_FILE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id30">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-debug">NCCL_DEBUG</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id32">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-debug-file">NCCL_DEBUG_FILE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id33">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-debug-subsys">NCCL_DEBUG_SUBSYS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id34">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-debug-timestamp-format">NCCL_DEBUG_TIMESTAMP_FORMAT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#value-accepted">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-debug-timestamp-levels">NCCL_DEBUG_TIMESTAMP_LEVELS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id35">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-collnet-enable">NCCL_COLLNET_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id36">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-collnet-node-threshold">NCCL_COLLNET_NODE_THRESHOLD</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id37">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-cta-policy">NCCL_CTA_POLICY</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id38">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-netdevs-policy">NCCL_NETDEVS_POLICY</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id39">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-topo-file">NCCL_TOPO_FILE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id40">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-topo-dump-file">NCCL_TOPO_DUMP_FILE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id41">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-set-thread-name">NCCL_SET_THREAD_NAME</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id42">Value accepted</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../env.html#debugging">Debugging</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-p2p-disable">NCCL_P2P_DISABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id43">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-p2p-level">NCCL_P2P_LEVEL</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id44">Values accepted</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#integer-values-legacy">Integer Values (Legacy)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-p2p-direct-disable">NCCL_P2P_DIRECT_DISABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id45">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-shm-disable">NCCL_SHM_DISABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id46">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-buffsize">NCCL_BUFFSIZE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id47">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-nthreads">NCCL_NTHREADS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id48">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-max-nchannels">NCCL_MAX_NCHANNELS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id49">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-min-nchannels">NCCL_MIN_NCHANNELS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id50">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-checks-disable">NCCL_CHECKS_DISABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id51">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-check-pointers">NCCL_CHECK_POINTERS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id52">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-launch-mode">NCCL_LAUNCH_MODE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id53">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-disable">NCCL_IB_DISABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id54">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-ar-threshold">NCCL_IB_AR_THRESHOLD</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id55">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-qps-per-connection">NCCL_IB_QPS_PER_CONNECTION</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id56">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-split-data-on-qps">NCCL_IB_SPLIT_DATA_ON_QPS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id57">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-cuda-support">NCCL_IB_CUDA_SUPPORT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id58">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-pci-relaxed-ordering">NCCL_IB_PCI_RELAXED_ORDERING</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id59">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-adaptive-routing">NCCL_IB_ADAPTIVE_ROUTING</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id60">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-ece-enable">NCCL_IB_ECE_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id61">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-mem-sync-domain">NCCL_MEM_SYNC_DOMAIN</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id62">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-cumem-enable">NCCL_CUMEM_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id63">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-cumem-host-enable">NCCL_CUMEM_HOST_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id64">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-net-gdr-level-formerly-nccl-ib-gdr-level">NCCL_NET_GDR_LEVEL (formerly NCCL_IB_GDR_LEVEL)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id65">Values accepted</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id66">Integer Values (Legacy)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-net-gdr-c2c">NCCL_NET_GDR_C2C</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id67">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-net-gdr-read">NCCL_NET_GDR_READ</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id68">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-net-shared-buffers">NCCL_NET_SHARED_BUFFERS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id69">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-net-shared-comms">NCCL_NET_SHARED_COMMS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id70">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-single-ring-threshold">NCCL_SINGLE_RING_THRESHOLD</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id71">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ll-threshold">NCCL_LL_THRESHOLD</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id72">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-tree-threshold">NCCL_TREE_THRESHOLD</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id73">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-algo">NCCL_ALGO</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id74">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-proto">NCCL_PROTO</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id75">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-nvb-disable">NCCL_NVB_DISABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id76">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-pxn-disable">NCCL_PXN_DISABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id77">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-p2p-pxn-level">NCCL_P2P_PXN_LEVEL</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id78">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-pxn-c2c">NCCL_PXN_C2C</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id79">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-runtime-connect">NCCL_RUNTIME_CONNECT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id80">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-graph-register">NCCL_GRAPH_REGISTER</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id82">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-local-register">NCCL_LOCAL_REGISTER</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id83">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-legacy-cuda-register">NCCL_LEGACY_CUDA_REGISTER</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id84">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-win-enable">NCCL_WIN_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id85">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-set-stack-size">NCCL_SET_STACK_SIZE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id86">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-graph-mixing-support">NCCL_GRAPH_MIXING_SUPPORT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id88">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-dmabuf-enable">NCCL_DMABUF_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id89">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-p2p-net-chunksize">NCCL_P2P_NET_CHUNKSIZE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id90">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-p2p-ll-threshold">NCCL_P2P_LL_THRESHOLD</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id91">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-alloc-p2p-net-ll-buffers">NCCL_ALLOC_P2P_NET_LL_BUFFERS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id92">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-comm-blocking">NCCL_COMM_BLOCKING</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id93">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-cga-cluster-size">NCCL_CGA_CLUSTER_SIZE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id94">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-max-ctas">NCCL_MAX_CTAS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id95">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-min-ctas">NCCL_MIN_CTAS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id96">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-nvls-enable">NCCL_NVLS_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id97">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ib-merge-nics">NCCL_IB_MERGE_NICS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id98">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-mnnvl-enable">NCCL_MNNVL_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id99">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-mnnvl-uuid">NCCL_MNNVL_UUID</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id100">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-mnnvl-clique-id">NCCL_MNNVL_CLIQUE_ID</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id101">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ras-enable">NCCL_RAS_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id102">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ras-addr">NCCL_RAS_ADDR</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id103">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ras-timeout-factor">NCCL_RAS_TIMEOUT_FACTOR</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id104">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-launch-order-implicit">NCCL_LAUNCH_ORDER_IMPLICIT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id106">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-launch-race-fatal">NCCL_LAUNCH_RACE_FATAL</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id107">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../env.html#nccl-ipc-use-abstract-socket">NCCL_IPC_USE_ABSTRACT_SOCKET</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../env.html#id108">Values accepted</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#ras">RAS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../troubleshooting/ras.html">RAS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../troubleshooting/ras.html#principle-of-operation">Principle of Operation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../troubleshooting/ras.html#ras-queries">RAS Queries</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../troubleshooting/ras.html#sample-output">Sample Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../troubleshooting/ras.html#json-output">JSON Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../troubleshooting/ras.html#monitoring-mode">Monitoring Mode</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#gpu-direct">GPU Direct</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../troubleshooting.html#gpu-to-gpu-communication">GPU-to-GPU communication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../troubleshooting.html#gpu-to-nic-communication">GPU-to-NIC communication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../troubleshooting.html#pci-access-control-services-acs">PCI Access Control Services (ACS)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#topology-detection">Topology detection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#memory-issues">Memory issues</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../troubleshooting.html#shared-memory">Shared memory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../troubleshooting.html#stack-size">Stack size</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../troubleshooting.html#unified-memory-uvm">Unified Memory (UVM)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../troubleshooting.html#networking-issues">Networking issues</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../troubleshooting.html#ip-network-interfaces">IP Network Interfaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../troubleshooting.html#ip-ports">IP Ports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../troubleshooting.html#infiniband">InfiniBand</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../troubleshooting.html#rdma-over-converged-ethernet-roce">RDMA over Converged Ethernet (RoCE)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NCCL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">NCCL API</a></li>
+      <li class="breadcrumb-item active">Device API</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/device.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="device-api">
+<h1>Device API<a class="headerlink" href="#device-api" title="Permalink to this heading"></a></h1>
+<section id="host-side-setup">
+<h2>Host-Side Setup<a class="headerlink" href="#host-side-setup" title="Permalink to this heading"></a></h2>
+<section id="nccldevcomm">
+<h3>ncclDevComm<a class="headerlink" href="#nccldevcomm" title="Permalink to this heading"></a></h3>
+<dl class="c type">
+<dt class="sig sig-object c" id="c.ncclDevComm">
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncclDevComm</span></span></span><a class="headerlink" href="#c.ncclDevComm" title="Permalink to this definition"></a><br /></dt>
+<dd><p>A structure describing a device communicator, as created on the host side using <a class="reference internal" href="#c.ncclDevCommCreate" title="ncclDevCommCreate"><code class="xref c c-func docutils literal notranslate"><span class="pre">ncclDevCommCreate()</span></code></a>.  The
+structure is used primarily on the device side; elements that could be of particular interest include:</p>
+<dl class="c member">
+<dt class="sig sig-object c" id="c.ncclDevComm.rank">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rank</span></span></span><a class="headerlink" href="#c.ncclDevComm.rank" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>The rank within the communicator.</p>
+<dl class="c member">
+<dt class="sig sig-object c" id="c.ncclDevComm.nRanks">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">nRanks</span></span></span><a class="headerlink" href="#c.ncclDevComm.nRanks" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>The size of the communicator.</p>
+<dl class="c member">
+<dt class="sig sig-object c" id="c.ncclDevComm.lsaRank">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">lsaRank</span></span></span><a class="headerlink" href="#c.ncclDevComm.lsaRank" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="c member">
+<dt class="sig sig-object c" id="c.ncclDevComm.lsaSize">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">lsaSize</span></span></span><a class="headerlink" href="#c.ncclDevComm.lsaSize" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Rank within the local LSA team and its size (see <a class="reference internal" href="../usage/deviceapi.html#devapi-teams"><span class="std std-ref">Teams</span></a>).</p>
+<dl class="c member">
+<dt class="sig sig-object c" id="c.ncclDevComm.ginContextCount">
+<span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ginContextCount</span></span></span><a class="headerlink" href="#c.ncclDevComm.ginContextCount" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>The number of supported GIN contexts (see <a class="reference internal" href="#_CPPv47ncclGin" title="ncclGin"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">ncclGin</span></code></a>; available since NCCL 2.28.7).</p>
+</dd></dl>
+
+</section>
+<section id="nccldevcommcreate">
+<h3>ncclDevCommCreate<a class="headerlink" href="#nccldevcommcreate" title="Permalink to this heading"></a></h3>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.ncclDevCommCreate">
+<a class="reference internal" href="types.html#c.ncclResult_t" title="ncclResult_t"><span class="n"><span class="pre">ncclResult_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncclDevCommCreate</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="types.html#c.ncclComm_t" title="ncclComm_t"><span class="n"><span class="pre">ncclComm_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">comm</span></span>, <span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="#c.ncclDevCommRequirements" title="ncclDevCommRequirements"><span class="n"><span class="pre">ncclDevCommRequirements</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">reqs</span></span>, <span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="#c.ncclDevComm" title="ncclDevComm"><span class="n"><span class="pre">ncclDevComm</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">outDevComm</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.ncclDevCommCreate" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Creates a new device communicator (see <a class="reference internal" href="#c.ncclDevComm" title="ncclDevComm"><code class="xref c c-type docutils literal notranslate"><span class="pre">ncclDevComm</span></code></a>) corresponding to the supplied host-side communicator
+<em>comm</em>.  The result is returned in the <em>outDevComm</em> buffer (which needs to be supplied by the caller).  The caller needs
+to also provide a filled-in list of requirements via the <em>reqs</em> argument (see <a class="reference internal" href="#c.ncclDevCommRequirements" title="ncclDevCommRequirements"><code class="xref c c-type docutils literal notranslate"><span class="pre">ncclDevCommRequirements</span></code></a>); the
+function will allocate any necessary resources to meet them. It is recommended to call <a class="reference internal" href="#c.ncclCommQueryProperties" title="ncclCommQueryProperties"><code class="xref c c-func docutils literal notranslate"><span class="pre">ncclCommQueryProperties()</span></code></a>
+before calling the function; the function will fail if the specified requirements are not supported. Since this is a
+collective call, every rank in the communicator needs to participate.  If called within a group, <em>outDevComm</em> may not be
+filled in until <code class="docutils literal notranslate"><span class="pre">ncclGroupEnd()</span></code> has completed.</p>
+<p>Note that this is a <em>host-side</em> function.</p>
+</section>
+<section id="nccldevcommdestroy">
+<h3>ncclDevCommDestroy<a class="headerlink" href="#nccldevcommdestroy" title="Permalink to this heading"></a></h3>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.ncclDevCommDestroy">
+<a class="reference internal" href="types.html#c.ncclResult_t" title="ncclResult_t"><span class="n"><span class="pre">ncclResult_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncclDevCommDestroy</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="types.html#c.ncclComm_t" title="ncclComm_t"><span class="n"><span class="pre">ncclComm_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">comm</span></span>, <span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="#c.ncclDevComm" title="ncclDevComm"><span class="n"><span class="pre">ncclDevComm</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">devComm</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.ncclDevCommDestroy" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Destroys a device communicator (see <a class="reference internal" href="#c.ncclDevComm" title="ncclDevComm"><code class="xref c c-type docutils literal notranslate"><span class="pre">ncclDevComm</span></code></a>) previously created using <a class="reference internal" href="#c.ncclDevCommCreate" title="ncclDevCommCreate"><code class="xref c c-func docutils literal notranslate"><span class="pre">ncclDevCommCreate()</span></code></a> and
+releases any allocated resources.  The caller must ensure that no device kernel that uses this device communicator could
+be running at the time this function is invoked.</p>
+<p>Note that this is a <em>host-side</em> function.</p>
+</section>
+<section id="nccldevcommrequirements">
+<h3>ncclDevCommRequirements<a class="headerlink" href="#nccldevcommrequirements" title="Permalink to this heading"></a></h3>
+<dl class="c type">
+<dt class="sig sig-object c" id="c.ncclDevCommRequirements">
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncclDevCommRequirements</span></span></span><a class="headerlink" href="#c.ncclDevCommRequirements" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>A host-side structure specifying the list of requirements when creating device communicators (see
+<a class="reference internal" href="#c.ncclDevComm" title="ncclDevComm"><code class="xref c c-type docutils literal notranslate"><span class="pre">ncclDevComm</span></code></a>). Since NCCL 2.29, this struct must be initialized using <code class="docutils literal notranslate"><span class="pre">NCCL_DEV_COMM_REQUIREMENTS_INITIALIZER</span></code>.</p>
+<blockquote>
+<div><dl class="c member">
+<dt class="sig sig-object c" id="c.lsaMultimem">
+<span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">lsaMultimem</span></span></span><a class="headerlink" href="#c.lsaMultimem" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Specifies whether multimem support is required for all LSA ranks.</p>
+<dl class="c member">
+<dt class="sig sig-object c" id="c.lsaBarrierCount">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">lsaBarrierCount</span></span></span><a class="headerlink" href="#c.lsaBarrierCount" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Specifies the number of memory barriers to allocate (see <a class="reference internal" href="#_CPPv4I0E21ncclLsaBarrierSession" title="ncclLsaBarrierSession"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">ncclLsaBarrierSession</span></code></a>).</p>
+<dl class="c member">
+<dt class="sig sig-object c" id="c.railGinBarrierCount">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">railGinBarrierCount</span></span></span><a class="headerlink" href="#c.railGinBarrierCount" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Specifies the number of network barriers to allocate (see <a class="reference internal" href="#_CPPv4I0E21ncclGinBarrierSession" title="ncclGinBarrierSession"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">ncclGinBarrierSession</span></code></a>; available since NCCL
+2.28.7).</p>
+<dl class="c member">
+<dt class="sig sig-object c" id="c.barrierCount">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">barrierCount</span></span></span><a class="headerlink" href="#c.barrierCount" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Specifies the minimum number for both the memory and network barriers (see above; available since NCCL 2.28.7).</p>
+<dl class="c member">
+<dt class="sig sig-object c" id="c.ginSignalCount">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ginSignalCount</span></span></span><a class="headerlink" href="#c.ginSignalCount" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Specifies the number of network signals to allocate (see <a class="reference internal" href="#_CPPv415ncclGinSignal_t" title="ncclGinSignal_t"><code class="xref cpp cpp-type docutils literal notranslate"><span class="pre">ncclGinSignal_t</span></code></a>; available since NCCL 2.28.7).</p>
+<dl class="c member">
+<dt class="sig sig-object c" id="c.ginCounterCount">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ginCounterCount</span></span></span><a class="headerlink" href="#c.ginCounterCount" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Specifies the number of network counters to allocate (see <a class="reference internal" href="#_CPPv416ncclGinCounter_t" title="ncclGinCounter_t"><code class="xref cpp cpp-type docutils literal notranslate"><span class="pre">ncclGinCounter_t</span></code></a>; available since NCCL 2.28.7).</p>
+<dl class="c member">
+<dt class="sig sig-object c" id="c.resourceRequirementsList">
+<span class="n"><span class="pre">ncclDevResourceRequirements_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">resourceRequirementsList</span></span></span><a class="headerlink" href="#c.resourceRequirementsList" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Specifies a list of resource requirements.  This is best set to NULL for now.</p>
+<dl class="c member">
+<dt class="sig sig-object c" id="c.teamRequirementsList">
+<span class="n"><span class="pre">ncclTeamRequirements_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">teamRequirementsList</span></span></span><a class="headerlink" href="#c.teamRequirementsList" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Specifies a list of requirements for particular teams.  This is best set to NULL for now.</p>
+</div></blockquote>
+</section>
+<section id="ncclcommqueryproperties">
+<h3>ncclCommQueryProperties<a class="headerlink" href="#ncclcommqueryproperties" title="Permalink to this heading"></a></h3>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.ncclCommQueryProperties">
+<a class="reference internal" href="types.html#c.ncclResult_t" title="ncclResult_t"><span class="n"><span class="pre">ncclResult_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncclCommQueryProperties</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="types.html#c.ncclComm_t" title="ncclComm_t"><span class="n"><span class="pre">ncclComm_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">comm</span></span>, <a class="reference internal" href="#c.ncclCommProperties_t" title="ncclCommProperties_t"><span class="n"><span class="pre">ncclCommProperties_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">props</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.ncclCommQueryProperties" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Exposes communicator properties by filling in <em>props</em>. Before calling this function, <em>props</em> must be initialized using <code class="docutils literal notranslate"><span class="pre">NCCL_COMM_PROPERTIES_INITIALIZER</span></code>. Introduced in NCCL 2.29.</p>
+<p>Note that this is a <em>host-side</em> function.</p>
+</section>
+<section id="ncclcommproperties-t">
+<h3>ncclCommProperties_t<a class="headerlink" href="#ncclcommproperties-t" title="Permalink to this heading"></a></h3>
+<dl class="c type">
+<dt class="sig sig-object c" id="c.ncclCommProperties_t">
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncclCommProperties_t</span></span></span><a class="headerlink" href="#c.ncclCommProperties_t" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>A structure describing the properties of the communicator. Introduced in NCCL 2.29. Properties include:</p>
+<blockquote>
+<div><dl class="c member">
+<dt class="sig sig-object c" id="c.rank">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rank</span></span></span><a class="headerlink" href="#c.rank" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Rank within the communicator.</p>
+<dl class="c member">
+<dt class="sig sig-object c" id="c.nRanks">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">nRanks</span></span></span><a class="headerlink" href="#c.nRanks" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Size of the communicator.</p>
+<dl class="c member">
+<dt class="sig sig-object c" id="c.cudaDev">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cudaDev</span></span></span><a class="headerlink" href="#c.cudaDev" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>CUDA device index.</p>
+<dl class="c member">
+<dt class="sig sig-object c" id="c.nvmlDev">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">nvmlDev</span></span></span><a class="headerlink" href="#c.nvmlDev" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>NVML device index.</p>
+<dl class="c member">
+<dt class="sig sig-object c" id="c.deviceApiSupport">
+<span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">deviceApiSupport</span></span></span><a class="headerlink" href="#c.deviceApiSupport" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Whether the device API is supported. If false, a <a class="reference internal" href="#c.ncclDevComm" title="ncclDevComm"><code class="xref c c-type docutils literal notranslate"><span class="pre">ncclDevComm</span></code></a> cannot be created.</p>
+<dl class="c member">
+<dt class="sig sig-object c" id="c.multimemSupport">
+<span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">multimemSupport</span></span></span><a class="headerlink" href="#c.multimemSupport" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Whether ranks in the same LSA team can communicate using multimem. If false, a <a class="reference internal" href="#c.ncclDevComm" title="ncclDevComm"><code class="xref c c-type docutils literal notranslate"><span class="pre">ncclDevComm</span></code></a> cannot be created with multimem resources.</p>
+<dl class="c member">
+<dt class="sig sig-object c" id="c.ginType">
+<a class="reference internal" href="#c.ncclGinType_t" title="ncclGinType_t"><span class="n"><span class="pre">ncclGinType_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ginType</span></span></span><a class="headerlink" href="#c.ginType" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>The GIN type supported by the communicator. If equal to <a class="reference internal" href="#c.NCCL_GIN_TYPE_NONE" title="NCCL_GIN_TYPE_NONE"><code class="xref c c-macro docutils literal notranslate"><span class="pre">NCCL_GIN_TYPE_NONE</span></code></a>, a <a class="reference internal" href="#c.ncclDevComm" title="ncclDevComm"><code class="xref c c-type docutils literal notranslate"><span class="pre">ncclDevComm</span></code></a> cannot be created with GIN resources.</p>
+</div></blockquote>
+</section>
+<section id="ncclgintype-t">
+<h3>ncclGinType_t<a class="headerlink" href="#ncclgintype-t" title="Permalink to this heading"></a></h3>
+<dl class="c type">
+<dt class="sig sig-object c" id="c.ncclGinType_t">
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncclGinType_t</span></span></span><a class="headerlink" href="#c.ncclGinType_t" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>GIN type. Communication between different GIN types is not supported. Possible values include:</p>
+<blockquote>
+<div><dl class="c macro">
+<dt class="sig sig-object c" id="c.NCCL_GIN_TYPE_NONE">
+<span class="sig-name descname"><span class="n"><span class="pre">NCCL_GIN_TYPE_NONE</span></span></span><a class="headerlink" href="#c.NCCL_GIN_TYPE_NONE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>GIN is not supported.</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.NCCL_GIN_TYPE_PROXY">
+<span class="sig-name descname"><span class="n"><span class="pre">NCCL_GIN_TYPE_PROXY</span></span></span><a class="headerlink" href="#c.NCCL_GIN_TYPE_PROXY" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Host Proxy GIN type.</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.NCCL_GIN_TYPE_GDAKI">
+<span class="sig-name descname"><span class="n"><span class="pre">NCCL_GIN_TYPE_GDAKI</span></span></span><a class="headerlink" href="#c.NCCL_GIN_TYPE_GDAKI" title="Permalink to this definition"></a><br /></dt>
+<dd><p>GPUDirect Async Kernel-Initiated (GDAKI) GIN type.</p>
+</dd></dl>
+
+</div></blockquote>
+</section>
+</section>
+<section id="lsa">
+<h2>LSA<a class="headerlink" href="#lsa" title="Permalink to this heading"></a></h2>
+<p>All functionality described from this point on is available on the device side only.</p>
+<section id="nccllsabarriersession">
+<h3>ncclLsaBarrierSession<a class="headerlink" href="#nccllsabarriersession" title="Permalink to this heading"></a></h3>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I0E21ncclLsaBarrierSession">
+<span id="_CPPv3I0E21ncclLsaBarrierSession"></span><span id="_CPPv2I0E21ncclLsaBarrierSession"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Coop</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncclLsaBarrierSession</span></span></span><a class="headerlink" href="#_CPPv4I0E21ncclLsaBarrierSession" title="Permalink to this definition"></a><br /></dt>
+<dd><p>A class representing a memory barrier session.</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N21ncclLsaBarrierSession21ncclLsaBarrierSessionE4CoopRK11ncclDevComm14ncclTeamTagLsa8uint32_tb">
+<span id="_CPPv3N21ncclLsaBarrierSession21ncclLsaBarrierSessionE4CoopRK11ncclDevComm14ncclTeamTagLsa8uint32_tb"></span><span id="_CPPv2N21ncclLsaBarrierSession21ncclLsaBarrierSessionE4CoopRK11ncclDevComm14ncclTeamTagLsa8uint32_tb"></span><span id="ncclLsaBarrierSession::ncclLsaBarrierSession__Coop.ncclDevCommCR.ncclTeamTagLsa.uint32_t.b"></span><span class="sig-name descname"><span class="n"><span class="pre">ncclLsaBarrierSession</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0E21ncclLsaBarrierSession" title="ncclLsaBarrierSession::Coop"><span class="n"><span class="pre">Coop</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">coop</span></span>, <span class="n"><span class="pre">ncclDevComm</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">comm</span></span>, <span class="n"><span class="pre">ncclTeamTagLsa</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">tag</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">index</span></span>, <span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">multimem</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N21ncclLsaBarrierSession21ncclLsaBarrierSessionE4CoopRK11ncclDevComm14ncclTeamTagLsa8uint32_tb" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Initializes a new memory barrier session.  <em>coop</em> represents a cooperative group (see <a class="reference internal" href="../usage/deviceapi.html#devapi-teams"><span class="std std-ref">Teams</span></a>).
+<em>comm</em> is the device communicator created using <a class="reference internal" href="#c.ncclDevCommCreate" title="ncclDevCommCreate"><code class="xref c c-func docutils literal notranslate"><span class="pre">ncclDevCommCreate()</span></code></a>.
+<em>ncclTeamTagLsa</em> is here to indicate which subset of ranks the barrier will apply to.  The identifier of the underlying
+barrier to use is provided by <em>index</em> (it should be different for each <em>coop</em>; typically set to <code class="docutils literal notranslate"><span class="pre">blockIdx.x</span></code> to
+ensure uniqueness between CTAs).  <em>multimem</em> requests a hardware-accelerated implementation using memory multicast.</p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N21ncclLsaBarrierSession6arriveE4CoopN4cuda12memory_orderE">
+<span id="_CPPv3N21ncclLsaBarrierSession6arriveE4CoopN4cuda12memory_orderE"></span><span id="_CPPv2N21ncclLsaBarrierSession6arriveE4CoopN4cuda12memory_orderE"></span><span id="ncclLsaBarrierSession::arrive__Coop.cuda::memory_order"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">arrive</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0E21ncclLsaBarrierSession" title="ncclLsaBarrierSession::Coop"><span class="n"><span class="pre">Coop</span></span></a>, <span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">memory_order</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">order</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N21ncclLsaBarrierSession6arriveE4CoopN4cuda12memory_orderE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Signals the arrival of the thread at the barrier session.</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N21ncclLsaBarrierSession4waitE4CoopN4cuda12memory_orderE">
+<span id="_CPPv3N21ncclLsaBarrierSession4waitE4CoopN4cuda12memory_orderE"></span><span id="_CPPv2N21ncclLsaBarrierSession4waitE4CoopN4cuda12memory_orderE"></span><span id="ncclLsaBarrierSession::wait__Coop.cuda::memory_order"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">wait</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0E21ncclLsaBarrierSession" title="ncclLsaBarrierSession::Coop"><span class="n"><span class="pre">Coop</span></span></a>, <span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">memory_order</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">order</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N21ncclLsaBarrierSession4waitE4CoopN4cuda12memory_orderE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Blocks until all threads of all team members arrive at the barrier session.</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N21ncclLsaBarrierSession4syncE4CoopN4cuda12memory_orderE">
+<span id="_CPPv3N21ncclLsaBarrierSession4syncE4CoopN4cuda12memory_orderE"></span><span id="_CPPv2N21ncclLsaBarrierSession4syncE4CoopN4cuda12memory_orderE"></span><span id="ncclLsaBarrierSession::sync__Coop.cuda::memory_order"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">sync</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0E21ncclLsaBarrierSession" title="ncclLsaBarrierSession::Coop"><span class="n"><span class="pre">Coop</span></span></a>, <span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">memory_order</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">order</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N21ncclLsaBarrierSession4syncE4CoopN4cuda12memory_orderE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Synchronizes all threads of all team members that participate in the barrier session (combines <code class="docutils literal notranslate"><span class="pre">arrive</span></code> and
+<code class="docutils literal notranslate"><span class="pre">wait</span></code>).</p>
+</dd></dl>
+
+</section>
+<section id="ncclgetpeerpointer">
+<h3>ncclGetPeerPointer<a class="headerlink" href="#ncclgetpeerpointer" title="Permalink to this heading"></a></h3>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv418ncclGetPeerPointer12ncclWindow_t6size_ti">
+<span id="_CPPv318ncclGetPeerPointer12ncclWindow_t6size_ti"></span><span id="_CPPv218ncclGetPeerPointer12ncclWindow_t6size_ti"></span><span id="ncclGetPeerPointer__ncclWindow_t.s.i"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">ncclGetPeerPointer</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ncclWindow_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">offset</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">peer</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv418ncclGetPeerPointer12ncclWindow_t6size_ti" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Returns a load/store accessible pointer to the memory buffer of device <em>peer</em> within the window <em>w</em>.  <em>offset</em> is
+byte-based.  <em>peer</em> is a rank index within the world team (see <a class="reference internal" href="../usage/deviceapi.html#devapi-teams"><span class="std std-ref">Teams</span></a>).  This function will return NULL if
+the <em>peer</em> is not within the LSA team.</p>
+</section>
+<section id="ncclgetlsapointer">
+<h3>ncclGetLsaPointer<a class="headerlink" href="#ncclgetlsapointer" title="Permalink to this heading"></a></h3>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv417ncclGetLsaPointer12ncclWindow_t6size_ti">
+<span id="_CPPv317ncclGetLsaPointer12ncclWindow_t6size_ti"></span><span id="_CPPv217ncclGetLsaPointer12ncclWindow_t6size_ti"></span><span id="ncclGetLsaPointer__ncclWindow_t.s.i"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">ncclGetLsaPointer</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ncclWindow_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">offset</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lsaPeer</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417ncclGetLsaPointer12ncclWindow_t6size_ti" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Returns a load/store accessible pointer to the memory buffer of device <em>lsaPeer</em> within the window <em>w</em>.  <em>offset</em> is
+byte-based.  This is similar to <code class="docutils literal notranslate"><span class="pre">ncclGetPeerPointer</span></code>, but here <em>lsaPeer</em> is a rank index with the LSA team (see
+<a class="reference internal" href="../usage/deviceapi.html#devapi-teams"><span class="std std-ref">Teams</span></a>).</p>
+</section>
+<section id="ncclgetlocalpointer">
+<h3>ncclGetLocalPointer<a class="headerlink" href="#ncclgetlocalpointer" title="Permalink to this heading"></a></h3>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv419ncclGetLocalPointer12ncclWindow_t6size_t">
+<span id="_CPPv319ncclGetLocalPointer12ncclWindow_t6size_t"></span><span id="_CPPv219ncclGetLocalPointer12ncclWindow_t6size_t"></span><span id="ncclGetLocalPointer__ncclWindow_t.s"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">ncclGetLocalPointer</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ncclWindow_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">offset</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv419ncclGetLocalPointer12ncclWindow_t6size_t" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Returns a load-store accessible pointer to the memory buffer of the current device within the window <em>w</em>.  <em>offset</em> is
+byte-based.  This is just a shortcut version of <code class="docutils literal notranslate"><span class="pre">ncclGetPeerPointer</span></code> with <em>devComm.rank</em> as <em>peer</em>, or <code class="docutils literal notranslate"><span class="pre">ncclGetLsaPointer</span></code> with <em>devComm.lsaRank</em> as <em>lsaPeer</em>.</p>
+</section>
+</section>
+<section id="multimem">
+<h2>Multimem<a class="headerlink" href="#multimem" title="Permalink to this heading"></a></h2>
+<section id="ncclgetlsamultimempointer">
+<h3>ncclGetLsaMultimemPointer<a class="headerlink" href="#ncclgetlsamultimempointer" title="Permalink to this heading"></a></h3>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv425ncclGetLsaMultimemPointer12ncclWindow_t6size_tRK11ncclDevComm">
+<span id="_CPPv325ncclGetLsaMultimemPointer12ncclWindow_t6size_tRK11ncclDevComm"></span><span id="_CPPv225ncclGetLsaMultimemPointer12ncclWindow_t6size_tRK11ncclDevComm"></span><span id="ncclGetLsaMultimemPointer__ncclWindow_t.s.ncclDevCommCR"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">ncclGetLsaMultimemPointer</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ncclWindow_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">w</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">offset</span></span>, <span class="n"><span class="pre">ncclDevComm</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">devComm</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv425ncclGetLsaMultimemPointer12ncclWindow_t6size_tRK11ncclDevComm" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Returns a multicast memory pointer associated with the window <em>w</em> and device communicator <em>devComm</em>.  <em>offset</em>
+is byte-based.  Availability of multicast memory is hardware-dependent.</p>
+</section>
+</section>
+<section id="host-accessible-device-pointer-functions">
+<span id="device-api-host-functions"></span><h2>Host-Accessible Device Pointer Functions<a class="headerlink" href="#host-accessible-device-pointer-functions" title="Permalink to this heading"></a></h2>
+<p>The following functions provide host-side access to device pointer functionality, enabling host code to obtain
+pointers to LSA memory regions.</p>
+<p>All functions return <code class="docutils literal notranslate"><span class="pre">ncclResult_t</span></code> error codes. On success, <code class="docutils literal notranslate"><span class="pre">ncclSuccess</span></code> is returned.
+On failure, appropriate error codes are returned (e.g., <code class="docutils literal notranslate"><span class="pre">ncclInvalidArgument</span></code> for invalid parameters,
+<code class="docutils literal notranslate"><span class="pre">ncclInternalError</span></code> for internal failures), unless otherwise specified.</p>
+<p>The returned pointers are valid for the lifetime of the window.
+Pointers should not be used after either the window or communicator is destroyed.
+Obtained pointers are device pointers.</p>
+<section id="ncclgetlsamultimemdevicepointer">
+<h3>ncclGetLsaMultimemDevicePointer<a class="headerlink" href="#ncclgetlsamultimemdevicepointer" title="Permalink to this heading"></a></h3>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.ncclGetLsaMultimemDevicePointer">
+<a class="reference internal" href="types.html#c.ncclResult_t" title="ncclResult_t"><span class="n"><span class="pre">ncclResult_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncclGetLsaMultimemDevicePointer</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="types.html#c.ncclWindow_t" title="ncclWindow_t"><span class="n"><span class="pre">ncclWindow_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">window</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n"><span class="pre">offset</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">outPtr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.ncclGetLsaMultimemDevicePointer" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Returns a multimem base pointer for the LSA team associated with the given window. This function provides host-side
+access to the multimem memory functionality.</p>
+<p><em>window</em> is the NCCL window object (must not be NULL). <em>offset</em> is the byte offset within the window.
+<em>outPtr</em> is the output parameter for the multimem pointer (must not be NULL).</p>
+<p>This function requires LSA multimem support (multicast capability on the system). The window must be registered
+with a communicator that supports symmetric memory, and the hardware must support NVLink SHARP multicast functionality.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the system does not support multimem, the function returns <code class="docutils literal notranslate"><span class="pre">ncclSuccess</span></code> with <code class="docutils literal notranslate"><span class="pre">*outPtr</span></code> set to <code class="docutils literal notranslate"><span class="pre">nullptr</span></code>.
+This allows applications to gracefully detect and handle the absence of multimem support without breaking
+the communicator. Users should check if the returned pointer is <code class="docutils literal notranslate"><span class="pre">nullptr</span></code> to determine availability.</p>
+</div>
+<dl>
+<dt>Example:</dt><dd><div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">multimemPtr</span><span class="p">;</span>
+<span class="n">ncclResult_t</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ncclGetLsaMultimemDevicePointer</span><span class="p">(</span><span class="n">window</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">multimemPtr</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">ncclSuccess</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">multimemPtr</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">nullptr</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Use multimemPtr for multimem operations</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Multimem not supported, use fallback approach</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="ncclgetmultimemdevicepointer">
+<h3>ncclGetMultimemDevicePointer<a class="headerlink" href="#ncclgetmultimemdevicepointer" title="Permalink to this heading"></a></h3>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.ncclGetMultimemDevicePointer">
+<a class="reference internal" href="types.html#c.ncclResult_t" title="ncclResult_t"><span class="n"><span class="pre">ncclResult_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncclGetMultimemDevicePointer</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="types.html#c.ncclWindow_t" title="ncclWindow_t"><span class="n"><span class="pre">ncclWindow_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">window</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n"><span class="pre">offset</span></span>, <span class="n"><span class="pre">ncclMultimemHandle</span></span><span class="w"> </span><span class="n"><span class="pre">multimem</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">outPtr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.ncclGetMultimemDevicePointer" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Returns a multimem base pointer using a provided multimem handle instead of the window’s internal multimem.
+This function enables using external or custom multimem handles for pointer calculation.</p>
+<p><em>window</em> is the NCCL window object (must not be NULL). <em>offset</em> is the byte offset within the window.
+<em>multimem</em> is the multimem handle containing the multimem base pointer (multimem.mcBasePtr must not be NULL).
+<em>outPtr</em> is the output parameter for the multimem pointer (must not be NULL).</p>
+<p>This function requires LSA multimem support (multicast capability on the system).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the system does not support multimem, the function returns <code class="docutils literal notranslate"><span class="pre">ncclSuccess</span></code> with <code class="docutils literal notranslate"><span class="pre">*outPtr</span></code> set to <code class="docutils literal notranslate"><span class="pre">nullptr</span></code>.
+The function validates that <code class="docutils literal notranslate"><span class="pre">multimem.mcBasePtr</span></code> is not nullptr before proceeding.</p>
+</div>
+<dl>
+<dt>Example:</dt><dd><div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="c1">// Get multimem handle from device communicator setup</span>
+<span class="n">ncclMultimemHandle</span><span class="w"> </span><span class="n">customHandle</span><span class="p">;</span>
+<span class="c1">// ... (obtain handle)</span>
+
+<span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">multimemPtr</span><span class="p">;</span>
+<span class="n">ncclResult_t</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ncclGetMultimemDevicePointer</span><span class="p">(</span><span class="n">window</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">customHandle</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">multimemPtr</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">ncclSuccess</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">multimemPtr</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">nullptr</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Use multimemPtr for multimem operations with custom handle</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Multimem not supported, use fallback approach</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="ncclgetlsadevicepointer">
+<h3>ncclGetLsaDevicePointer<a class="headerlink" href="#ncclgetlsadevicepointer" title="Permalink to this heading"></a></h3>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.ncclGetLsaDevicePointer">
+<a class="reference internal" href="types.html#c.ncclResult_t" title="ncclResult_t"><span class="n"><span class="pre">ncclResult_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncclGetLsaDevicePointer</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="types.html#c.ncclWindow_t" title="ncclWindow_t"><span class="n"><span class="pre">ncclWindow_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">window</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n"><span class="pre">offset</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">lsaRank</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">outPtr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.ncclGetLsaDevicePointer" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Returns a load/store accessible pointer to the memory buffer of a specific LSA peer within the window. This function
+provides host-side access to LSA pointer functionality using LSA rank directly.</p>
+<p><em>window</em> is the NCCL window object (must not be NULL). <em>offset</em> is the byte offset within the window
+(must be &gt;= 0 and &lt; window size).
+<em>lsaRank</em> is the LSA rank of the target peer (must be &gt;= 0 and &lt; LSA team size).
+<em>outPtr</em> is the output parameter for the LSA pointer (must not be NULL).</p>
+<p>On success, <code class="docutils literal notranslate"><span class="pre">ncclSuccess</span></code> is returned and the LSA pointer is returned in <code class="docutils literal notranslate"><span class="pre">outPtr</span></code>.</p>
+<p>The window must be registered with a communicator that supports LSA. The LSA rank must be within the valid range
+for the LSA team, and the target peer must be load/store accessible (P2P connectivity required).</p>
+<dl>
+<dt>Example:</dt><dd><div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">lsaPtr</span><span class="p">;</span>
+<span class="n">ncclResult_t</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ncclGetLsaDevicePointer</span><span class="p">(</span><span class="n">window</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">lsaPtr</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">ncclSuccess</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Use lsaPtr to access LSA peer 1&#39;s memory</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="ncclgetpeerdevicepointer">
+<h3>ncclGetPeerDevicePointer<a class="headerlink" href="#ncclgetpeerdevicepointer" title="Permalink to this heading"></a></h3>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.ncclGetPeerDevicePointer">
+<a class="reference internal" href="types.html#c.ncclResult_t" title="ncclResult_t"><span class="n"><span class="pre">ncclResult_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncclGetPeerDevicePointer</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="types.html#c.ncclWindow_t" title="ncclWindow_t"><span class="n"><span class="pre">ncclWindow_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">window</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n"><span class="pre">offset</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">peer</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">outPtr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.ncclGetPeerDevicePointer" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Returns a load/store accessible pointer to the memory buffer of a specific world rank peer within the window.
+This function converts world rank to LSA rank internally and provides host-side access to peer pointer functionality.</p>
+<p><em>window</em> is the NCCL window object (must not be NULL). <em>offset</em> is the byte offset within the window.
+<em>peer</em> is the world rank of the target peer (must be &gt;= 0 and &lt; communicator size).
+<em>outPtr</em> is the output parameter for the peer pointer (must not be NULL).</p>
+<p>On success, <code class="docutils literal notranslate"><span class="pre">ncclSuccess</span></code> is returned and the peer pointer is returned in <code class="docutils literal notranslate"><span class="pre">outPtr</span></code>.</p>
+<p>If the peer is not reachable via LSA (not in LSA team), <code class="docutils literal notranslate"><span class="pre">outPtr</span></code> is set to NULL and <code class="docutils literal notranslate"><span class="pre">ncclSuccess</span></code> is returned.
+This matches the behavior of the device-side <code class="docutils literal notranslate"><span class="pre">ncclGetPeerPointer</span></code> function.</p>
+<p>The window must be registered with a communicator that supports LSA. The peer rank must be within the valid range
+for the communicator, and the target peer must be load/store accessible (P2P connectivity required).</p>
+<dl>
+<dt>Example:</dt><dd><div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">peerPtr</span><span class="p">;</span>
+<span class="n">ncclResult_t</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ncclGetPeerDevicePointer</span><span class="p">(</span><span class="n">window</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">peerPtr</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">ncclSuccess</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">peerPtr</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Use peerPtr to access world rank 2&#39;s memory</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Peer 2 is not reachable via LSA</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+</section>
+<section id="gin">
+<h2>GIN<a class="headerlink" href="#gin" title="Permalink to this heading"></a></h2>
+<p>GIN is supported since NCCL 2.28.7.</p>
+<section id="ncclgin">
+<h3>ncclGin<a class="headerlink" href="#ncclgin" title="Permalink to this heading"></a></h3>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv47ncclGin">
+<span id="_CPPv37ncclGin"></span><span id="_CPPv27ncclGin"></span><span id="ncclGin"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncclGin</span></span></span><a class="headerlink" href="#_CPPv47ncclGin" title="Permalink to this definition"></a><br /></dt>
+<dd><p>A class encompassing major elements of the GIN support.</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N7ncclGin7ncclGinERK11ncclDevCommi">
+<span id="_CPPv3N7ncclGin7ncclGinERK11ncclDevCommi"></span><span id="_CPPv2N7ncclGin7ncclGinERK11ncclDevCommi"></span><span id="ncclGin::ncclGin__ncclDevCommCR.i"></span><span class="sig-name descname"><span class="n"><span class="pre">ncclGin</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ncclDevComm</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">comm</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">contextIndex</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N7ncclGin7ncclGinERK11ncclDevCommi" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Initializes a new <code class="docutils literal notranslate"><span class="pre">ncclGin</span></code> object. <em>comm</em> is the device communicator created using <a class="reference internal" href="#c.ncclDevCommCreate" title="ncclDevCommCreate"><code class="xref c c-func docutils literal notranslate"><span class="pre">ncclDevCommCreate()</span></code></a>.
+<em>contextIndex</em> is the index of the GIN context – a network communication channel.  Using multiple GIN contexts allows
+the implementation to spread traffic onto multiple connections, avoiding locking and bottlenecks.  Therefore,
+performance-oriented kernels should cycle among the available contexts to improve resource utilization (the number of
+available contexts is available via <code class="xref c c-macro docutils literal notranslate"><span class="pre">ginContextCount</span></code>).</p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N7ncclGin3putE8ncclTeami12ncclWindow_t6size_t12ncclWindow_t6size_t6size_t12RemoteAction11LocalAction4Coop14DescriptorSmemN4cuda12thread_scopeEN4cuda12thread_scopeE">
+<span id="_CPPv3N7ncclGin3putE8ncclTeami12ncclWindow_t6size_t12ncclWindow_t6size_t6size_t12RemoteAction11LocalAction4Coop14DescriptorSmemN4cuda12thread_scopeEN4cuda12thread_scopeE"></span><span id="_CPPv2N7ncclGin3putE8ncclTeami12ncclWindow_t6size_t12ncclWindow_t6size_t6size_t12RemoteAction11LocalAction4Coop14DescriptorSmemN4cuda12thread_scopeEN4cuda12thread_scopeE"></span><span id="ncclGin::put__ncclTeam.i.ncclWindow_t.s.ncclWindow_t.s.s.RemoteAction.LocalAction.Coop.DescriptorSmem.cuda::thread_scope.cuda::thread_scope"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">put</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ncclTeam</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">team</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">peer</span></span>, <span class="n"><span class="pre">ncclWindow_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dstWnd</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dstOffset</span></span>, <span class="n"><span class="pre">ncclWindow_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">srcWnd</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">srcOffset</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">bytes</span></span>, <span class="n"><span class="pre">RemoteAction</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">remoteAction</span></span>, <span class="n"><span class="pre">LocalAction</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">localAction</span></span>, <span class="n"><span class="pre">Coop</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">coop</span></span>, <span class="n"><span class="pre">DescriptorSmem</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">descriptor</span></span>, <span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">thread_scope</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">alreadyReleased</span></span>, <span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">thread_scope</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">expected_scope</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N7ncclGin3putE8ncclTeami12ncclWindow_t6size_t12ncclWindow_t6size_t6size_t12RemoteAction11LocalAction4Coop14DescriptorSmemN4cuda12thread_scopeEN4cuda12thread_scopeE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Schedules a device-initiated, one-sided data transfer operation from a local buffer to a remote buffer on a peer.</p>
+<p><em>peer</em> is a rank within <em>team</em> (see <a class="reference internal" href="../usage/deviceapi.html#devapi-teams"><span class="std std-ref">Teams</span></a>); it may refer to the local rank (a loopback).  The destination
+and source buffers are each specified using the window (<em>dstWnd</em>, <em>srcWnd</em>) and a byte-based offset (<em>dstOffset</em>,
+<em>srcOffset</em>).  <em>bytes</em> specifies the data transfer count in bytes.</p>
+<p>Arguments beyond the first seven are optional.  <em>remoteAction</em> and <em>localAction</em> specify actions
+to undertake on the destination peer and on the local rank when the payload has been settled and the input has been
+consumed (respectively).  They default to <code class="docutils literal notranslate"><span class="pre">ncclGin_None</span></code> (no action); other options include
+<code class="docutils literal notranslate"><span class="pre">ncclGin_Signal{Inc|Add}</span></code> (for <em>remoteAction</em>) and <code class="docutils literal notranslate"><span class="pre">ncclGin_CounterInc</span></code> (for <em>localAction</em>); see
+<a class="reference internal" href="#devapi-signals"><span class="std std-ref">Signals and Counters</span></a> below for more details.  <em>coop</em> indicates the set of threads participating in this operation (see
+<a class="reference internal" href="../usage/deviceapi.html#devapi-coops"><span class="std std-ref">Thread Groups</span></a>); it defaults to <code class="docutils literal notranslate"><span class="pre">ncclCoopThread</span></code> (a single device thread), which is the recommended model.</p>
+<p>The visibility of the signal on the destination peer implies the visibility of the put data it is attached to <em>and all
+the preceding puts to the same peer, provided that they were issued using the same GIN context</em>.</p>
+<p>The API also defines an alternative, “convenience” variant of this method that uses <code class="docutils literal notranslate"><span class="pre">ncclSymPtr</span></code> types to specify the
+buffers and expects size to be conveyed in terms of the number of elements instead of the byte count.  There are also
+two <code class="docutils literal notranslate"><span class="pre">putValue</span></code> variants that take a single element at a time (no greater than eight bytes), passed by value.</p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N7ncclGin5flushE4CoopN4cuda12memory_orderE">
+<span id="_CPPv3N7ncclGin5flushE4CoopN4cuda12memory_orderE"></span><span id="_CPPv2N7ncclGin5flushE4CoopN4cuda12memory_orderE"></span><span id="ncclGin::flush__Coop.cuda::memory_order"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">flush</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">Coop</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">coop</span></span>, <span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">memory_order</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ord</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">memory_order_acquire</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N7ncclGin5flushE4CoopN4cuda12memory_orderE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Ensures that all the pending transfer operations scheduled by any threads of <em>coop</em> are locally consumed, meaning that
+their source buffers are safe to reuse.  Makes no claims regarding the completion status on the remote peer(s).</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="signals-and-counters">
+<span id="devapi-signals"></span><h3>Signals and Counters<a class="headerlink" href="#signals-and-counters" title="Permalink to this heading"></a></h3>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv415ncclGinSignal_t">
+<span id="_CPPv315ncclGinSignal_t"></span><span id="_CPPv215ncclGinSignal_t"></span><span id="ncclGinSignal_t"></span><span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncclGinSignal_t</span></span></span><a class="headerlink" href="#_CPPv415ncclGinSignal_t" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Signals are used to trigger actions on remote peers, most commonly on the completion of a <a class="reference internal" href="#_CPPv4N7ncclGin3putE8ncclTeami12ncclWindow_t6size_t12ncclWindow_t6size_t6size_t12RemoteAction11LocalAction4Coop14DescriptorSmemN4cuda12thread_scopeEN4cuda12thread_scopeE" title="ncclGin::put"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">ncclGin::put()</span></code></a> operation.  They each
+have a 64-bit integer value associated with them that can be manipulated atomically.</p>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv417ncclGin_SignalAdd">
+<span id="_CPPv317ncclGin_SignalAdd"></span><span id="_CPPv217ncclGin_SignalAdd"></span><span id="ncclGin_SignalAdd"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncclGin_SignalAdd</span></span></span><a class="headerlink" href="#_CPPv417ncclGin_SignalAdd" title="Permalink to this definition"></a><br /></dt>
+<dd><dl class="cpp member">
+<dt class="sig sig-object cpp" id="_CPPv4N17ncclGin_SignalAdd6signalE">
+<span id="_CPPv3N17ncclGin_SignalAdd6signalE"></span><span id="_CPPv2N17ncclGin_SignalAdd6signalE"></span><span id="ncclGin_SignalAdd::signal__ncclGinSignal_t"></span><a class="reference internal" href="#_CPPv415ncclGinSignal_t" title="ncclGinSignal_t"><span class="n"><span class="pre">ncclGinSignal_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">signal</span></span></span><a class="headerlink" href="#_CPPv4N17ncclGin_SignalAdd6signalE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp member">
+<dt class="sig sig-object cpp" id="_CPPv4N17ncclGin_SignalAdd5valueE">
+<span id="_CPPv3N17ncclGin_SignalAdd5valueE"></span><span id="_CPPv2N17ncclGin_SignalAdd5valueE"></span><span id="ncclGin_SignalAdd::value__uint64_t"></span><span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">value</span></span></span><a class="headerlink" href="#_CPPv4N17ncclGin_SignalAdd5valueE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv417ncclGin_SignalInc">
+<span id="_CPPv317ncclGin_SignalInc"></span><span id="_CPPv217ncclGin_SignalInc"></span><span id="ncclGin_SignalInc"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncclGin_SignalInc</span></span></span><a class="headerlink" href="#_CPPv417ncclGin_SignalInc" title="Permalink to this definition"></a><br /></dt>
+<dd><dl class="cpp member">
+<dt class="sig sig-object cpp" id="_CPPv4N17ncclGin_SignalInc6signalE">
+<span id="_CPPv3N17ncclGin_SignalInc6signalE"></span><span id="_CPPv2N17ncclGin_SignalInc6signalE"></span><span id="ncclGin_SignalInc::signal__ncclGinSignal_t"></span><a class="reference internal" href="#_CPPv415ncclGinSignal_t" title="ncclGinSignal_t"><span class="n"><span class="pre">ncclGinSignal_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">signal</span></span></span><a class="headerlink" href="#_CPPv4N17ncclGin_SignalInc6signalE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<p>These objects can be passed as the <em>remoteAction</em> arguments of methods such as <a class="reference internal" href="#_CPPv4N7ncclGin3putE8ncclTeami12ncclWindow_t6size_t12ncclWindow_t6size_t6size_t12RemoteAction11LocalAction4Coop14DescriptorSmemN4cuda12thread_scopeEN4cuda12thread_scopeE" title="ncclGin::put"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">ncclGin::put()</span></code></a> and <a class="reference internal" href="#_CPPv4N7ncclGin6signalE8ncclTeami12RemoteAction4Coop14DescriptorSmemN4cuda12thread_scopeEN4cuda12thread_scopeE" title="ncclGin::signal"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">ncclGin::signal()</span></code></a> to describe the
+actions to perform on the peer on receipt – in this case, increase the value of a <em>signal</em> specified by
+index. <code class="docutils literal notranslate"><span class="pre">ncclGin_SignalInc{signalIdx}</span></code> is functionally equivalent to <code class="docutils literal notranslate"><span class="pre">ncclGin_SignalAdd{signalIdx,</span> <span class="pre">1}</span></code>; however, it
+may not be mixed with other signal-modifying operations without an intervening signal reset (see below).  Signal values
+use “rolling” comparison logic to ensure that an unsigned overflow maintains the property of <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">&lt;</span> <span class="pre">x</span> <span class="pre">+</span> <span class="pre">1</span></code>.</p>
+<p><strong>Signal methods of ncclGin:</strong></p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N7ncclGin6signalE8ncclTeami12RemoteAction4Coop14DescriptorSmemN4cuda12thread_scopeEN4cuda12thread_scopeE">
+<span id="_CPPv3N7ncclGin6signalE8ncclTeami12RemoteAction4Coop14DescriptorSmemN4cuda12thread_scopeEN4cuda12thread_scopeE"></span><span id="_CPPv2N7ncclGin6signalE8ncclTeami12RemoteAction4Coop14DescriptorSmemN4cuda12thread_scopeEN4cuda12thread_scopeE"></span><span id="ncclGin::signal__ncclTeam.i.RemoteAction.Coop.DescriptorSmem.cuda::thread_scope.cuda::thread_scope"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><a class="reference internal" href="#_CPPv47ncclGin" title="ncclGin"><span class="n"><span class="pre">ncclGin</span></span></a><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">signal</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ncclTeam</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">team</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">peer</span></span>, <span class="n"><span class="pre">RemoteAction</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">remoteAction</span></span>, <span class="n"><span class="pre">Coop</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">coop</span></span>, <span class="n"><span class="pre">DescriptorSmem</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">descriptor</span></span>, <span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">thread_scope</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">alreadyReleased</span></span>, <span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">thread_scope</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">expected_scope</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N7ncclGin6signalE8ncclTeami12RemoteAction4Coop14DescriptorSmemN4cuda12thread_scopeEN4cuda12thread_scopeE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N7ncclGin10readSignalE15ncclGinSignal_tiN4cuda12memory_orderE">
+<span id="_CPPv3N7ncclGin10readSignalE15ncclGinSignal_tiN4cuda12memory_orderE"></span><span id="_CPPv2N7ncclGin10readSignalE15ncclGinSignal_tiN4cuda12memory_orderE"></span><span id="ncclGin::readSignal__ncclGinSignal_t.i.cuda::memory_order"></span><span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="sig-prename descclassname"><a class="reference internal" href="#_CPPv47ncclGin" title="ncclGin"><span class="n"><span class="pre">ncclGin</span></span></a><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">readSignal</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv415ncclGinSignal_t" title="ncclGinSignal_t"><span class="n"><span class="pre">ncclGinSignal_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">signal</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">bits</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">64</span></span>, <span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">memory_order</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ord</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">memory_order_acquire</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N7ncclGin10readSignalE15ncclGinSignal_tiN4cuda12memory_orderE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N7ncclGin10waitSignalE4Coop15ncclGinSignal_t8uint64_tiN4cuda12memory_orderE">
+<span id="_CPPv3N7ncclGin10waitSignalE4Coop15ncclGinSignal_t8uint64_tiN4cuda12memory_orderE"></span><span id="_CPPv2N7ncclGin10waitSignalE4Coop15ncclGinSignal_t8uint64_tiN4cuda12memory_orderE"></span><span id="ncclGin::waitSignal__Coop.ncclGinSignal_t.uint64_t.i.cuda::memory_order"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><a class="reference internal" href="#_CPPv47ncclGin" title="ncclGin"><span class="n"><span class="pre">ncclGin</span></span></a><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">waitSignal</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">Coop</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">coop</span></span>, <a class="reference internal" href="#_CPPv415ncclGinSignal_t" title="ncclGinSignal_t"><span class="n"><span class="pre">ncclGinSignal_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">signal</span></span>, <span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">least</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">bits</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">64</span></span>, <span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">memory_order</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ord</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">memory_order_acquire</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N7ncclGin10waitSignalE4Coop15ncclGinSignal_t8uint64_tiN4cuda12memory_orderE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N7ncclGin11resetSignalE15ncclGinSignal_t">
+<span id="_CPPv3N7ncclGin11resetSignalE15ncclGinSignal_t"></span><span id="_CPPv2N7ncclGin11resetSignalE15ncclGinSignal_t"></span><span id="ncclGin::resetSignal__ncclGinSignal_t"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><a class="reference internal" href="#_CPPv47ncclGin" title="ncclGin"><span class="n"><span class="pre">ncclGin</span></span></a><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">resetSignal</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv415ncclGinSignal_t" title="ncclGinSignal_t"><span class="n"><span class="pre">ncclGinSignal_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">signal</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N7ncclGin11resetSignalE15ncclGinSignal_t" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>These are signal-specific methods of <a class="reference internal" href="#_CPPv47ncclGin" title="ncclGin"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">ncclGin</span></code></a>.  <a class="reference internal" href="#_CPPv4N7ncclGin6signalE8ncclTeami12RemoteAction4Coop14DescriptorSmemN4cuda12thread_scopeEN4cuda12thread_scopeE" title="ncclGin::signal"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">ncclGin::signal()</span></code></a> implements an explicit signal notification without
+an accompanying data transfer operation; it takes a subset of arguments of <a class="reference internal" href="#_CPPv4N7ncclGin3putE8ncclTeami12ncclWindow_t6size_t12ncclWindow_t6size_t6size_t12RemoteAction11LocalAction4Coop14DescriptorSmemN4cuda12thread_scopeEN4cuda12thread_scopeE" title="ncclGin::put"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">ncclGin::put()</span></code></a>.  <a class="reference internal" href="#_CPPv4N7ncclGin10readSignalE15ncclGinSignal_tiN4cuda12memory_orderE" title="ncclGin::readSignal"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">ncclGin::readSignal()</span></code></a> returns the
+bottom <em>bits</em> of the value of the <em>signal</em>.  <a class="reference internal" href="#_CPPv4N7ncclGin10waitSignalE4Coop15ncclGinSignal_t8uint64_tiN4cuda12memory_orderE" title="ncclGin::waitSignal"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">ncclGin::waitSignal()</span></code></a> waits for the bottom <em>bits</em> of the <em>signal</em> value to meet
+or exceed <em>least</em>.  Finally, <a class="reference internal" href="#_CPPv4N7ncclGin11resetSignalE15ncclGinSignal_t" title="ncclGin::resetSignal"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">ncclGin::resetSignal()</span></code></a> resets the <em>signal</em> value to <code class="docutils literal notranslate"><span class="pre">0</span></code> (this method may not race with
+concurrent modifications to the signal).</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv416ncclGinCounter_t">
+<span id="_CPPv316ncclGinCounter_t"></span><span id="_CPPv216ncclGinCounter_t"></span><span id="ncclGinCounter_t"></span><span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncclGinCounter_t</span></span></span><a class="headerlink" href="#_CPPv416ncclGinCounter_t" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>Counters are used to trigger actions on the local rank; as such, they are complementary to signals, which are meant for
+remote actions.  Like signals, they use “rolling” comparison logic, but they are limited to storing values of at most 56
+bits.</p>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv418ncclGin_CounterInc">
+<span id="_CPPv318ncclGin_CounterInc"></span><span id="_CPPv218ncclGin_CounterInc"></span><span id="ncclGin_CounterInc"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncclGin_CounterInc</span></span></span><a class="headerlink" href="#_CPPv418ncclGin_CounterInc" title="Permalink to this definition"></a><br /></dt>
+<dd><dl class="cpp member">
+<dt class="sig sig-object cpp" id="_CPPv4N18ncclGin_CounterInc7counterE">
+<span id="_CPPv3N18ncclGin_CounterInc7counterE"></span><span id="_CPPv2N18ncclGin_CounterInc7counterE"></span><span id="ncclGin_CounterInc::counter__ncclGinCounter_t"></span><a class="reference internal" href="#_CPPv416ncclGinCounter_t" title="ncclGinCounter_t"><span class="n"><span class="pre">ncclGinCounter_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">counter</span></span></span><a class="headerlink" href="#_CPPv4N18ncclGin_CounterInc7counterE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<p>This object can be passed as the <em>localAction</em> argument of methods such as <a class="reference internal" href="#_CPPv4N7ncclGin3putE8ncclTeami12ncclWindow_t6size_t12ncclWindow_t6size_t6size_t12RemoteAction11LocalAction4Coop14DescriptorSmemN4cuda12thread_scopeEN4cuda12thread_scopeE" title="ncclGin::put"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">ncclGin::put()</span></code></a>.  It is the only action
+defined for counters.</p>
+<p><strong>Counter methods of ncclGin:</strong></p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N7ncclGin11readCounterE16ncclGinCounter_tiN4cuda12memory_orderE">
+<span id="_CPPv3N7ncclGin11readCounterE16ncclGinCounter_tiN4cuda12memory_orderE"></span><span id="_CPPv2N7ncclGin11readCounterE16ncclGinCounter_tiN4cuda12memory_orderE"></span><span id="ncclGin::readCounter__ncclGinCounter_t.i.cuda::memory_order"></span><span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="sig-prename descclassname"><a class="reference internal" href="#_CPPv47ncclGin" title="ncclGin"><span class="n"><span class="pre">ncclGin</span></span></a><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">readCounter</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv416ncclGinCounter_t" title="ncclGinCounter_t"><span class="n"><span class="pre">ncclGinCounter_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">counter</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">bits</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">56</span></span>, <span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">memory_order</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ord</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">memory_order_acquire</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N7ncclGin11readCounterE16ncclGinCounter_tiN4cuda12memory_orderE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N7ncclGin11waitCounterE4Coop16ncclGinCounter_t8uint64_tiN4cuda12memory_orderE">
+<span id="_CPPv3N7ncclGin11waitCounterE4Coop16ncclGinCounter_t8uint64_tiN4cuda12memory_orderE"></span><span id="_CPPv2N7ncclGin11waitCounterE4Coop16ncclGinCounter_t8uint64_tiN4cuda12memory_orderE"></span><span id="ncclGin::waitCounter__Coop.ncclGinCounter_t.uint64_t.i.cuda::memory_order"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><a class="reference internal" href="#_CPPv47ncclGin" title="ncclGin"><span class="n"><span class="pre">ncclGin</span></span></a><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">waitCounter</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">Coop</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">coop</span></span>, <a class="reference internal" href="#_CPPv416ncclGinCounter_t" title="ncclGinCounter_t"><span class="n"><span class="pre">ncclGinCounter_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">counter</span></span>, <span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">least</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">bits</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">56</span></span>, <span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">memory_order</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ord</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">memory_order_acquire</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N7ncclGin11waitCounterE4Coop16ncclGinCounter_t8uint64_tiN4cuda12memory_orderE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N7ncclGin12resetCounterE16ncclGinCounter_t">
+<span id="_CPPv3N7ncclGin12resetCounterE16ncclGinCounter_t"></span><span id="_CPPv2N7ncclGin12resetCounterE16ncclGinCounter_t"></span><span id="ncclGin::resetCounter__ncclGinCounter_t"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><a class="reference internal" href="#_CPPv47ncclGin" title="ncclGin"><span class="n"><span class="pre">ncclGin</span></span></a><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">resetCounter</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv416ncclGinCounter_t" title="ncclGinCounter_t"><span class="n"><span class="pre">ncclGinCounter_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">counter</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N7ncclGin12resetCounterE16ncclGinCounter_t" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<p>These are counter-specific methods of <a class="reference internal" href="#_CPPv47ncclGin" title="ncclGin"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">ncclGin</span></code></a> and they are functionally equivalent to their signal
+counterparts discussed above.</p>
+</section>
+<section id="ncclginbarriersession">
+<h3>ncclGinBarrierSession<a class="headerlink" href="#ncclginbarriersession" title="Permalink to this heading"></a></h3>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I0E21ncclGinBarrierSession">
+<span id="_CPPv3I0E21ncclGinBarrierSession"></span><span id="_CPPv2I0E21ncclGinBarrierSession"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Coop</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncclGinBarrierSession</span></span></span><a class="headerlink" href="#_CPPv4I0E21ncclGinBarrierSession" title="Permalink to this definition"></a><br /></dt>
+<dd><p>A class representing a network barrier session.</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N21ncclGinBarrierSession21ncclGinBarrierSessionE4Coop7ncclGin15ncclTeamTagRail8uint32_t">
+<span id="_CPPv3N21ncclGinBarrierSession21ncclGinBarrierSessionE4Coop7ncclGin15ncclTeamTagRail8uint32_t"></span><span id="_CPPv2N21ncclGinBarrierSession21ncclGinBarrierSessionE4Coop7ncclGin15ncclTeamTagRail8uint32_t"></span><span id="ncclGinBarrierSession::ncclGinBarrierSession__Coop.ncclGin.ncclTeamTagRail.uint32_t"></span><span class="sig-name descname"><span class="n"><span class="pre">ncclGinBarrierSession</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0E21ncclGinBarrierSession" title="ncclGinBarrierSession::Coop"><span class="n"><span class="pre">Coop</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">coop</span></span>, <a class="reference internal" href="#_CPPv47ncclGin" title="ncclGin"><span class="n"><span class="pre">ncclGin</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">gin</span></span>, <span class="n"><span class="pre">ncclTeamTagRail</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">tag</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">index</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N21ncclGinBarrierSession21ncclGinBarrierSessionE4Coop7ncclGin15ncclTeamTagRail8uint32_t" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Initializes a new network barrier session.  <em>coop</em> represents a cooperative group (see <a class="reference internal" href="../usage/deviceapi.html#devapi-coops"><span class="std std-ref">Thread Groups</span></a>).  <em>gin</em> is
+a previously initialized <a class="reference internal" href="#_CPPv47ncclGin" title="ncclGin"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">ncclGin</span></code></a> object.  <em>ncclTeamTagRail</em> indicates that the barrier will apply to all
+peers on the same rail as the local rank (see <a class="reference internal" href="../usage/deviceapi.html#devapi-teams"><span class="std std-ref">Teams</span></a>).  <em>index</em> identifies the underlying barrier to use
+(it should be different for each <em>coop</em>; typically set to <code class="docutils literal notranslate"><span class="pre">blockIdx.x</span></code> to ensure uniqueness between CTAs).</p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N21ncclGinBarrierSession21ncclGinBarrierSessionE4Coop7ncclGin8ncclTeam20ncclGinBarrierHandle8uint32_t">
+<span id="_CPPv3N21ncclGinBarrierSession21ncclGinBarrierSessionE4Coop7ncclGin8ncclTeam20ncclGinBarrierHandle8uint32_t"></span><span id="_CPPv2N21ncclGinBarrierSession21ncclGinBarrierSessionE4Coop7ncclGin8ncclTeam20ncclGinBarrierHandle8uint32_t"></span><span id="ncclGinBarrierSession::ncclGinBarrierSession__Coop.ncclGin.ncclTeam.ncclGinBarrierHandle.uint32_t"></span><span class="sig-name descname"><span class="n"><span class="pre">ncclGinBarrierSession</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0E21ncclGinBarrierSession" title="ncclGinBarrierSession::Coop"><span class="n"><span class="pre">Coop</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">coop</span></span>, <a class="reference internal" href="#_CPPv47ncclGin" title="ncclGin"><span class="n"><span class="pre">ncclGin</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">gin</span></span>, <span class="n"><span class="pre">ncclTeam</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">team</span></span>, <span class="n"><span class="pre">ncclGinBarrierHandle</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">handle</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">index</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N21ncclGinBarrierSession21ncclGinBarrierSessionE4Coop7ncclGin8ncclTeam20ncclGinBarrierHandle8uint32_t" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Initializes a new network barrier session.  This is the general-purpose variant to be used, e.g., when communicating
+with ranks from the world team (see <a class="reference internal" href="../usage/deviceapi.html#devapi-teams"><span class="std std-ref">Teams</span></a>), whereas the previous variant was specific to the rail team.
+This variant expects <em>team</em> to be passed as an argument, and also takes an extra <em>handle</em> argument indicating the
+location of the underlying barriers (typically set to the <code class="docutils literal notranslate"><span class="pre">railGinBarrier</span></code> field of the device communicator).</p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N21ncclGinBarrierSession4syncE4CoopN4cuda12memory_orderE17ncclGinFenceLevel">
+<span id="_CPPv3N21ncclGinBarrierSession4syncE4CoopN4cuda12memory_orderE17ncclGinFenceLevel"></span><span id="_CPPv2N21ncclGinBarrierSession4syncE4CoopN4cuda12memory_orderE17ncclGinFenceLevel"></span><span id="ncclGinBarrierSession::sync__Coop.cuda::memory_order.ncclGinFenceLevel"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">sync</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0E21ncclGinBarrierSession" title="ncclGinBarrierSession::Coop"><span class="n"><span class="pre">Coop</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">coop</span></span>, <span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">memory_order</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">order</span></span>, <span class="n"><span class="pre">ncclGinFenceLevel</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">fence</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N21ncclGinBarrierSession4syncE4CoopN4cuda12memory_orderE17ncclGinFenceLevel" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Synchronizes all threads of all team members that participate in the barrier session. <code class="docutils literal notranslate"><span class="pre">ncclGinFenceLevel::Relaxed</span></code> is
+the only defined value for <em>fence</em> for now.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="flags.html" class="btn btn-neutral float-left" title="NCCL API Supported Flags" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../nccl1.html" class="btn btn-neutral float-right" title="Migrating from NCCL 1 to NCCL 2" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020-2025, NVIDIA Corporation.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+  <style>
+  a:link, a:visited {
+    color: #76b900;
+  }
+  a:hover {
+    color: #8c0;
+  }
+  .rst-content dl:not(.docutils) dt {
+    background: rgba(118, 185, 0, 0.1) !important;
+    color: rgba(59,93,0,1) !important;
+    border-top: solid 3px rgba(59,93,0,1) !important;
+  }
+  </style>
+  <script type="text/javascript">_satellite.pageBottom();</script>
+
+
+</body>
+</html>

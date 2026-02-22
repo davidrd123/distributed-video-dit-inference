@@ -18,6 +18,10 @@ Block profiling shows VAE decode is already a material slice of wall time in TP 
 
 See: `refs/implementation-context.md` → Phase 2, `scope-drd/notes/FA4/h200/tp/bringup-run-log.md` (Run 10b), `scope-drd/notes/FA4/h200/tp/v1.1-generator-only-workers.md` (v1.1 rationale), `scope-drd/notes/FA4/h200/tp/streamdiffusion-v2-analysis-opus.md` (Stream-VAE), `scope-drd/notes/FA4/h200/tp/async-decode-overlap-scoping.md` (gain ceiling).
 
+Relevant Scope code:
+- `scope-drd/src/scope/core/pipelines/krea_realtime_video/modules/vae.py` and `scope-drd/src/scope/core/pipelines/krea_realtime_video/blocks/prepare_context_frames.py` (where decode/encode and context assembly happen today)
+- `scope-drd/src/scope/server/frame_processor.py` (frame chunking / decoded frame buffer lifecycle that couples to recompute)
+
 ## Synthesis
 
 <!-- To be filled during study -->

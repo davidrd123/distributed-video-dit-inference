@@ -14,7 +14,7 @@ TorchInductor's scheduler decides fusion using `score_fusion(node1, node2)`, whi
 
 ## Implementation context
 
-Run 12b’s performance win depended on Inductor being able to fuse through the TP block when collectives are traceable: functional collectives eliminate graph breaks and enable “one compiled graph per block” behavior. The regression harness treats this as an invariant: `tp_compile_repro.py` expects **mode_C graph_break_count=0** and **graph_count=1**. Any new graph breaks in the collective wrappers tends to push the system back into many tiny graphs and overhead-bound performance (Runs 8-9b).
+Run 12b’s performance win depended on Inductor being able to fuse through the TP block when collectives are traceable: functional collectives eliminate graph breaks and enable “one compiled graph per block” behavior. The regression harness treats this as an invariant: `tp_compile_repro.py` expects **mode_C graph_break_count=0** and **graph_count=1**. Any new graph breaks in the collective wrappers tend to push the system back into many tiny graphs and overhead-bound performance (Runs 8-9b).
 
 See: `refs/implementation-context.md` → Phase 1, `scope-drd/notes/FA4/h200/tp/bringup-run-log.md` (Runs 8-12b), `scope-drd/notes/FA4/h200/tp/research-program.md` (compile micro-repro).
 

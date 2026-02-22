@@ -16,6 +16,11 @@ In TP v0, “replay” is intentionally coarse: pipeline reload and snapshot res
 
 See: `refs/implementation-context.md`, `scope-drd/notes/FA4/h200/tp/explainers/07-v0-contract.md` (no reload/snapshot), `scope-drd/notes/FA4/h200/tp/pp-next-steps.md` (cache_epoch filtering), `scope-drd/notes/FA4/h200/tp/pp-topology-pilot-plan.md` (hard cut flush rules).
 
+Relevant Scope code:
+- `scope-drd/src/scope/core/distributed/control.py` (TP headers: monotonic `call_id`, epoch fields, action framing)
+- `scope-drd/src/scope/core/distributed/pp_contract.py` (`call_id`, `chunk_index`, `cache_epoch` as ordering/replay primitives)
+- `scope-drd/scripts/pp_two_rank_pipelined.py` (queue flush/drop behavior that uses `cache_epoch` during bringup)
+
 ## Synthesis
 
 <!-- To be filled during study -->

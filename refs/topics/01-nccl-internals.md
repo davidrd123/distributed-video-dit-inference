@@ -7,7 +7,7 @@ NCCL's algorithm selection (ring, tree, NVLS, CollNet) is governed by message si
 <!-- Resource IDs from manifest belonging to this topic -->
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| nccl-user-guide | NCCL User Guide | high | pending |
+| nccl-user-guide | NCCL User Guide | high | converted |
 | scaling-dl-nccl | Scaling Deep Learning Training with NCCL | medium | pending |
 | nccl-tuning | Understanding NCCL Tuning to Accelerate GPU-to-GPU Communication | medium | pending |
 | nccl-cuda-graphs | Using NCCL with CUDA Graphs | medium | pending |

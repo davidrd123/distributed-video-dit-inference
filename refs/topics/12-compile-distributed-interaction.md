@@ -7,7 +7,7 @@ The core challenge is that **DDP/FSDP use backward hooks for communication**, an
 <!-- Resource IDs from manifest belonging to this topic -->
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| ezyang-state-of-compile | State of torch.compile for training (August 2025) | high | pending |
+| ezyang-state-of-compile | State of torch.compile for training (August 2025) | high | converted |
 | compiled-autograd-tutorial | Compiled Autograd Tutorial | medium | pending |
 | ezyang-ways-to-compile | Ways to use torch.compile | medium | pending |
 | torch-compiler-faq-dist | torch.compiler FAQ: Distributed Section | medium | pending |
@@ -19,6 +19,10 @@ The core challenge is that **DDP/FSDP use backward hooks for communication**, an
 Compile interacted catastrophically with distributed collectives until Run 12b: `torch._dynamo.disable()` on each all-reduce caused ~160 graph breaks per forward and TP=2 throughput dropped from 16 FPS (Run 7) to **9.6 FPS** (Runs 8-9b). Replacing those with functional collectives made collectives traceable and restored end-to-end performance to **24.5 FPS** (Run 12b). Current steady state in the E2E harness is `unique_graphs=12, graph_breaks=2` after removing attention-backend logger breaks (Run 14).
 
 See: `refs/implementation-context.md` → Phase 1, `scope-drd/notes/FA4/h200/tp/bringup-run-log.md` (Runs 7-14).
+
+Relevant Scope code:
+- `scope-drd/src/scope/core/tensor_parallel/linear.py` and `scope-drd/src/scope/core/tensor_parallel/rmsnorm.py` (compile-aware collective dispatch)
+- `scope-drd/scripts/tp_compile_repro.py` (minimal repro + invariants that protect the baseline)
 
 ## Synthesis
 

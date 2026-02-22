@@ -1,6 +1,49 @@
 # Reference Library Completion — Task Flow & Ordering
 
 Date: 2026-02-22
+Last updated: 2026-02-22 (opus1 — Batch B1 complete, cost lesson learned)
+
+---
+
+## Agent coordination
+
+Multiple agents work on this library. Each owns specific tracks to avoid duplication and wasted budget.
+
+| Agent | Identity | Strengths | Assigned work |
+|---|---|---|---|
+| **opus** | Claude Opus (Claude Code) | PDF reading, project-specific judgment, Tier 3 grounding, QC | Batch B2 (papers), Track C (Tier 3 cards), review |
+| **gpt-xhigh** | GPT 5.2 xhigh (Codex CLI) | Thorough, cost-effective, good for bulk work | Track A, mechanical Tier 2 (HTML/repo/JSON), bulk file ops, consistency scripts |
+
+GPT 5.2 xhigh via Codex CLI is the workhorse — more usage headroom on OpenAI plan. Opus is reserved for high-judgment work only.
+
+### Cost discipline (learned 2026-02-22)
+
+Opus burned **26% of 5-hour budget in 12 minutes** doing Batch B1 (HTML→markdown) — work that was mostly pandoc + cleanup. This is expensive brainpower for text munging.
+
+**Rules going forward:**
+- **Opus**: Only for work that requires strong reading comprehension — PDF page reading (equations, tables, figures), Tier 3 cards (project-specific judgment, working notes integration), topic synthesis
+- **Codex / GPT xhigh**: All mechanical Tier 2 conversions (HTML, JSON, repo dumps), file tree operations, manifest updates, context expansion wiring
+- **Before launching Opus subagents**: Ask "does this need reading comprehension or just text processing?" If the latter, don't use Opus.
+
+### Handoff conventions
+
+- Each agent should note its identity (e.g., `opus1`, `codex1`) in commit messages and file headers where relevant
+- PLAN.md is the coordination doc — check it before starting a new track
+- Mark work in progress in the "Progress log" section below to prevent overlap
+- Manifest is the source of truth for resource status
+
+## Progress log
+
+| Date | Agent | Work done | Notes |
+|---|---|---|---|
+| 2026-02-22 | opus1 | CLAUDE.md policy updates | Tier 2 policies codified |
+| 2026-02-22 | opus1 | Batch B1 complete (7 resources → Tier 2) | funcol-rfc, ezyang, dynamo, nccl, pytorch-cuda-semantics, pipelining-api, cuda-graphs. NCCL required sub-page fetch. |
+| 2026-02-22 | opus2 | QC of medium-priority Tier 1 artifacts | Fixed ezyang-blog URL, fetched fp-non-assoc PDF, deleted dupes, fetched issue comments. Committed `bae52f5`. |
+| 2026-02-22 | opus2 | PLAN.md moved from scope-drd, sibling repo convention | Committed `8136655`. |
+| 2026-02-22 | codex2+opus2 | Batch B3 complete (streamdiffusionv2 → Tier 2) | 42 files, 9597 lines structured dump. Committed `fe92551`. |
+| | | | |
+
+---
 
 ## Context
 
@@ -12,19 +55,19 @@ The reference library has 15 Phase 1 (high-priority) resources. 2 are complete (
 |---|---|---|---|---|
 | `making-dl-go-brrrr` | blog | 159KB HTML | **3 (done)** | Reference implementation |
 | `dit-paper` | paper | 43MB PDF | **3 (done)** | Reference implementation |
-| `streamdiffusionv2` | repo+paper | 42KB HTML + repo (42 files) | 1 | Most complex extraction (repo type) |
+| `funcol-rfc-93173` | RFC (GitHub) | 11KB JSON | **2** | opus1, 2026-02-22 |
+| `ezyang-state-of-compile` | blog | 26KB HTML | **2** | opus1, 2026-02-22 |
+| `dynamo-deep-dive` | docs | 208KB HTML | **2** | opus1, 2026-02-22 |
+| `nccl-user-guide` | docs | 107KB+590KB (multi-page) | **2** | opus1, 2026-02-22. Tier 1 expanded with 7 sub-pages |
+| `pytorch-cuda-semantics` | docs | 378KB HTML | **2** | opus1, 2026-02-22 |
+| `cuda-graphs-guide` | docs | 312KB HTML | **2** | opus1, 2026-02-22 |
+| `pytorch-pipelining-api` | docs | 582KB HTML | **2** | opus1, 2026-02-22 |
+| `streamdiffusionv2` | repo+paper | 42KB HTML + repo (42 files) | **2** | codex2+opus2, 2026-02-22. Structured code dump (9597 lines, streamv2v/ first) |
 | `gpipe` | paper | 539KB PDF | 1 | |
 | `pipedream-2bw` | paper | 2.2MB PDF | 1 | |
 | `zero-bubble-pp` | paper | 649KB PDF | 1 | |
 | `pipedit` | paper | 3.9MB PDF | 1 | |
 | `pagedattention` | paper | 1.5MB PDF | 1 | |
-| `funcol-rfc-93173` | RFC (GitHub) | 11KB JSON | 1 | Smallest extraction |
-| `dynamo-deep-dive` | docs/blog | 208KB HTML | 1 | |
-| `ezyang-state-of-compile` | blog | 26KB HTML | 1 | Smallest HTML |
-| `nccl-user-guide` | docs | 107KB HTML | 1 | Multi-section docs page |
-| `pytorch-cuda-semantics` | docs | 378KB HTML | 1 | Large docs page |
-| `cuda-graphs-guide` | docs | 312KB HTML | 1 | Large docs page |
-| `pytorch-pipelining-api` | docs | 582KB HTML | 1 | Largest docs page |
 
 ## Tier 2 policies (updated per Codex review)
 
@@ -131,13 +174,14 @@ Week 4:
 
 ## Assignment guidance
 
-| Track | Model | Why |
+| Track | Agent | Why |
 |---|---|---|
-| Track A (context expansion) | Codex | Reading + targeted edits across many files; no deep judgment |
-| Track B, B1+B3 (HTML/repo Tier 2) | Codex | Mechanical lossless conversion |
-| Track B, B2 (Paper Tier 2) | Opus | PDF page reading requires strong model for equation/table fidelity |
-| Track C (Tier 3) | Opus, **user reviews each card** | Requires project-specific judgment, working notes integration |
-| Track D (topic synthesis) | User + Opus | Highest-judgment work; user's understanding matters most |
+| Track A (context expansion) | **gpt-xhigh** | Reading + targeted edits across many files; no deep judgment |
+| Track B, B1 (HTML Tier 2) | **DONE** | Completed by opus (2026-02-22). |
+| Track B, B3 (repo Tier 2) | **DONE** | Completed by gpt-xhigh+opus (2026-02-22). |
+| Track B, B2 (Paper Tier 2) | **opus** | PDF page reading requires strong model for equation/table fidelity |
+| Track C (Tier 3) | **opus**, user reviews each card | Requires project-specific judgment, working notes integration |
+| Track D (topic synthesis) | User + **opus** | Highest-judgment work; user's understanding matters most |
 
 ### Track C review workflow
 Opus writes each Tier 3 card, presents it to the user for review. User can:
@@ -147,12 +191,12 @@ Opus writes each Tier 3 card, presents it to the user for review. User can:
 
 This keeps cards grounded but doesn't block Tier 2 extraction (which runs ahead).
 
-## CLAUDE.md updates needed (prerequisite for Track B)
+## CLAUDE.md updates needed (prerequisite for Track B) — DONE (opus1, 2026-02-22)
 
-1. Repo Tier 2 definition: change "annotated source guide" to "file tree + verbatim content under `## File:` headings"
-2. HTML docs Tier 2 policy: add "strip site chrome only, keep all article body verbatim"
-3. Paper Tier 2: add `conversion_notes:` frontmatter requirement
-4. Add `implementation-context.md` to repo structure diagram (already done)
+1. ~~Repo Tier 2 definition: change "annotated source guide" to "file tree + verbatim content under `## File:` headings"~~ ✓
+2. ~~HTML docs Tier 2 policy: add "strip site chrome only, keep all article body verbatim"~~ ✓
+3. ~~Paper Tier 2: add `conversion_notes:` frontmatter requirement~~ ✓
+4. ~~Add `implementation-context.md` to repo structure diagram~~ ✓ (already done)
 
 ## Codex session prompts
 

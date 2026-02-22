@@ -17,6 +17,10 @@ Scope already observed the classic pipeline-bubble reality: block-PP can reach *
 
 See: `refs/implementation-context.md`, `scope-drd/notes/FA4/h200/tp/explainers/01-why-two-gpus.md` (PP throughput vs latency), `scope-drd/notes/FA4/h200/tp/streamdiffusion-v2-analysis-opus.md` (PP bubble + Stream Batch), `scope-drd/notes/FA4/h200/tp/pp0-bringup-runbook.md` (overlap gate), `scope-drd/notes/FA4/h200/tp/pp-topology-pilot-plan.md` (queue depths).
 
+Relevant Scope code:
+- `scope-drd/scripts/pp_two_rank_pipelined.py` (`max_outstanding` and microbatch/queue depth knobs for PP0)
+- `scope-drd/scripts/bench_pp_comm.py` (PP transport cost microbench when validating scheduling assumptions)
+
 ## Synthesis
 
 <!-- To be filled during study -->

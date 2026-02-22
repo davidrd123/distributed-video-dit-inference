@@ -17,6 +17,11 @@ Both TP and PP bringup converged on the same pattern: a tiny fixed header (`call
 
 See: `refs/implementation-context.md` → Phase 2, `scope-drd/notes/FA4/h200/tp/explainers/03-broadcast-envelope.md` (TPControlHeader + tensor_specs), `scope-drd/notes/FA4/h200/tp/pp-next-steps.md` (anti-stranding Step A1 + contract changes).
 
+Relevant Scope code:
+- `scope-drd/src/scope/core/distributed/control.py` (TPControlHeader + tensor_specs framing)
+- `scope-drd/src/scope/core/distributed/pp_contract.py` (`PPEnvelopeV1`/`PPResultV1` versioned schema)
+- `scope-drd/src/scope/core/distributed/pp_control.py` (PP preflight + header-first send pattern)
+
 ## Synthesis
 
 <!-- To be filled during study -->

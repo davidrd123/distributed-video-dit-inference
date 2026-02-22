@@ -7,7 +7,7 @@ Streams are the fundamental concurrency primitive for overlapping compute, commu
 <!-- Resource IDs from manifest belonging to this topic -->
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| pytorch-cuda-semantics | PyTorch CUDA Semantics | high | pending |
+| pytorch-cuda-semantics | PyTorch CUDA Semantics | high | converted |
 | cuda-async-execution | CUDA Programming Guide: Asynchronous Execution | medium | pending |
 | leimao-cuda-stream | CUDA Stream | low | pending |
 

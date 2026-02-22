@@ -7,7 +7,7 @@ The PyTorch caching allocator avoids expensive `cudaMalloc`/`cudaFree` calls by 
 <!-- Resource IDs from manifest belonging to this topic -->
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| pytorch-cuda-semantics | PyTorch CUDA Semantics | high | pending |
+| pytorch-cuda-semantics | PyTorch CUDA Semantics | high | converted |
 | pytorch-cuda-module | torch.cuda Module Reference | medium | pending |
 
 ## Implementation context

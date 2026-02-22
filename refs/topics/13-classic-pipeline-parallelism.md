@@ -7,9 +7,9 @@ Pipeline parallelism partitions a model across devices by layer. **GPipe** fills
 <!-- Resource IDs from manifest belonging to this topic -->
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| gpipe | GPipe: Efficient Training of Giant Neural Networks using Pipeline Parallelism | high | pending |
+| gpipe | GPipe: Efficient Training of Giant Neural Networks using Pipeline Parallelism | high | fetched |
 | pipedream | PipeDream: Generalized Pipeline Parallelism for DNN Training | medium | pending |
-| pipedream-2bw | Memory-Efficient Pipeline-Parallel DNN Training (PipeDream-2BW) | high | pending |
+| pipedream-2bw | Memory-Efficient Pipeline-Parallel DNN Training (PipeDream-2BW) | high | fetched |
 | pp-siboehm | Pipeline-Parallelism: Distributed Training via Model Partitioning | medium | pending |
 
 ## Implementation context
@@ -18,7 +18,14 @@ PP is the **next topology play** after TP v0. The working design is rank0-out-of
 
 Bringup plan is Steps A1-A5 in `scope-drd/notes/FA4/h200/tp/pp-next-steps.md`. Pseudocode reference in `pp-control-plane-pseudocode.md`. Runbook in `pp0-bringup-runbook.md`.
 
+Current PP transport is **PP0**: rank0 ↔ mesh leader point-to-point. Mesh-wide broadcast/repartition is staged work (PP1+), not done end-to-end yet.
+
 See: `refs/implementation-context.md` → Phase 3.
+
+Relevant Scope code:
+- `scope-drd/src/scope/core/distributed/pp_contract.py` (`PPEnvelopeV1`/`PPResultV1` schema + validation, `expected_generator_calls` tripwire)
+- `scope-drd/src/scope/core/distributed/pp_control.py` (rank0↔leader preflight + send/recv)
+- `scope-drd/scripts/pp_two_rank_pipelined.py` (PP0 overlap bringup; `max_outstanding` bounded in-flight)
 
 ## Synthesis
 

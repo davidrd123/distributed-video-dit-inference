@@ -18,6 +18,10 @@ Bandwidth accounting explains two observed ceilings: (1) single-stream FPS scale
 
 See: `refs/implementation-context.md` → System summary + Phase 1, `scope-drd/notes/FA4/h200/tp/streamdiffusion-v2-analysis-opus.md` (H200 bandwidth-bound evidence), `scope-drd/notes/FA4/h200/tp/feasibility.md` (Section 1: collective bandwidth).
 
+Relevant Scope artifacts:
+- `scope-drd/scripts/bench_nccl_collectives.py` (collective latency/bandwidth measurements)
+- `scope-drd/scripts/bench_gemm_shapes.py` / `scope-drd/scripts/gemm_shape_census.py` (compute-vs-bytes reasoning for common matmuls)
+
 ## Synthesis
 
 <!-- To be filled during study -->

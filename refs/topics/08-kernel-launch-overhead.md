@@ -7,7 +7,7 @@ Each PyTorch operator call traverses Python -> C++ dispatch -> CUDA kernel launc
 <!-- Resource IDs from manifest belonging to this topic -->
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| making-dl-go-brrrr | Making Deep Learning Go Brrrr From First Principles | high | pending |
+| making-dl-go-brrrr | Making Deep Learning Go Brrrr From First Principles | high | condensed |
 | gpu-mode-lecture-6 | GPU MODE Lecture 6: Optimizing Optimizers in PyTorch | low | link_only |
 | pytorch-internals-ezyang | PyTorch internals | medium | pending |
 

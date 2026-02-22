@@ -7,7 +7,7 @@ TorchDynamo uses CPython's **PEP 523 frame evaluation API** to intercept Python 
 <!-- Resource IDs from manifest belonging to this topic -->
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| dynamo-deep-dive | Dynamo Deep-Dive | high | pending |
+| dynamo-deep-dive | Dynamo Deep-Dive | high | converted |
 | torchdynamo-uwplse | How does torch.compile work? | medium | pending |
 | torch-compile-missing-manual | torch.compile: the missing manual | medium | link_only |
 | torch-compile-programming-model | torch.compile Programming Model | medium | pending |

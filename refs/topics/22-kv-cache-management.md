@@ -18,6 +18,11 @@ The Scope KV-cache is a **fixed-size ring buffer** (~32K tokens, head-sharded in
 
 See: `refs/implementation-context.md` → Phase 2-3, `scope-drd/notes/FA4/h200/tp/explainers/05-kv-cache-head-sharding.md`.
 
+Relevant Scope code:
+- `scope-drd/src/scope/core/distributed/pp_contract.py` (`cache_epoch`, `do_kv_recompute`, explicit reset flags)
+- `scope-drd/src/scope/core/pipelines/krea_realtime_video/blocks/recompute_kv_cache.py` (recompute path + coupling to decoded frames)
+- `scope-drd/src/scope/server/frame_processor.py` (hard cuts / soft transitions, `kv_cache_attention_bias` override lifecycle)
+
 ## Synthesis
 
 <!-- To be filled during study -->

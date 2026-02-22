@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en-US">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Troubleshooting &mdash; NCCL 2.29.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/theme_overrides.css?v=8eabb79f" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=324d1df1"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="RAS" href="troubleshooting/ras.html" />
+    <link rel="prev" title="Environment Variables" href="env.html" />
+  <script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" > 
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            NCCL
+          </a>
+              <div class="version">
+                <a href="https://docs.nvidia.com/deeplearning/sdk/nccl-archived/index.html">2.29</a>
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+    .wy-side-nav-search, .wy-nav-top {
+      background: #76b900;
+    }
+    .wy-side-nav-search a:link, .wy-nav-top a:link {
+      color: #fff;
+    }
+    .wy-side-nav-search a:visited, .wy-nav-top a:visited {
+      color: #fff;
+    }
+    .wy-side-nav-search a:hover, .wy-nav-top a:hover {
+      color: #fff;
+    }
+    .wy-menu-vertical a:link, .wy-menu-vertical a:visited {
+      color: #d9d9d9
+    }
+    .wy-menu-vertical a:active {
+      background-color: #76b900
+    }
+    .wy-side-nav-search>div.version {
+      color: rgba(0, 0, 0, 0.3)
+    }
+  </style>
+
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview of NCCL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Using NCCL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage/communicators.html">Creating a Communicator</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage/communicators.html#creating-a-communicator-with-options">Creating a communicator with options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/communicators.html#creating-a-communicator-using-multiple-nccluniqueids">Creating a communicator using multiple ncclUniqueIds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/communicators.html#shrinking-a-communicator">Shrinking a communicator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/communicators.html#growing-a-communicator">Growing a communicator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/communicators.html#creating-more-communicators">Creating more communicators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/communicators.html#using-multiple-nccl-communicators-concurrently">Using multiple NCCL communicators concurrently</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/communicators.html#finalizing-a-communicator">Finalizing a communicator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/communicators.html#destroying-a-communicator">Destroying a communicator</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usage/communicators.html#error-handling-and-communicator-abort">Error handling and communicator abort</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage/communicators.html#asynchronous-errors-and-error-handling">Asynchronous errors and error handling</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usage/communicators.html#fault-tolerance">Fault Tolerance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/communicators.html#quality-of-service">Quality of Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/collectives.html">Collective Operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage/collectives.html#allreduce">AllReduce</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/collectives.html#broadcast">Broadcast</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/collectives.html#reduce">Reduce</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/collectives.html#allgather">AllGather</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/collectives.html#reducescatter">ReduceScatter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/collectives.html#alltoall">AlltoAll</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/collectives.html#gather">Gather</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/collectives.html#scatter">Scatter</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usage/data.html">Data Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/streams.html">CUDA Stream Semantics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage/streams.html#mixing-multiple-streams-within-the-same-ncclgroupstart-end-group">Mixing Multiple Streams within the same ncclGroupStart/End() group</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usage/groups.html">Group Calls</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage/groups.html#management-of-multiple-gpus-from-one-thread">Management Of Multiple GPUs From One Thread</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/groups.html#aggregated-operations-2-2-and-later">Aggregated Operations (2.2 and later)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/groups.html#group-operation-ordering-semantics">Group Operation Ordering Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/groups.html#nonblocking-group-operation">Nonblocking Group Operation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usage/p2p.html">Point-to-point communication</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage/p2p.html#two-sided-communication">Two-sided communication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="usage/p2p.html#sendrecv">Sendrecv</a></li>
+<li class="toctree-l4"><a class="reference internal" href="usage/p2p.html#one-to-all-scatter">One-to-all (scatter)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="usage/p2p.html#all-to-one-gather">All-to-one (gather)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="usage/p2p.html#all-to-all">All-to-all</a></li>
+<li class="toctree-l4"><a class="reference internal" href="usage/p2p.html#neighbor-exchange">Neighbor exchange</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="usage/p2p.html#one-sided-communication">One-sided communication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="usage/p2p.html#putsignal-and-waitsignal">PutSignal and WaitSignal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="usage/p2p.html#barrier">Barrier</a></li>
+<li class="toctree-l4"><a class="reference internal" href="usage/p2p.html#id1">All-to-all</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usage/threadsafety.html">Thread Safety</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/inplace.html">In-place Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/cudagraph.html">Using NCCL with CUDA Graphs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/bufferreg.html">User Buffer Registration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage/bufferreg.html#nvlink-sharp-buffer-registration">NVLink Sharp Buffer Registration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/bufferreg.html#ib-sharp-buffer-registration">IB Sharp Buffer Registration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/bufferreg.html#general-buffer-registration">General Buffer Registration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/bufferreg.html#buffer-registration-and-pxn">Buffer Registration and PXN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/bufferreg.html#memory-allocator">Memory Allocator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/bufferreg.html#window-registration">Window Registration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/bufferreg.html#zero-cta-optimization">Zero-CTA Optimization</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usage/deviceapi.html">Device-Initiated Communication</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage/deviceapi.html#device-api">Device API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/deviceapi.html#requirements">Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/deviceapi.html#host-side-setup">Host-Side Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/deviceapi.html#simple-lsa-kernel">Simple LSA Kernel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/deviceapi.html#multimem-device-kernel">Multimem Device Kernel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/deviceapi.html#thread-groups">Thread Groups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/deviceapi.html#teams">Teams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/deviceapi.html#host-accessible-device-pointer-functions">Host-Accessible Device Pointer Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/deviceapi.html#gin-device-kernel">GIN Device Kernel</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">NCCL API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/comms.html">Communicator Creation and Management Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclgetlasterror">ncclGetLastError</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclgeterrorstring">ncclGetErrorString</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclgetversion">ncclGetVersion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclgetuniqueid">ncclGetUniqueId</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcomminitrank">ncclCommInitRank</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcomminitall">ncclCommInitAll</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcomminitrankconfig">ncclCommInitRankConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcomminitrankscalable">ncclCommInitRankScalable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcommsplit">ncclCommSplit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcommshrink">ncclCommShrink</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcommgetuniqueid">ncclCommGetUniqueId</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcommgrow">ncclCommGrow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcommfinalize">ncclCommFinalize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcommrevoke">ncclCommRevoke</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcommdestroy">ncclCommDestroy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcommabort">ncclCommAbort</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcommgetasyncerror">ncclCommGetAsyncError</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcommcount">ncclCommCount</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcommcudevice">ncclCommCuDevice</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcommuserrank">ncclCommUserRank</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcommregister">ncclCommRegister</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcommderegister">ncclCommDeregister</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcommwindowregister">ncclCommWindowRegister</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclcommwindowderegister">ncclCommWindowDeregister</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclmemalloc">ncclMemAlloc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/comms.html#ncclmemfree">ncclMemFree</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/colls.html">Collective Communication Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/colls.html#ncclallreduce">ncclAllReduce</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/colls.html#ncclbroadcast">ncclBroadcast</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/colls.html#ncclreduce">ncclReduce</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/colls.html#ncclallgather">ncclAllGather</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/colls.html#ncclreducescatter">ncclReduceScatter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/colls.html#ncclalltoall">ncclAlltoAll</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/colls.html#ncclgather">ncclGather</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/colls.html#ncclscatter">ncclScatter</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/group.html">Group Calls</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/group.html#ncclgroupstart">ncclGroupStart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/group.html#ncclgroupend">ncclGroupEnd</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/group.html#ncclgroupsimulateend">ncclGroupSimulateEnd</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/p2p.html">Point To Point Communication Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/p2p.html#two-sided-point-to-point-operations">Two-Sided Point-to-Point Operations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/p2p.html#ncclsend">ncclSend</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/p2p.html#ncclrecv">ncclRecv</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/p2p.html#one-sided-point-to-point-operations-rma">One-Sided Point-to-Point Operations (RMA)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/p2p.html#ncclputsignal">ncclPutSignal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/p2p.html#ncclsignal">ncclSignal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/p2p.html#ncclwaitsignal">ncclWaitSignal</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/types.html">Types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/types.html#ncclcomm-t">ncclComm_t</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/types.html#ncclresult-t">ncclResult_t</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/types.html#nccldatatype-t">ncclDataType_t</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/types.html#ncclredop-t">ncclRedOp_t</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/types.html#ncclscalarresidence-t">ncclScalarResidence_t</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/types.html#ncclconfig-t">ncclConfig_t</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/types.html#ncclsiminfo-t">ncclSimInfo_t</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/types.html#ncclwindow-t">ncclWindow_t</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/ops.html">User Defined Reduction Operators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/ops.html#ncclredopcreatepremulsum">ncclRedOpCreatePreMulSum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/ops.html#ncclredopdestroy">ncclRedOpDestroy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/flags.html">NCCL API Supported Flags</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/flags.html#window-registration-flags">Window Registration Flags</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flags.html#nccl-communicator-cta-policy-flags">NCCL Communicator CTA Policy Flags</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/flags.html#communicator-shrink-flags">Communicator Shrink Flags</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/device.html">Device API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/device.html#host-side-setup">Host-Side Setup</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/device.html#nccldevcomm">ncclDevComm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/device.html#nccldevcommcreate">ncclDevCommCreate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/device.html#nccldevcommdestroy">ncclDevCommDestroy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/device.html#nccldevcommrequirements">ncclDevCommRequirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/device.html#ncclcommqueryproperties">ncclCommQueryProperties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/device.html#ncclcommproperties-t">ncclCommProperties_t</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/device.html#ncclgintype-t">ncclGinType_t</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/device.html#lsa">LSA</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/device.html#nccllsabarriersession">ncclLsaBarrierSession</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/device.html#ncclgetpeerpointer">ncclGetPeerPointer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/device.html#ncclgetlsapointer">ncclGetLsaPointer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/device.html#ncclgetlocalpointer">ncclGetLocalPointer</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/device.html#multimem">Multimem</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/device.html#ncclgetlsamultimempointer">ncclGetLsaMultimemPointer</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/device.html#host-accessible-device-pointer-functions">Host-Accessible Device Pointer Functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/device.html#ncclgetlsamultimemdevicepointer">ncclGetLsaMultimemDevicePointer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/device.html#ncclgetmultimemdevicepointer">ncclGetMultimemDevicePointer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/device.html#ncclgetlsadevicepointer">ncclGetLsaDevicePointer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/device.html#ncclgetpeerdevicepointer">ncclGetPeerDevicePointer</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/device.html#gin">GIN</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/device.html#ncclgin">ncclGin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/device.html#signals-and-counters">Signals and Counters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/device.html#ncclginbarriersession">ncclGinBarrierSession</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nccl1.html">Migrating from NCCL 1 to NCCL 2</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nccl1.html#initialization">Initialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nccl1.html#communication">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nccl1.html#counts">Counts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nccl1.html#in-place-usage-for-allgather-and-reducescatter">In-place usage for AllGather and ReduceScatter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nccl1.html#allgather-arguments-order">AllGather arguments order</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nccl1.html#datatypes">Datatypes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nccl1.html#error-codes">Error codes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#communicator-creation-and-destruction-examples">Communicator Creation and Destruction Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples.html#example-1-single-process-single-thread-multiple-devices">Example 1: Single Process, Single Thread, Multiple Devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples.html#example-2-one-device-per-process-or-thread">Example 2: One Device per Process or Thread</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples.html#example-3-multiple-devices-per-thread">Example 3: Multiple Devices per Thread</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples.html#example-4-multiple-communicators-per-device">Example 4: Multiple communicators per device</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#communication-examples">Communication Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples.html#example-1-one-device-per-process-or-thread">Example 1: One Device per Process or Thread</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples.html#example-2-multiple-devices-per-thread">Example 2: Multiple Devices per Thread</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mpi.html">NCCL and MPI</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mpi.html#api">API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mpi.html#using-multiple-devices-per-process">Using multiple devices per process</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mpi.html#reducescatter-operation">ReduceScatter operation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mpi.html#send-and-receive-counts">Send and Receive counts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mpi.html#other-collectives-and-point-to-point-operations">Other collectives and point-to-point operations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mpi.html#in-place-operations">In-place operations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mpi.html#using-nccl-within-an-mpi-program">Using NCCL within an MPI Program</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mpi.html#mpi-progress">MPI Progress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mpi.html#inter-gpu-communication-with-cuda-aware-mpi">Inter-GPU Communication with CUDA-aware MPI</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="env.html">Environment Variables</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="env.html#system-configuration">System configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-socket-ifname">NCCL_SOCKET_IFNAME</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#values-accepted">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-socket-family">NCCL_SOCKET_FAMILY</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id2">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-socket-retry-cnt">NCCL_SOCKET_RETRY_CNT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id3">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-socket-retry-sleep-msec">NCCL_SOCKET_RETRY_SLEEP_MSEC</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id4">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-socket-poll-timeout-msec">NCCL_SOCKET_POLL_TIMEOUT_MSEC</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id5">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-socket-nthreads">NCCL_SOCKET_NTHREADS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id6">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-nsocks-perthread">NCCL_NSOCKS_PERTHREAD</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id7">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-cross-nic">NCCL_CROSS_NIC</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id8">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-hca">NCCL_IB_HCA</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id9">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-timeout">NCCL_IB_TIMEOUT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id10">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-retry-cnt">NCCL_IB_RETRY_CNT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id11">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-gid-index">NCCL_IB_GID_INDEX</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id12">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-addr-family">NCCL_IB_ADDR_FAMILY</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id13">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-addr-range">NCCL_IB_ADDR_RANGE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id14">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-roce-version-num">NCCL_IB_ROCE_VERSION_NUM</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id15">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-sl">NCCL_IB_SL</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id16">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-tc">NCCL_IB_TC</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id17">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-fifo-tc">NCCL_IB_FIFO_TC</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id18">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-return-async-events">NCCL_IB_RETURN_ASYNC_EVENTS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id19">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-oob-net-enable">NCCL_OOB_NET_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id20">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-oob-net-ifname">NCCL_OOB_NET_IFNAME</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id21">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-uid-stagger-threshold">NCCL_UID_STAGGER_THRESHOLD</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id22">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-uid-stagger-rate">NCCL_UID_STAGGER_RATE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id23">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-net">NCCL_NET</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id24">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-net-plugin">NCCL_NET_PLUGIN</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id25">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-tuner-plugin">NCCL_TUNER_PLUGIN</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id26">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-profiler-plugin">NCCL_PROFILER_PLUGIN</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id27">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-env-plugin">NCCL_ENV_PLUGIN</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id28">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ignore-cpu-affinity">NCCL_IGNORE_CPU_AFFINITY</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id29">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-conf-file">NCCL_CONF_FILE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id30">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-debug">NCCL_DEBUG</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id32">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-debug-file">NCCL_DEBUG_FILE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id33">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-debug-subsys">NCCL_DEBUG_SUBSYS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id34">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-debug-timestamp-format">NCCL_DEBUG_TIMESTAMP_FORMAT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#value-accepted">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-debug-timestamp-levels">NCCL_DEBUG_TIMESTAMP_LEVELS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id35">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-collnet-enable">NCCL_COLLNET_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id36">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-collnet-node-threshold">NCCL_COLLNET_NODE_THRESHOLD</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id37">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-cta-policy">NCCL_CTA_POLICY</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id38">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-netdevs-policy">NCCL_NETDEVS_POLICY</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id39">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-topo-file">NCCL_TOPO_FILE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id40">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-topo-dump-file">NCCL_TOPO_DUMP_FILE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id41">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-set-thread-name">NCCL_SET_THREAD_NAME</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id42">Value accepted</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="env.html#debugging">Debugging</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-p2p-disable">NCCL_P2P_DISABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id43">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-p2p-level">NCCL_P2P_LEVEL</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id44">Values accepted</a></li>
+<li class="toctree-l4"><a class="reference internal" href="env.html#integer-values-legacy">Integer Values (Legacy)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-p2p-direct-disable">NCCL_P2P_DIRECT_DISABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id45">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-shm-disable">NCCL_SHM_DISABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id46">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-buffsize">NCCL_BUFFSIZE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id47">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-nthreads">NCCL_NTHREADS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id48">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-max-nchannels">NCCL_MAX_NCHANNELS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id49">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-min-nchannels">NCCL_MIN_NCHANNELS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id50">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-checks-disable">NCCL_CHECKS_DISABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id51">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-check-pointers">NCCL_CHECK_POINTERS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id52">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-launch-mode">NCCL_LAUNCH_MODE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id53">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-disable">NCCL_IB_DISABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id54">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-ar-threshold">NCCL_IB_AR_THRESHOLD</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id55">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-qps-per-connection">NCCL_IB_QPS_PER_CONNECTION</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id56">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-split-data-on-qps">NCCL_IB_SPLIT_DATA_ON_QPS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id57">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-cuda-support">NCCL_IB_CUDA_SUPPORT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id58">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-pci-relaxed-ordering">NCCL_IB_PCI_RELAXED_ORDERING</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id59">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-adaptive-routing">NCCL_IB_ADAPTIVE_ROUTING</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id60">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-ece-enable">NCCL_IB_ECE_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id61">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-mem-sync-domain">NCCL_MEM_SYNC_DOMAIN</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id62">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-cumem-enable">NCCL_CUMEM_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id63">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-cumem-host-enable">NCCL_CUMEM_HOST_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id64">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-net-gdr-level-formerly-nccl-ib-gdr-level">NCCL_NET_GDR_LEVEL (formerly NCCL_IB_GDR_LEVEL)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id65">Values accepted</a></li>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id66">Integer Values (Legacy)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-net-gdr-c2c">NCCL_NET_GDR_C2C</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id67">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-net-gdr-read">NCCL_NET_GDR_READ</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id68">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-net-shared-buffers">NCCL_NET_SHARED_BUFFERS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id69">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-net-shared-comms">NCCL_NET_SHARED_COMMS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id70">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-single-ring-threshold">NCCL_SINGLE_RING_THRESHOLD</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id71">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ll-threshold">NCCL_LL_THRESHOLD</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id72">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-tree-threshold">NCCL_TREE_THRESHOLD</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id73">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-algo">NCCL_ALGO</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id74">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-proto">NCCL_PROTO</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id75">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-nvb-disable">NCCL_NVB_DISABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id76">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-pxn-disable">NCCL_PXN_DISABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id77">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-p2p-pxn-level">NCCL_P2P_PXN_LEVEL</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id78">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-pxn-c2c">NCCL_PXN_C2C</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id79">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-runtime-connect">NCCL_RUNTIME_CONNECT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id80">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-graph-register">NCCL_GRAPH_REGISTER</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id82">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-local-register">NCCL_LOCAL_REGISTER</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id83">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-legacy-cuda-register">NCCL_LEGACY_CUDA_REGISTER</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id84">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-win-enable">NCCL_WIN_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id85">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-set-stack-size">NCCL_SET_STACK_SIZE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id86">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-graph-mixing-support">NCCL_GRAPH_MIXING_SUPPORT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id88">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-dmabuf-enable">NCCL_DMABUF_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id89">Value accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-p2p-net-chunksize">NCCL_P2P_NET_CHUNKSIZE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id90">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-p2p-ll-threshold">NCCL_P2P_LL_THRESHOLD</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id91">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-alloc-p2p-net-ll-buffers">NCCL_ALLOC_P2P_NET_LL_BUFFERS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id92">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-comm-blocking">NCCL_COMM_BLOCKING</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id93">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-cga-cluster-size">NCCL_CGA_CLUSTER_SIZE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id94">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-max-ctas">NCCL_MAX_CTAS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id95">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-min-ctas">NCCL_MIN_CTAS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id96">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-nvls-enable">NCCL_NVLS_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id97">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ib-merge-nics">NCCL_IB_MERGE_NICS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id98">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-mnnvl-enable">NCCL_MNNVL_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id99">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-mnnvl-uuid">NCCL_MNNVL_UUID</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id100">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-mnnvl-clique-id">NCCL_MNNVL_CLIQUE_ID</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id101">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ras-enable">NCCL_RAS_ENABLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id102">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ras-addr">NCCL_RAS_ADDR</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id103">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ras-timeout-factor">NCCL_RAS_TIMEOUT_FACTOR</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id104">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-launch-order-implicit">NCCL_LAUNCH_ORDER_IMPLICIT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id106">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-launch-race-fatal">NCCL_LAUNCH_RACE_FATAL</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id107">Values accepted</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="env.html#nccl-ipc-use-abstract-socket">NCCL_IPC_USE_ABSTRACT_SOCKET</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="env.html#id108">Values accepted</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ras">RAS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="troubleshooting/ras.html">RAS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="troubleshooting/ras.html#principle-of-operation">Principle of Operation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="troubleshooting/ras.html#ras-queries">RAS Queries</a></li>
+<li class="toctree-l4"><a class="reference internal" href="troubleshooting/ras.html#sample-output">Sample Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="troubleshooting/ras.html#json-output">JSON Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="troubleshooting/ras.html#monitoring-mode">Monitoring Mode</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#gpu-direct">GPU Direct</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#gpu-to-gpu-communication">GPU-to-GPU communication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gpu-to-nic-communication">GPU-to-NIC communication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pci-access-control-services-acs">PCI Access Control Services (ACS)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#topology-detection">Topology detection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#memory-issues">Memory issues</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#shared-memory">Shared memory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stack-size">Stack size</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#unified-memory-uvm">Unified Memory (UVM)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#networking-issues">Networking issues</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ip-network-interfaces">IP Network Interfaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ip-ports">IP Ports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#infiniband">InfiniBand</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rdma-over-converged-ethernet-roce">RDMA over Converged Ethernet (RoCE)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">NCCL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Troubleshooting</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/troubleshooting.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="troubleshooting">
+<h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this heading"></a></h1>
+<p>Ensure you are familiar with the following known issues and useful debugging strategies.</p>
+<section id="errors">
+<h2>Errors<a class="headerlink" href="#errors" title="Permalink to this heading"></a></h2>
+<p>NCCL calls may return a variety of return codes. Ensure that the return codes are always equal to ncclSuccess. If any call fails and returns a value different from ncclSuccess, setting NCCL_DEBUG to “WARN” will make NCCL print an explicit warning message before returning the error.</p>
+<p>Errors are grouped into different categories.</p>
+<ul class="simple">
+<li><p>ncclUnhandledCudaError and ncclSystemError indicate that a call to an external library failed.</p></li>
+<li><p>ncclInvalidArgument and ncclInvalidUsage indicates there was a programming error in the application using NCCL.</p></li>
+</ul>
+<p>In either case, refer to the NCCL warning message to understand how to resolve the problem.</p>
+</section>
+<section id="ras">
+<h2>RAS<a class="headerlink" href="#ras" title="Permalink to this heading"></a></h2>
+<p>Starting with version 2.24, NCCL includes a reliability, availability, and serviceability (RAS) subsystem to help with
+the diagnosis and debugging of crashes and hangs.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting/ras.html">RAS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting/ras.html#principle-of-operation">Principle of Operation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting/ras.html#ras-queries">RAS Queries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting/ras.html#sample-output">Sample Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting/ras.html#json-output">JSON Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting/ras.html#monitoring-mode">Monitoring Mode</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="gpu-direct">
+<h2>GPU Direct<a class="headerlink" href="#gpu-direct" title="Permalink to this heading"></a></h2>
+<p>NCCL heavily relies on GPU Direct for inter-GPU communication. This refers to the ability for a GPU to directly
+communicate with another device, such as another GPU or a network card, using direct point-to-point PCI messages.</p>
+<p>Direct point-to-point PCI messages can fail or perform poorly for a variety of reasons, like missing components,
+a bad configuration of a virtual machine or a container, or some BIOS settings.</p>
+<section id="gpu-to-gpu-communication">
+<h3>GPU-to-GPU communication<a class="headerlink" href="#gpu-to-gpu-communication" title="Permalink to this heading"></a></h3>
+<p>To make sure GPU-to-GPU communication is working correctly, look for the <code class="docutils literal notranslate"><span class="pre">p2pBandwidthLatencyTest</span></code> from the CUDA
+samples found here: <a class="reference external" href="https://github.com/nvidia/cuda-samples">https://github.com/nvidia/cuda-samples</a></p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>cuda-samples/Samples/5_Domain_Specific/p2pBandwidthLatencyTest
+make
+./p2pBandwidthLatencyTest
+</pre></div>
+</div>
+<p>The test should run to completion and report good performance between GPUs.</p>
+<p>Another tool for checking GPU-to-GPU performance is called <code class="docutils literal notranslate"><span class="pre">nvbandwidth</span></code>.
+This can be downloaded and built from the code and instructions found here: <a class="reference external" href="https://github.com/NVIDIA/nvbandwidth">https://github.com/NVIDIA/nvbandwidth</a></p>
+</section>
+<section id="gpu-to-nic-communication">
+<h3>GPU-to-NIC communication<a class="headerlink" href="#gpu-to-nic-communication" title="Permalink to this heading"></a></h3>
+<p>GPUs can also communicate directly with network cards using GPU Direct RDMA (GDRDMA). This requires having a compatible
+network cards and drivers, plus loading an extra kernel module called <code class="docutils literal notranslate"><span class="pre">nvidia-peermem</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">nvidia-peermem</span></code> module is now supplied with the CUDA drivers, however it must be loaded on each node boot with:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>modprobe<span class="w"> </span>nvidia-peermem
+</pre></div>
+</div>
+<p>GDRDMA can also be enabled by using the DMA-BUF feature of recent Linux kernels combined with the Open Source Nvidia GPU driver.
+In this case, NCCL will automatically detect and enable DMA-BUF so the nvidia-peermem module will not be necessary.</p>
+</section>
+<section id="pci-access-control-services-acs">
+<h3>PCI Access Control Services (ACS)<a class="headerlink" href="#pci-access-control-services-acs" title="Permalink to this heading"></a></h3>
+<p><strong>Baremetal systems</strong></p>
+<p>IO virtualization (also known as VT-d or IOMMU) can interfere with GPU Direct by redirecting all PCI point-to-point
+traffic to the CPU root complex, causing a significant performance reduction or even a hang. You can check
+whether ACS is enabled on PCI bridges by running:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>lspci<span class="w"> </span>-vvv<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>ACSCtl
+</pre></div>
+</div>
+<p>If lines show “SrcValid+”, then ACS might be enabled. Looking at the full output of lspci, one can check if
+a PCI bridge has ACS enabled.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>lspci<span class="w"> </span>-vvv
+</pre></div>
+</div>
+<p>If PCI switches have ACS enabled, it needs to be disabled. On some systems this can be done from the BIOS
+by disabling IO virtualization or VT-d. For Broadcom PLX devices, it can be done from the OS but needs to
+be done again after each reboot.</p>
+<p>Use the command below to find the PCI bus IDs of PLX PCI bridges:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>lspci<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>PLX
+</pre></div>
+</div>
+<p>Next, use setpci to disable ACS with the command below, replacing 03:00.0 by the PCI bus ID of each PCI bridge.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>setpci<span class="w"> </span>-s<span class="w"> </span><span class="m">03</span>:00.0<span class="w"> </span>ECAP_ACS+0x6.w<span class="o">=</span><span class="m">0000</span>
+</pre></div>
+</div>
+<p>Or you can use a script similar to this:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span>BDF<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="sb">`</span>lspci<span class="w"> </span>-d<span class="w"> </span><span class="s2">&quot;*:*:*&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{print $1}&#39;</span><span class="sb">`</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span><span class="c1"># skip if it doesn&#39;t support ACS</span>
+<span class="w">  </span>sudo<span class="w"> </span>setpci<span class="w"> </span>-v<span class="w"> </span>-s<span class="w"> </span><span class="si">${</span><span class="nv">BDF</span><span class="si">}</span><span class="w"> </span>ECAP_ACS+0x6.w<span class="w"> </span>&gt;<span class="w"> </span>/dev/null<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$?</span><span class="w"> </span>-ne<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">    </span><span class="k">continue</span>
+<span class="w">  </span><span class="k">fi</span>
+<span class="w">  </span>sudo<span class="w"> </span>setpci<span class="w"> </span>-v<span class="w"> </span>-s<span class="w"> </span><span class="si">${</span><span class="nv">BDF</span><span class="si">}</span><span class="w"> </span>ECAP_ACS+0x6.w<span class="o">=</span><span class="m">0000</span>
+<span class="k">done</span>
+</pre></div>
+</div>
+<p><strong>Virtual machines</strong></p>
+<p>Virtual machines require ACS to function, hence disabling ACS is not an option. To run with maximum
+performance inside virtual machines, ATS needs to be enabled in network adapters.</p>
+</section>
+</section>
+<section id="topology-detection">
+<h2>Topology detection<a class="headerlink" href="#topology-detection" title="Permalink to this heading"></a></h2>
+<p>NCCL relies on /sys to discover the PCI topology of GPUs and network cards. When running inside a virtual
+machine or container, make sure /sys is properly mounted. Having /sys expose a virtual PCI topology can
+result in sub-optimal performance.</p>
+</section>
+<section id="memory-issues">
+<h2>Memory issues<a class="headerlink" href="#memory-issues" title="Permalink to this heading"></a></h2>
+<section id="shared-memory">
+<span id="cumem-host-allocations"></span><h3>Shared memory<a class="headerlink" href="#shared-memory" title="Permalink to this heading"></a></h3>
+<p>To communicate between processes and even between threads of a process, NCCL creates shared memory segments,
+traditionally
+in /dev/shm. The operating system’s limits on these resources may need to be increased accordingly. Please see your
+system’s documentation for details.</p>
+<p>If insufficient shared memory is available, NCCL will fail to initialize. Running with NCCL_DEBUG=WARN
+will show a message similar to this:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>NCCL<span class="w"> </span>WARN<span class="w"> </span>Error:<span class="w"> </span>failed<span class="w"> </span>to<span class="w"> </span>extend<span class="w"> </span>/dev/shm/nccl-03v824<span class="w"> </span>to<span class="w"> </span><span class="m">4194660</span><span class="w"> </span>bytes
+</pre></div>
+</div>
+<p><strong>Docker</strong></p>
+<p>In particular, Docker containers default to limited shared and pinned memory resources. When using NCCL inside a
+container, please make sure to adjust the shared memory size inside the container, for example by adding the following
+arguments to the docker launch command line:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>--shm-size<span class="o">=</span>1g<span class="w"> </span>--ulimit<span class="w"> </span><span class="nv">memlock</span><span class="o">=</span>-1
+</pre></div>
+</div>
+<p><strong>Systemd</strong></p>
+<p>When running jobs using mpirun or SLURM, systemd may remove files in shared memory when it detects that the
+corresponding user is not logged in, in an attempt to clean up old temporary files. This can cause NCCL to crash
+during init with an error like:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>NCCL<span class="w"> </span>WARN<span class="w"> </span>unlink<span class="w"> </span>shared<span class="w"> </span>memory<span class="w"> </span>/dev/shm/nccl-d5rTd0<span class="w"> </span>failed,<span class="w"> </span>error:<span class="w"> </span>No<span class="w"> </span>such<span class="w"> </span>file<span class="w"> </span>or<span class="w"> </span>directory
+</pre></div>
+</div>
+<p>Given mpirun and SLURM jobs can run on the node without the user being seen as logged in by systemd, system administrators need
+to disable that clean-up mechanism, which can be performed by SLURM epilogue scripts instead. To do this, the following
+line needs to be set in /etc/systemd/logind.conf:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">RemoveIPC</span><span class="o">=</span>no
+</pre></div>
+</div>
+<p>Once updated, the daemons should be restarted with:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>systemd-logind
+</pre></div>
+</div>
+<p><strong>cuMem host allocations</strong></p>
+<p>Starting with version 2.23, NCCL supports an alternative shared memory mechanism using cuMem host allocations.  From
+NCCL 2.24, if CUDA driver &gt;= 12.6 and CUDA runtime &gt;= 12.2, it is enabled by default in favor of /dev/shm.</p>
+<p>However, cuMem host allocations rely on correctly configured and working NUMA support, which may not be available in
+some VM and containerization scenarios.  In particular, Docker by default disables NUMA support (it can be enabled by
+invoking Docker with <code class="docutils literal notranslate"><span class="pre">--cap-add</span> <span class="pre">SYS_NICE</span></code>).  From version 2.26.5, NCCL checks if cuMem host allocations work and, if
+needed, automatically falls back to the /dev/shm code.  In prior versions, the same outcome can be achieved by manually
+specifying <code class="docutils literal notranslate"><span class="pre">NCCL_CUMEM_HOST_ENABLE=0</span></code>.  We still recommend configuring the underlying system to ensure that cuMem host
+allocations work, as they provide improved reliability during communicator aborts.</p>
+<p>cuMem host allocations may fail on systems without CUDA P2P connectivity if CUDA driver version prior to 13.0 is being
+used.  Furthermore, <a class="reference external" href="https://docs.nvidia.com/deploy/cuda-compatibility/forward-compatibility.html">CUDA Forward Compatibility</a> feature can affect NCCL’s ability to
+accurately determine the current driver version, resulting in cuMem host allocations being enabled on older drivers than
+intended.  We continue to investigate additional mechanisms to detect such circumstances; in the meantime, use
+<code class="docutils literal notranslate"><span class="pre">NCCL_CUMEM_HOST_ENABLE=0</span></code> to deactivate this feature if it causes issues.</p>
+</section>
+<section id="stack-size">
+<h3>Stack size<a class="headerlink" href="#stack-size" title="Permalink to this heading"></a></h3>
+<p>NCCL’s graph search algorithm is highly recursive and, especially on MNNVL
+systems where many ranks are reachable via CUDA P2P, may temporarily require
+more than 2 MB of thread stack during communicator creation.  While the default
+Linux stack size limit (8 MB) is known to be sufficient, we’ve seen crashes
+if the limit is changed to <code class="docutils literal notranslate"><span class="pre">unlimited</span></code>.  Due to an idiosyncracy of GNU libc
+(see the man page of <code class="docutils literal notranslate"><span class="pre">pthread_create(3)</span></code>), such a setting results in a
+<em>decrease</em> of the stack size of NCCL’s background threads to just 2 MB,
+which may not be sufficiently large.  Use <code class="docutils literal notranslate"><span class="pre">ulimit</span> <span class="pre">-s</span></code> in bash to print the
+current limit; if needed, reset it to 8192 KB using <code class="docutils literal notranslate"><span class="pre">ulimit</span> <span class="pre">-s</span> <span class="pre">8192</span></code> (one
+also needs to ensure that the new setting is propagated to other nodes when
+launching a multi-node NCCL job).  Starting with version 2.28, NCCL queries the
+default stack size for newly launched threads and, if necessary, changes it to
+a safe value for the current job.  We still recommend that users on affected
+systems attempt to get the system-wide setting fixed as – however well
+intentioned – it is a potentially serious misconfiguration that could have
+negative effects extending beyond NCCL jobs.</p>
+</section>
+<section id="unified-memory-uvm">
+<h3>Unified Memory (UVM)<a class="headerlink" href="#unified-memory-uvm" title="Permalink to this heading"></a></h3>
+<p>Starting with version 2.23, NCCL utilizes CUDA memory pools to optimize graph capturing. This feature relies on UVM
+being available.  While UVM may not be on by default in some virtual machine (VM) setups, it can typically be enabled through a
+configuration change.</p>
+</section>
+</section>
+<section id="networking-issues">
+<h2>Networking issues<a class="headerlink" href="#networking-issues" title="Permalink to this heading"></a></h2>
+<section id="ip-network-interfaces">
+<h3>IP Network Interfaces<a class="headerlink" href="#ip-network-interfaces" title="Permalink to this heading"></a></h3>
+<p>NCCL auto-detects which network interfaces to use for inter-node communication. If some interfaces are in the UP state but are not able to communicate between nodes, NCCL may try to use them anyway and therefore fail during the init functions or even hang.</p>
+<p>For information about how to specify which interfaces to use, see the Environment Variables section, particularly the <code class="docutils literal notranslate"><span class="pre">NCCL_SOCKET_IFNAME</span></code> environment variable.</p>
+</section>
+<section id="ip-ports">
+<h3>IP Ports<a class="headerlink" href="#ip-ports" title="Permalink to this heading"></a></h3>
+<p>NCCL opens TCP ports to connect processes together and exchange connection information. To restrict the range of ports used by NCCL, one can set the <code class="docutils literal notranslate"><span class="pre">net.ipv4.ip_local_port_range</span></code> property of the Linux kernel.</p>
+<p>This example shows how to restrict NCCL ports to 50000-51000:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="m">50000</span><span class="w"> </span><span class="m">51000</span><span class="w"> </span>&gt;<span class="w"> </span>/proc/sys/net/ipv4/ip_local_port_range
+</pre></div>
+</div>
+<p>Or to make this permanent, add a line to /etc/sysctl.conf:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;net.ipv4.ip_local_port_range = 50000 51000&quot;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>/etc/sysctl.conf
+</pre></div>
+</div>
+<p>Restricting the port range can be useful to open a corresponding range in the firewall, for example on Google Cloud:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>gcloud<span class="w"> </span>compute<span class="w"> </span>--project<span class="o">=</span>myproject<span class="w"> </span>firewall-rules<span class="w"> </span>create<span class="w"> </span>ncclnet0-ingress<span class="w"> </span>--direction<span class="o">=</span>INGRESS<span class="w"> </span>--priority<span class="o">=</span><span class="m">1</span><span class="w"> </span>--network<span class="o">=</span>ncclnet<span class="w"> </span>--action<span class="o">=</span>ALLOW<span class="w"> </span>--rules<span class="o">=</span>tcp:50000-51000,22,1024-1039<span class="w"> </span>--destination-ranges<span class="o">=</span><span class="m">0</span>.0.0.0/0<span class="w"> </span>--target-tags<span class="o">=</span>ncclnet
+</pre></div>
+</div>
+</section>
+<section id="infiniband">
+<h3>InfiniBand<a class="headerlink" href="#infiniband" title="Permalink to this heading"></a></h3>
+<p>Before running NCCL on InfiniBand, running low-level InfiniBand tests (and in particular the ib_write_bw test) can help verify whether the nodes are able to communicate properly.</p>
+<p>A common issue seen with InfiniBand is the library not being able to register sufficient pinned memory. In such cases you may see an error like:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>NCCL<span class="w"> </span>WARN<span class="w"> </span>Call<span class="w"> </span>to<span class="w"> </span>ibv_create_qp<span class="w"> </span>failed
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>NCCL<span class="w"> </span>WARN<span class="w"> </span>Call<span class="w"> </span>to<span class="w"> </span>ibv_reg_mr<span class="w"> </span>failed
+</pre></div>
+</div>
+<p>The solution is to remove the user limits on registering pinned memory. This can be done by adding these lines:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>*<span class="w"> </span>soft<span class="w"> </span>memlock<span class="w"> </span>unlimited
+*<span class="w"> </span>hard<span class="w"> </span>memlock<span class="w"> </span>unlimited
+</pre></div>
+</div>
+<p>To the <code class="docutils literal notranslate"><span class="pre">/etc/security/limits.conf</span></code> configuration file or equivalent on your Linux distribution.</p>
+</section>
+<section id="rdma-over-converged-ethernet-roce">
+<h3>RDMA over Converged Ethernet (RoCE)<a class="headerlink" href="#rdma-over-converged-ethernet-roce" title="Permalink to this heading"></a></h3>
+<p>Before running NCCL on RoCE, running low-level RDMA tests (and in particular the <code class="docutils literal notranslate"><span class="pre">ib_write_bw</span></code> test) can help verify whether the nodes are able to communicate properly.</p>
+<p>A common issue seen with RoCE is the incorrect GID Index being selected for the RoCE v2 NICs. This can result in the following error:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>NCCL<span class="w"> </span>WARN<span class="w"> </span>Call<span class="w"> </span>to<span class="w"> </span>ibv_modify_qp<span class="w"> </span>failed<span class="w"> </span>with<span class="w"> </span>error<span class="w"> </span>Invalid<span class="w"> </span>argument
+</pre></div>
+</div>
+<p>With NCCL 2.21 and later the GID index is dynamically selected, but with prior versions the user would need to run:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>show_gids
+</pre></div>
+</div>
+<p>And then set <code class="docutils literal notranslate"><span class="pre">NCCL_IB_GID_INDEX</span></code> to the GID INDEX for the RoCE v2 VER GID.
+With NCCL 2.21 and later releases, this environment variable should <em>not</em> be set.</p>
+<p>Users may also need to set <code class="docutils literal notranslate"><span class="pre">NCCL_IB_TC</span></code> when using RoCE based networks. Refer to your vendor’s documentation for the values this should be set to.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="env.html" class="btn btn-neutral float-left" title="Environment Variables" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="troubleshooting/ras.html" class="btn btn-neutral float-right" title="RAS" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020-2025, NVIDIA Corporation.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+  <style>
+  a:link, a:visited {
+    color: #76b900;
+  }
+  a:hover {
+    color: #8c0;
+  }
+  .rst-content dl:not(.docutils) dt {
+    background: rgba(118, 185, 0, 0.1) !important;
+    color: rgba(59,93,0,1) !important;
+    border-top: solid 3px rgba(59,93,0,1) !important;
+  }
+  </style>
+  <script type="text/javascript">_satellite.pageBottom();</script>
+
+
+</body>
+</html>

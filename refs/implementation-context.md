@@ -238,3 +238,21 @@ When completing Tier 3 for each Phase 1 resource, use this table to write target
 | `streamdiffusionv2` | PP comm cost (Figure 5), overlap pattern (Figure 16), stage imbalance (Figure 13), Stream Batch fill requirement | all three analysis docs, `pp-topology-pilot-plan.md` |
 | `pipedit` | Pipelined sequence parallelism design space; complementary to layer-parallel PP | — |
 | `dit-paper` | Uniform block structure enables PP; adaLN-Zero requires conditioning at every stage; Gflops scale quadratically with tokens | `explainers/01-why-two-gpus.md`, `explainers/04-tp-math.md` |
+
+---
+
+## Appendix: Bringup run index (H200 / TP v0)
+
+This index is a navigation aid: *run number* → *measured finding / design decision* → where to look in the library.
+
+| Run | Date | What changed | Key measured result | Where it maps |
+|---|---|---|---|---|
+| 7 | 2026-02-20 | First successful TP=2 end-to-end inference (BF16, flash KV-bias, no compile) | **16 FPS** stable | `scope-drd/notes/FA4/h200/tp/bringup-run-log.md` Run 7; topics: 02, 03, 04 |
+| 8–9b | 2026-02-20 | TP=2 + compile (pre-funcol) | **9.6 FPS**; Run 9b diagnoses **~160 graph breaks/forward** from `torch._dynamo.disable()` around collectives | `bringup-run-log.md` Runs 8–9b; bridge: Phase 1 “Functional collectives fixed compile”; topics: 08, 09, 10, 11, 12 |
+| 10 | 2026-02-21 | KV-bias backend `flash` → `fa4` (CUTLASS available) | **16 → 19.5 FPS** (+22%) | `bringup-run-log.md` Run 10; bridge: Phase 1 “FA4 KV-bias backend…”; topics: 18, 22 |
+| 10b | 2026-02-21 | Block profiling (`PROFILE_PIPELINE_BLOCKS=1`) | denoise **435ms (66.8%)**, decode **107ms (16.5%)**, recompute **104ms (16.0%)** | `bringup-run-log.md` Run 10b; bridge: Phase 2 “decode + recompute…”; topics: 17, 23 |
+| 11 | 2026-02-21 | `SCOPE_KV_CACHE_RECOMPUTE_EVERY=2` experiment | Quality regression + **no net FPS gain** (denoise got slower) | `bringup-run-log.md` Run 11; topics: 22 |
+| 12b | 2026-02-21 | Functional collectives + compile | **24.5 FPS**; collective graph breaks eliminated | `bringup-run-log.md` Run 12b; bridge: Phase 1 “Functional collectives fixed compile”; topics: 11, 12, 09 |
+| 13–14 | 2026-02-21 | E2E harness + graph-break census; guarded attention-backend logger | `unique_graphs=12`, `graph_breaks=2`; remaining break is KV-cache dynamic slicing | `bringup-run-log.md` Runs 13–14 + Known Issue 8; bridge: Phase 1 “Remaining graph break…”; topic: 09 |
+| 15 | 2026-02-21 | v1.1b scaffolding: broadcast video latents | Fixed a would-deadlock shape bug: first chunk **13 pixel frames → 4 latent frames** | `bringup-run-log.md` Run 15; topics: 20, 23 |
+| 17 | 2026-02-21 | TP=4 first test | **27 FPS**; “just works” (no code changes) | `bringup-run-log.md` Run 17; topics: 01, 18 |

@@ -17,6 +17,10 @@ The PP overlap design uses **bounded queues** with explicit depth limits: `D_in=
 
 See: `refs/implementation-context.md` → Phase 3, `scope-drd/notes/FA4/h200/tp/pp0-bringup-runbook.md` Phase 2, `pp-control-plane-pseudocode.md`.
 
+Relevant Scope code / notes:
+- `scope-drd/scripts/pp_two_rank_pipelined.py` (`max_outstanding` bounded in-flight implementation)
+- `scope-drd/notes/FA4/h200/tp/pp-topology-pilot-plan.md` (definitions of `D_in`/`D_out` + flush rules on hard cuts)
+
 ## Synthesis
 
 <!-- To be filled during study -->

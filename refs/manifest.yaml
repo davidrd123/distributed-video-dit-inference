@@ -17,8 +17,11 @@ resources:
     type: docs
     topics: [1]
     priority: high
-    status: fetched
-    local_paths: []
+    status: converted
+    local_paths:
+      - sources/nccl-user-guide/raw/page.html
+      - sources/nccl-user-guide/raw/subpages/
+      - sources/nccl-user-guide/full.md
     notes: "Covers communicators, collectives, CUDA stream semantics, group calls, algorithm selection, env vars (NCCL_DEBUG, NCCL_ALGO, NCCL_PROTO)"
   - id: scaling-dl-nccl
     title: "Scaling Deep Learning Training with NCCL"
@@ -175,8 +178,10 @@ resources:
     type: docs
     topics: [5, 6, 7]
     priority: high
-    status: fetched
-    local_paths: []
+    status: converted
+    local_paths:
+      - sources/pytorch-cuda-semantics/raw/page.html
+      - sources/pytorch-cuda-semantics/full.md
     notes: "Comprehensive treatment of streams, events, caching allocator, CUDA graphs, memory management. Referenced across topics 5-7"
 
   - id: cuda-async-execution
@@ -212,8 +217,10 @@ resources:
     type: docs
     topics: [6]
     priority: high
-    status: fetched
-    local_paths: []
+    status: converted
+    local_paths:
+      - sources/cuda-graphs-guide/raw/page.html
+      - sources/cuda-graphs-guide/full.md
     notes: "Graph definition vs execution, stream capture, memory allocations within graphs, instantiation, dependency management"
 
   - id: torch-compile-api
@@ -293,8 +300,10 @@ resources:
     type: docs
     topics: [9]
     priority: high
-    status: fetched
-    local_paths: []
+    status: converted
+    local_paths:
+      - sources/dynamo-deep-dive/raw/page.html
+      - sources/dynamo-deep-dive/full.md
     notes: "Most comprehensive official resource: PEP 523, VariableTracker system, guard generation, continuation functions, SymInt for dynamic shapes"
 
   - id: torchdynamo-uwplse
@@ -389,8 +398,10 @@ resources:
     type: code
     topics: [11]
     priority: high
-    status: fetched
-    local_paths: []
+    status: converted
+    local_paths:
+      - sources/funcol-rfc-93173/raw/issue.json
+      - sources/funcol-rfc-93173/full.md
     notes: "Foundational design doc. Why c10d APIs break tracing, functional semantics, AsyncTensor subclass approach"
 
   - id: funcol-source
@@ -411,8 +422,10 @@ resources:
     type: blog
     topics: [11, 12]
     priority: high
-    status: fetched
-    local_paths: []
+    status: converted
+    local_paths:
+      - sources/ezyang-state-of-compile/raw/page.html
+      - sources/ezyang-state-of-compile/full.md
     notes: "Most comprehensive treatment of functional collectives in context. DTensor compilation, SimpleFSDP, async TP as compiler pass, comparison with JAX"
 
   - id: pytorch-issue-138773
@@ -496,8 +509,10 @@ resources:
     type: paper
     topics: [13]
     priority: high
-    status: fetched
-    local_paths: []
+    status: converted
+    local_paths:
+      - sources/gpipe/raw/paper.pdf
+      - sources/gpipe/full.md
     notes: "Huang et al., 2018. Foundational synchronous PP paper. Micro-batch splitting, re-materialization (activation checkpointing)"
 
   - id: pipedream
@@ -566,8 +581,10 @@ resources:
     type: docs
     topics: [14]
     priority: high
-    status: fetched
-    local_paths: []
+    status: converted
+    local_paths:
+      - sources/pytorch-pipelining-api/raw/page.html
+      - sources/pytorch-pipelining-api/full.md
     notes: "ScheduleGPipe, Schedule1F1B, ScheduleInterleaved1F1B, ScheduleInterleavedZeroBubble, ScheduleZBVZeroBubble"
 
   # ============================================================

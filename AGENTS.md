@@ -79,22 +79,23 @@ Convert the raw artifact to clean, complete markdown. **No summarization, no edi
   - **Recipe A — LaTeX source (preferred for arXiv papers)**:
     1. Fetch source bundle: `curl -sL -o /tmp/<id>_src.tar.gz "https://arxiv.org/e-print/<arxiv-id>"`
     2. Extract: `mkdir -p /tmp/<id>_src && tar xzf /tmp/<id>_src.tar.gz -C /tmp/<id>_src`
-    3. Find the main `.tex` file and `.bbl` (bibliography). Read these directly — equations, tables, and section structure are exact ground truth from the authors.
-    4. Convert LaTeX markup to markdown: `\section{}` → `##`, `\begin{equation}` → `$$...$$`, `\begin{tabular}` → markdown tables, `\cite{key}` → `[N]` references.
+    3. Find the main `.tex` file and bibliography (`.bbl` if present, otherwise `.bib`). Read these directly — equations, tables, and section structure are exact ground truth from the authors.
+    4. Convert LaTeX markup to markdown (mechanical reformat only): `\section{}` → `##`, `\begin{equation}` → `$$...$$`, `\begin{tabular}` → markdown tables, and preserve citation keys (e.g., `\citep{key1,key2}` → `[cite: key1,key2]`).
     5. For figures: describe in brackets using the `\caption{}` text from the `.tex` + the figure filename for context. The actual images are in the source bundle but don't commit them.
-    6. For bibliography: convert `.bbl` entries to a numbered reference list.
+    6. For bibliography: prefer converting `.bbl` entries to a numbered reference list. If only a `.bib` is available, embed the BibTeX in a fenced block and (optionally) append the PDF-rendered reference list for readability.
     7. Add `conversion_notes: "Converted from LaTeX source via arxiv e-print"` to YAML frontmatter.
     8. Clean up `/tmp/<id>_src/` after conversion.
-	  - **Recipe B — Vision fallback (non-arXiv PDFs, or when e-print is unavailable)**:
-	    1. Render pages to PNGs (do **not** commit these): `mkdir -p /tmp/<id>_pages && pdftoppm -png -r 200 sources/<id>/raw/paper.pdf /tmp/<id>_pages/page`
-	    2. Read the rendered pages directly as images (multimodal input), reconstructing section structure, equations, tables, and bracketed figure descriptions.
-	    3. Cross-check completeness with text extraction (especially for References and long tables):
-	       - Prefer `-nopgbrk` to avoid form-feed artifacts: `pdftotext -raw -nopgbrk sources/<id>/raw/paper.pdf /tmp/<id>_raw.txt`
-	       - Use `-layout` when reconstructing tables: `pdftotext -layout sources/<id>/raw/paper.pdf /tmp/<id>_layout.txt`
-	       - Use `-f/-l` to isolate a single page when an equation/table is tricky: `pdftotext -raw -f 7 -l 7 sources/<id>/raw/paper.pdf /tmp/<id>_p7.txt`
-	    4. Add `conversion_notes:` to YAML frontmatter documenting the method + any equation/table artifacts.
-	    5. Clean up `/tmp/<id>_pages/` after conversion.
-	  - Alternative tools (lower quality but faster): marker, nougat
+  - **Recipe B — Vision fallback (non-arXiv PDFs, or when e-print is unavailable)**:
+    - Caveat: PDF text extraction often turns **figure labels into garbage blocks** (unicode math like `𝑥₁`) and **breaks equation structure** (fractions split across lines). If you see that, stop and switch back to Recipe A.
+    1. Render pages to PNGs (do **not** commit these): `mkdir -p /tmp/<id>_pages && pdftoppm -png -r 200 sources/<id>/raw/paper.pdf /tmp/<id>_pages/page`
+    2. Read the rendered pages directly as images (multimodal input), reconstructing section structure, equations, tables, and bracketed figure descriptions.
+    3. Cross-check completeness with text extraction (especially for References and long tables):
+       - Prefer `-nopgbrk` to avoid form-feed artifacts: `pdftotext -raw -nopgbrk sources/<id>/raw/paper.pdf /tmp/<id>_raw.txt`
+       - Use `-layout` when reconstructing tables: `pdftotext -layout sources/<id>/raw/paper.pdf /tmp/<id>_layout.txt`
+       - Use `-f/-l` to isolate a single page when an equation/table is tricky: `pdftotext -raw -f 7 -l 7 sources/<id>/raw/paper.pdf /tmp/<id>_p7.txt`
+    4. Add `conversion_notes:` to YAML frontmatter documenting the method + any equation/table artifacts.
+    5. Clean up `/tmp/<id>_pages/` after conversion.
+  - Alternative tools (lower quality but faster): marker, nougat
 - JSON (GitHub) → markdown: direct formatting from structured data
 - Repo → structured code dump: file tree + verbatim content under `## File:` headings (no interpretation — that's Tier 3)
 

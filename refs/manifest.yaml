@@ -908,10 +908,11 @@ resources:
     type: paper
     topics: [22, 24]
     priority: high
-    status: fetched
+    status: converted
     local_paths:
       - sources/causvid/raw/paper.pdf
       - sources/causvid/raw/abstract.html
+      - sources/causvid/full.md
     notes: "CausVid. Causal DiT framing — converts bidirectional video diffusion to autoregressive with KV caching. Blueprint for AR Wan 2.1. Referenced in StreamDiffusionV2 source (causvid/ directory). 14.6MB PDF."
 
   # ============================================================
@@ -977,8 +978,8 @@ resources:
     local_paths: []
     notes: "Kodaira et al., 2023. Stream Batch, Residual CFG (2.05x speedup), Stochastic Similarity Filter. 91.07 fps on RTX 4090"
 
-	  - id: streamdiffusionv2
-	    title: "StreamDiffusionV2"
+  - id: streamdiffusionv2
+    title: "StreamDiffusionV2"
     urls:
       - https://arxiv.org/abs/2511.07399
       - https://streamdiffusionv2.github.io/
@@ -986,14 +987,15 @@ resources:
     type: paper
     topics: [24]
     priority: high
-	    status: converted
-	    local_paths:
-	      - sources/streamdiffusionv2/raw/page.html
-	      - sources/streamdiffusionv2/raw/repo/
-	      - sources/streamdiffusionv2/raw/paper.pdf
-	      - sources/streamdiffusionv2/full.md
-	      - sources/streamdiffusionv2/full-paper.md
-	    notes: "Feng et al., 2025. SLO-aware batching, block scheduler, sink-token rolling KV cache, motion-aware noise. 58.28 FPS with 14B model on 4xH100. Most directly relevant system. full.md is repo structured dump (9597 lines); full-paper.md is the paper conversion."
+    status: converted
+    local_paths:
+      - sources/streamdiffusionv2/raw/page.html
+      - sources/streamdiffusionv2/raw/repo/
+      - sources/streamdiffusionv2/raw/paper.pdf
+      - sources/streamdiffusionv2/raw/arxiv-eprint.tar.gz
+      - sources/streamdiffusionv2/full.md
+      - sources/streamdiffusionv2/full-paper.md
+    notes: "Feng et al., 2025. SLO-aware batching, block scheduler, sink-token rolling KV cache, motion-aware noise. 58.28 FPS with 14B model on 4xH100. Most directly relevant system. full.md is repo structured dump (9597 lines); full-paper.md is the paper conversion."
 
   - id: diffusion-video-survey
     title: "Diffusion Models for Video Generation"

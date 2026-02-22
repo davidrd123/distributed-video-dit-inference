@@ -9,6 +9,17 @@ This repo is a **grounded reference library** for building a pipeline-parallel i
 
 The source curriculum is `distributed_video_dit_inference.md` — 24 topics, ~85 resources.
 
+## Sibling repo: `scope-drd`
+
+This reference library is designed to interop with `scope-drd/` (the implementation repo for the PP inference system). They live as **sibling directories** under a shared parent — no submodules, no nesting.
+
+- **This repo → scope-drd**: `refs/implementation-context.md` cites scope-drd working notes paths (e.g., `scope-drd/notes/FA4/h200/tp/feasibility.md`) to ground resource cards in measured findings.
+- **scope-drd → this repo**: Implementation notes can cite resource cards by ID (e.g., `refs/resources/zero-bubble-pp.md` claim 3) for JIT lookup during development.
+- **The human is the bridge** — neither repo depends on the other at build time. Cross-references are documentation pointers, not imports.
+- **Multi-machine**: Both repos are cloned independently on each machine (desktop, laptop, remote server). The sibling layout is a convention, not enforced — absolute paths will differ. All cross-references use **relative paths from the repo root** (e.g., `scope-drd/notes/...` means "the scope-drd sibling, then that path within it"), never absolute paths. The sibling directory name may vary (`scope-drd/` locally, `scope/` on remote) — references here use `scope-drd/` canonically.
+
+This convention may evolve as the interop pattern matures.
+
 ## Repository structure
 
 ```
@@ -51,21 +62,22 @@ This tier is mechanical — no LLM needed, just fetch tools.
 
 Convert the raw artifact to clean, complete markdown. **No summarization, no editorial judgment.** The full text, all sections, all content — just in a readable, searchable, agent-friendly format.
 
-- YAML frontmatter: `title`, `source_url`, `fetch_date`, `source_type`, `author` (if applicable)
+- YAML frontmatter: `title`, `source_url`, `fetch_date`, `source_type`, `author` (if applicable), `conversion_notes` (for papers — document any equation/table conversion artifacts)
 - Preserve ALL section headings as markdown headings
 - Preserve all code blocks, formulas, API signatures verbatim
 - Preserve all tables
 - Describe figures/diagrams in brackets: `[Figure: description of what the figure shows]`
 - For papers: preserve abstract, all sections, all equations, all tables, references
+- For HTML docs/blogs: strip site chrome (nav, footer, sidebar) only. Keep **all** article body content verbatim — no selectivity, no "include relevant sections." Consistent policy across all docs resources.
 - For docs: preserve all sections including API details, parameters, examples
 - For GitHub issues: preserve the original post body and key follow-up comments
-- For GitHub repos: `full.md` becomes an **annotated source guide** — README content, architecture overview, key file listing with inline code for the most important modules. This is not a dump of every file; it's the repo content an agent needs to understand the system's design and reference specific implementations.
+- For GitHub repos: `full.md` is a **structured code dump** — file tree followed by verbatim file content under `## File: path/to/file.py` headings. **No interpretation, no architecture overview** — that's Tier 3 work. The `full.md` is a structured, citable source that Tier 3 references.
 
 **Tooling preference**: Use the highest-fidelity conversion available:
 - HTML → markdown: pandoc, or a strong model reading the HTML
 - PDF → markdown: marker, nougat, or a strong model reading the PDF. A strong model reading the rendered PDF pages is currently the highest-quality approach for academic papers (preserves equations, table structure, figure descriptions).
 - JSON (GitHub) → markdown: direct formatting from structured data
-- Repo → annotated guide: a strong model reading the key source files
+- Repo → structured code dump: file tree + verbatim content under `## File:` headings (no interpretation — that's Tier 3)
 
 Aim for **zero information loss** relative to the raw artifact. If in doubt, include more rather than less. This file is the searchable ground truth that Tier 3 citations point back to.
 
@@ -146,12 +158,12 @@ These notes capture what we learned doing the `making-dl-go-brrrr` and `dit-pape
 
 ### Resource types not yet templated
 
-- **GitHub repos** (code): StreamDiffusionV2 is the first repo-type resource. The pattern is: clone/fetch key files into `raw/repo/`, write an annotated source guide as `full.md`, condense into a resource card focusing on architecture, key APIs, and design patterns relevant to the project.
-- **Large docs pages**: PyTorch CUDA Semantics, NCCL User Guide — these are sprawling multi-section docs. May need to be selective about which sections go into `full.md` while still being transparent about what was included vs. omitted.
+- **GitHub repos** (code): StreamDiffusionV2 is the first repo-type resource. The pattern is: clone/fetch key files into `raw/repo/`, write Tier 2 as file tree + verbatim code under `## File:` headings (no interpretation), condense into Tier 3 resource card focusing on architecture, key APIs, and design patterns relevant to the project. Interpretation and architecture overview is Tier 3 only.
+- **Large docs pages**: PyTorch CUDA Semantics, NCCL User Guide — these are sprawling multi-section docs. Strip site chrome only; keep all article body content verbatim.
 
 ## Quality expectations
 
-- **Tier 2 (full.md)**: Zero information loss for papers and blog posts. For large docs and repos, include all architecturally-relevant content and explicitly note any sections omitted.
+- **Tier 2 (full.md)**: Zero information loss for papers and blog posts. For HTML docs, strip site chrome only — keep all article body content verbatim. For repos, file tree + verbatim code under `## File:` headings.
 - **Tier 3 (resource cards)**: Every non-trivial claim must cite a specific heading or section in `sources/<id>/full.md`
 - Don't invent claims — if the source doesn't support it, don't include it
 - Flag uncertainty with `(unverified)` rather than guessing at hardware specs, numeric ranges, or protocol details

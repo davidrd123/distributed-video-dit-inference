@@ -202,13 +202,19 @@ These notes capture what we learned doing the `making-dl-go-brrrr` and `dit-pape
 
 ## Multi-agent git safety
 
-Multiple agents work on this repo concurrently. Uncommitted changes from other agents may be in the working tree. Follow these rules to avoid destroying work:
+Multiple agents work on this repo concurrently. Uncommitted changes from other agents may be in the working tree. These rules prevent accidental data loss — they are about **destructive git operations and metadata ownership**, not about editing files you've been assigned to work on.
 
+**What you SHOULD do freely:**
+- Edit/populate any file your task assigns you to (e.g., drafting a Tier 3 card means replacing stub content with a full card)
+- `git add` and `git commit` your own files
+- Read any file in the repo for context
+
+**What NOT to do:**
 1. **Never `git checkout -- <file>` on files you didn't create or modify.** This permanently wipes uncommitted changes with no undo. It has already destroyed populated Tier 3 cards.
-2. **To keep your diff clean, use `git add <only-your-files>` and `git commit`.** Don't reset other files to clean your working tree.
+2. **Never `git stash` and `git stash pop`** unless you are certain the stash contains only your own changes. Stash pop restores old versions of files, overwriting edits made since the stash was created.
 3. **If you see uncommitted changes from other agents, leave them alone.** They are in-flight work.
-4. **Never touch the `Status` field in resource cards** (`refs/resources/*.md`). Status is set during user review (`extracted` → `condensed`), not during drafting. Set status to `extracted` when creating a new card; never change an existing status.
-5. **Never `git stash` and `git stash pop`** unless you are certain the stash contains only your own changes. Stash pop restores old versions of files, overwriting edits made since the stash was created.
+4. **Don't change the `Status` field in resource card frontmatter** (`refs/resources/*.md`). When drafting a new card, set Status to `stub`. The user changes it to `condensed` after review. This is just about the one metadata field — populate everything else in the card normally.
+5. **Don't modify `refs/manifest.yaml`** unless your task explicitly says to.
 6. **Commit early and often** rather than accumulating large uncommitted diffs. This reduces the blast radius if something goes wrong.
 
 ## Contributing to this document

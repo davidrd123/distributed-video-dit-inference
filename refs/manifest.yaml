@@ -178,10 +178,11 @@ resources:
     type: docs
     topics: [5, 6, 7]
     priority: high
-    status: converted
+    status: condensed
     local_paths:
       - sources/pytorch-cuda-semantics/raw/page.html
       - sources/pytorch-cuda-semantics/full.md
+      - refs/resources/pytorch-cuda-semantics.md
     notes: "Comprehensive treatment of streams, events, caching allocator, CUDA graphs, memory management. Referenced across topics 5-7"
 
   - id: cuda-async-execution
@@ -217,10 +218,11 @@ resources:
     type: docs
     topics: [6]
     priority: high
-    status: converted
+    status: condensed
     local_paths:
       - sources/cuda-graphs-guide/raw/page.html
       - sources/cuda-graphs-guide/full.md
+      - refs/resources/cuda-graphs-guide.md
     notes: "Graph definition vs execution, stream capture, memory allocations within graphs, instantiation, dependency management"
 
   - id: torch-compile-api
@@ -398,10 +400,11 @@ resources:
     type: code
     topics: [11]
     priority: high
-    status: converted
+    status: condensed
     local_paths:
       - sources/funcol-rfc-93173/raw/issue.json
       - sources/funcol-rfc-93173/full.md
+      - refs/resources/funcol-rfc-93173.md
     notes: "Foundational design doc. Why c10d APIs break tracing, functional semantics, AsyncTensor subclass approach"
 
   - id: funcol-source
@@ -509,10 +512,11 @@ resources:
     type: paper
     topics: [13]
     priority: high
-    status: converted
+    status: condensed
     local_paths:
       - sources/gpipe/raw/paper.pdf
       - sources/gpipe/full.md
+      - refs/resources/gpipe.md
     notes: "Huang et al., 2018. Foundational synchronous PP paper. Micro-batch splitting, re-materialization (activation checkpointing)"
 
   - id: pipedream

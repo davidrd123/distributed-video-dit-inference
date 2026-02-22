@@ -7,7 +7,7 @@
 | Topics | 13 |
 | Authors | Huang et al. |
 | Year | 2018 |
-| Status | stub |
+| Status | condensed |
 
 ## Why it matters
 
@@ -84,6 +84,7 @@ The foundational synchronous pipeline parallelism paper. Introduces micro-batch 
 
 ## Related resources
 
+- [streamdiffusionv2](streamdiffusionv2.md) -- PP inference reference implementation (PP + Stream Batch) that operationalizes the “fill the pipeline” requirement
 - [dit-paper](dit-paper.md) -- DiT’s uniform block stack is ideal for block-wise PP partitioning
 - [pipedream-2bw](pipedream-2bw.md) -- introduces 1F1B schedule that reduces GPipe's memory overhead
 - [zero-bubble-pp](zero-bubble-pp.md) -- eliminates pipeline bubbles by splitting backward into B and W phases

@@ -5,7 +5,7 @@
 | Source | https://github.com/pytorch/pytorch/issues/93173 |
 | Type | code |
 | Topics | 11 |
-| Status | stub |
+| Status | condensed |
 
 ## Why it matters
 
@@ -104,3 +104,4 @@ c10d.wait(Tensor) -> Tensor
 - [nccl-user-guide](nccl-user-guide.md) -- underlying NCCL operations that funcol wraps
 - [pytorch-cuda-semantics](pytorch-cuda-semantics.md) -- stream ordering + allocator semantics; funcol doesn't introduce multi-stream semantics
 - [pytorch-pipelining-api](pytorch-pipelining-api.md) -- pipeline schedules that use collectives for inter-stage communication
+- [making-dl-go-brrrr](making-dl-go-brrrr.md) -- overhead-bound regime that funcol addresses by eliminating graph breaks

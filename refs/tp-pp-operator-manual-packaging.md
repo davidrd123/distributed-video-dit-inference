@@ -34,6 +34,7 @@ The library already helps as “physics + failure-mode backing” (NCCL/CUDA/Dyn
 ## Operator test matrix (definition of done)
 
 - `refs/operator-test-matrix.md` — the shared “break-it tests” suite: anti-stranding, plan/call-count mismatches, wrong-group collectives, epoch fencing, watchdog exit, and compile regression gates.
+- `refs/operator-test-matrix-implementation.md` — mapping from matrix rows → runnable harnesses/hooks in `scope-drd/` (the “how” companion).
 
 ## Operator-manual topic standard (opinionated + test-driven)
 
@@ -50,14 +51,10 @@ Wording correction that prevents real confusion:
 ## Status snapshot (this repo)
 
 Topic docs (`refs/topics/*.md`) current counts:
-- `draft`: 20
-- `stub`: 4
+- `draft`: 24
+- `stub`: 0
 
-Remaining `stub` topic files:
-- `refs/topics/10-inductor-fusion-rules.md`
-- `refs/topics/17-reading-profiler-traces.md`
-- `refs/topics/18-bandwidth-accounting.md`
-- `refs/topics/24-video-dit-scheduling.md`
+Note: `refs/topics/meta-essential-resources.md` is a meta index and does not currently carry a `status:` frontmatter field.
 
 High-leverage “authoritative basics” (fetched but not converted/condensed yet):
 - `sources/pytorch-distributed-api/raw/page.html`
@@ -79,7 +76,7 @@ Rule: **one agent edits one file per unit** unless explicitly coordinating.
 | A5 | `refs/topics/04-determinism-across-ranks.md` | drift detection | draft | — | Needs operator-manual standardization (contract + tripwires + break-it tests + instrumentation) |
 | A6 | `refs/topics/21-idempotency-and-replay.md` | epochs/flush/drop | draft | — | Ensure cache_epoch + monotonic IDs + bounded reordering policy |
 | A7 | `refs/topics/22-kv-cache-management.md` | KV lifecycle | draft | — | Must remain aligned with v1.1/PP field names + recompute coupling |
-| A8 | `refs/topics/24-video-dit-scheduling.md` | PP scheduling | stub | — | Should connect bubble math + `max_outstanding` + PP overlap gating |
+| A8 | `refs/topics/24-video-dit-scheduling.md` | PP scheduling | draft | — | Connect fill requirement, phase-PP overlap, and recompute coupling gates |
 
 ### B) Convert + condense “authoritative basics” (so topics can cite canon)
 
@@ -125,7 +122,7 @@ Include these files (both repos), in roughly this order:
 - `refs/topics/19-producer-consumer-backpressure.md`
 - `refs/topics/03-graceful-shutdown.md`
 - `refs/topics/04-determinism-across-ranks.md`
-- `refs/topics/22-kv-cache-management.md` *(once drafted)*
+- `refs/topics/22-kv-cache-management.md`
 
 **Library physics cards (minimal set; keep short)**
 - `refs/resources/nccl-user-guide.md`
@@ -150,6 +147,9 @@ Update this table as units complete (keep it short; links only):
 | 2026-02-22 | C1 | Crosswalk first pass | codex | `refs/v1.1-generator-only-workers-crosswalk.md` |
 | 2026-02-22 | DR | Integrated 5Pro replies (compile + KV) | codex | Updated topics 04/09/11/12/21/22 |
 | 2026-02-22 | A2/A3 | Distilled PP group rulebook + overlap proof recipe | codex | `refs/topics/02-deadlock-patterns.md`, `refs/topics/19-producer-consumer-backpressure.md` |
+| 2026-02-22 | — | Added operator test matrix | codex | `refs/operator-test-matrix.md` |
+| 2026-02-22 | — | Drafted remaining stub topics (10/17/18/24) | codex | `refs/topics/10-inductor-fusion-rules.md`, `refs/topics/17-reading-profiler-traces.md`, `refs/topics/18-bandwidth-accounting.md`, `refs/topics/24-video-dit-scheduling.md` |
+| 2026-02-22 | — | Added scope-drd implementation mapping for the matrix | codex | `refs/operator-test-matrix-implementation.md` |
 
 ## Deep research queue (5 Pro via repo prompt)
 
@@ -165,13 +165,13 @@ These are intended to be runnable **in parallel** on another machine.
 
 ## Prior art coverage (so we don’t re-ask the same thing)
 
-The 3 “missing library value” surfaces are **already covered in Scope + 5 Pro history**; what’s missing is mostly **operator-manual packaging** (short checklists + break-it tests) and a few true gaps (notably KV-cache lifecycle).
+The 3 “missing library value” surfaces are **already covered in Scope + 5 Pro history**; what’s missing is mostly **operator-manual packaging** (short checklists + break-it tests) and a few true gaps (notably the “authoritative basics” conversions).
 
 | Operator surface | Where it already exists (Scope notes) | Where it already exists (5 Pro history) | Library packaging target |
 |---|---|---|---|
 | Control-plane contract patterns (anti-stranding, versioning, monotonic IDs, cache epochs) | `scope-drd/notes/FA4/h200/tp/explainers/03-broadcast-envelope.md`, `scope-drd/notes/FA4/h200/tp/explainers/07-v0-contract.md`, `scope-drd/notes/FA4/h200/tp/pp-next-steps.md` (A1) | `scope-drd/notes/FA4/h200/tp/5pro/08-v11-generator-only-workers/response.md`, `scope-drd/notes/FA4/h200/tp/5pro/10-v11-correctness-deadlock-audit/response.md` (FM-01..FM-09), `scope-drd/notes/FA4/h200/tp/5pro/03-code-review/response-v1.md` (shutdown interleaving) | `refs/topics/20-message-framing-versioning.md`, `refs/topics/03-graceful-shutdown.md`, `refs/topics/21-idempotency-and-replay.md` |
 | Multi-group deadlock avoidance (world vs mesh PG, conditional collectives, call-count asserts) | `scope-drd/notes/FA4/h200/tp/pp-next-steps.md` (A5), `scope-drd/notes/FA4/h200/tp/pp-topology-pilot-plan.md`, `scope-drd/notes/FA4/h200/tp/pp-control-plane-pseudocode.md` | `scope-drd/notes/FA4/h200/tp/5pro/10-v11-correctness-deadlock-audit/response.md` (FM-02/FM-03), `scope-drd/notes/FA4/h200/tp/5pro/13-pp-execution-ready/response.md` (mesh_pg + PP1 hazards) | `refs/topics/02-deadlock-patterns.md` (standardize “group rulebook” + tests) |
 | Backpressure/overlap mechanics (bounded queues, overlap proof, recompute coupling) | `scope-drd/notes/FA4/h200/tp/pp-next-steps.md` (A3/A4), `scope-drd/notes/FA4/h200/tp/pp-topology-pilot-plan.md`, `scope-drd/notes/FA4/h200/tp/async-decode-overlap-scoping.md` | `scope-drd/notes/FA4/h200/tp/5pro/13-pp-execution-ready/response.md` (Step 4), `scope-drd/notes/FA4/h200/tp/5pro/14-async-decode/review.md` (overlap collapse under R0a) | `refs/topics/19-producer-consumer-backpressure.md`, `refs/topics/24-video-dit-scheduling.md` |
-| KV-cache lifecycle (lockstep state machine) | `scope-drd/notes/FA4/h200/tp/explainers/05-kv-cache-head-sharding.md`, `scope-drd/notes/FA4/h200/tp/v1.1-generator-only-workers.md` (coupling), `scope-drd/notes/FA4/h200/tp/pp-topology-pilot-plan.md` (recompute regimes) | `scope-drd/notes/FA4/h200/tp/5pro/10-v11-correctness-deadlock-audit/response.md` (FM-10..FM-18), `scope-drd/notes/FA4/h200/tp/5pro/08-v11-generator-only-workers/response.md` (cache traps), `scope-drd/notes/FA4/h200/tp/5pro/14-async-decode/review.md` (decoded-anchor coupling) | **Gap:** draft `refs/topics/22-kv-cache-management.md` as an operator manual |
+| KV-cache lifecycle (lockstep state machine) | `scope-drd/notes/FA4/h200/tp/explainers/05-kv-cache-head-sharding.md`, `scope-drd/notes/FA4/h200/tp/v1.1-generator-only-workers.md` (coupling), `scope-drd/notes/FA4/h200/tp/pp-topology-pilot-plan.md` (recompute regimes) | `scope-drd/notes/FA4/h200/tp/5pro/10-v11-correctness-deadlock-audit/response.md` (FM-10..FM-18), `scope-drd/notes/FA4/h200/tp/5pro/08-v11-generator-only-workers/response.md` (cache traps), `scope-drd/notes/FA4/h200/tp/5pro/14-async-decode/review.md` (decoded-anchor coupling) | `refs/topics/22-kv-cache-management.md` |
 
 **Implication for new deep-research runs:** treat the 5 prompts in `deep-research/2026-02-22/` as “delta + repackaging” tasks (convert prior art into reusable checklists), plus “import outside patterns/resources” — not as first-principles re-derivations.

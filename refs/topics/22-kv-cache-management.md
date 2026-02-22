@@ -90,12 +90,131 @@ The key operational takeaway is: **KV cache management is not a local optimizati
 3. **Treat recompute as a first-class distributed feature (not an afterthought)**
    - For PP0 bringup, start in **R1** (disable recompute) to prove contracts/queues first: `SCOPE_KV_CACHE_RECOMPUTE_EVERY=999999`. (`scope-drd/notes/FA4/h200/tp/pp-next-steps.md`, `scope-drd/notes/FA4/h200/tp/pp0-bringup-runbook.md`)
    - To restore correctness semantics, move to **R0a**: rank0 must provide `context_frames_override` / `context_frames` when `do_kv_recompute=True`; mesh must use the override and never fall back to VAE re-encode. (`scope-drd/notes/FA4/h200/tp/pp-next-steps.md`, `scope-drd/notes/FA4/h200/tp/pp0-bringup-runbook.md`)
+   - Only as a later experiment, consider **R0** (semantic change): mesh uses a latent-only anchor (no decoded-anchor dependency). Treat this as an explicit quality-risk trade and gate it behind a validation run; don’t silently “accidentally do R0” while chasing overlap. (`scope-drd/notes/FA4/h200/tp/pp-topology-pilot-plan.md`)
 
 4. **In PP, couple hard cuts to epoching + queue flush**
    - On hard cut, flush bounded queues and increment `cache_epoch` so stale in-flight results are self-identifying and droppable. (`scope-drd/notes/FA4/h200/tp/pp-topology-pilot-plan.md`)
 
 5. **Audit for out-of-band cache mutation**
    - Any cache reset or lifecycle mutation that bypasses the broadcast/envelope (e.g., rank0-only side effects from a server endpoint) is a direct Franken-model risk. (`scope-drd/notes/FA4/h200/tp/explainers/06-failure-modes.md`)
+
+#### Minimal deterministic contract (TP v1.1 + PP)
+
+The “operator manual” framing: KV-cache lifecycle must be an explicit distributed **contract**. If it isn’t, you will either (a) hang (call-count mismatch) or (b) drift silently (Franken-model).
+
+**Canonical field mapping (naming drift is not allowed):**
+- TP v1.1: `tp_plan`, `tp_envelope_version`, `tp_do_kv_recompute`, `tp_num_denoise_steps`, `tp_expected_generator_calls`, `tp_reset_kv_cache`, `tp_reset_crossattn_cache`.
+- PP: `pp_envelope_version`, `do_kv_recompute`, `num_denoise_steps`, `expected_generator_calls`, `reset_kv_cache`, `reset_crossattn_cache`.
+- Recompute context tensor:
+  - TP: `context_frames_override`
+  - PP: sometimes called `context_frames`
+  - **Canonical semantics**: same tensor, required whenever recompute runs.
+
+**P0 fields (minimum)**
+
+| Field | Why | Fail-fast check |
+|---|---|---|
+| `plan_id` (`tp_plan` / PP enable) | prevents divergent codepaths | env parity + per-message assert |
+| `*_envelope_version` | schema mismatch must crash | reject unknown version pre-collective |
+| `call_id` | ordering + replay boundary | monotonic; crash if decreases |
+| `chunk_index` | output ordering | monotonic for `INFER` |
+| `cache_epoch` | hard-cut invalidation | bump on reset boundary; PP drops stale results |
+| `init_cache` | explicit hard cut | required on first chunk of epoch |
+| `reset_kv_cache` | stop per-rank inference | must be identical across participants |
+| `reset_crossattn_cache` | same as above | must be identical |
+| `current_start_frame` | cache indexing depends on it | broadcast scalar; treat as source of truth |
+| `do_kv_recompute` | recompute adds a generator call | must be explicit |
+| `num_denoise_steps` | controls call count | must be explicit |
+| `expected_generator_calls` | prevents hangs | worker counts calls and asserts |
+| `kv_cache_attention_bias` | soft forgetting must match | broadcast scalar every chunk |
+| `denoising_step_list` (or equivalent) | scheduler drift can change call graph | treat as required input, not inferred |
+| `height`, `width` | shape sanity for context/latents | validate tensors match geometry |
+
+#### Cache lifecycle sketch (state machine)
+
+Treat the lifecycle as a small state machine driven by the per-chunk plan:
+
+- **RESET (hard cut)**: `init_cache=True` (and explicit reset bits) starts a new epoch (`cache_epoch += 1` in PP). All indices are reinitialized.
+- **STEADY**: each chunk appends tokens, advances indices deterministically from `current_start_frame` and token counts.
+- **RECOMPUTE** (when scheduled/required): an extra generator call that rebuilds the cache slice for the active window. This must be explicit (`do_kv_recompute=True`) and must consume `context_frames_override` in generator-only workers / PP (no fallback).
+- **ADVANCE**: after recompute + denoise, the cache advances and the chunk commits; call-count must match `expected_generator_calls`.
+
+Operational note: in TP v0/v1.1, state-machine alignment comes from lockstep execution; in PP it comes from an explicit envelope plus drop-by-epoch semantics at the stage boundary. (`scope-drd/notes/FA4/h200/tp/explainers/06-failure-modes.md`, `scope-drd/notes/FA4/h200/tp/pp-topology-pilot-plan.md`)
+
+**Required tensors (bringup-safe default: broadcast every chunk until stable)**
+
+| Tensor | Required when | Why | Validation |
+|---|---|---|---|
+| `latents_in` | always | generator inputs must be identical | dtype/shape exact match |
+| `conditioning_embeds` (or override) | always in bringup | avoid worker text-encoder divergence | dtype/shape; later can be epoch-based |
+| `denoising_step_list` | always (if used) | prevents scheduler divergence | dtype/shape; length matches `num_denoise_steps` |
+| `context_frames_override` | whenever `do_kv_recompute=True` (v1.1c/PP) | avoids decoded-anchor coupling + fallback | must be present; mesh must not fall back |
+
+**Env parity keys that must include cache semantics**
+- `SCOPE_KV_CACHE_RECOMPUTE_EVERY` (call-count gating)
+- `SCOPE_KV_BIAS_BACKEND` (backend parity)
+- `SCOPE_TP_PLAN` (role/plan parity)
+- `SCOPE_PP_ENABLED` (topology parity)
+- Compile gating flags that change collective behavior (`SCOPE_TP_ALLOW_COMPILE`, etc.)
+
+#### Failure modes: what hangs vs what silently drifts
+
+The hazards that cause hangs are the ones that matter at 2am; the rest will silently ruin output if you don’t have digests/fingerprints.
+
+| Hazard | Failure class | Typical cause | Tripwire | Where to assert |
+|---|---|---|---|---|
+| Plan mismatch | NCCL hang | one rank runs v0, other runs v1/PP | env parity on `SCOPE_TP_PLAN` / `SCOPE_PP_ENABLED` | init (`runtime.py`) |
+| Generator-call count mismatch | NCCL hang | recompute scheduled on one side only, step count differs | broadcast `expected_generator_calls`; assert observed call count | rank0 preflight + worker/mesh runner |
+| Post-header exception strands peer | NCCL hang | sender emits header then fails building specs/tensors | preflight-before-header (pickle/meta/spec/dtype) | sender control plane |
+| KV reset decision drift | Franken-model | one side resets KV but other doesn’t | explicit `reset_kv_cache` + `cache_epoch` rules | rank0 decision + worker/mesh validation |
+| Cross-attn cache reset drift | Franken-model | `conditioning_embeds_updated` inferred differently | broadcast explicit reset bit/epoch | rank0 preflight + cache-setup path |
+| Transition state drift | Franken-model | worker didn’t run blending so `_transition_active` differs | don’t infer; broadcast final reset decisions | rank0 preflight |
+| `current_start_frame` drift | Franken-model | mesh advances differently or rank0 sends wrong scalar | broadcast scalar; optional scalar all_gather every N | worker/mesh runner |
+| Missing recompute override | Franken-model / crash | worker/mesh falls back to VAE path or wrong context | require `context_frames_override` when `do_kv_recompute` | rank0 preflight; mesh validate-before-run |
+| Backend mismatch (FA4 vs flash) | Franken-model | auto backend differs per rank | pin + parity-check effective backend | init + startup report |
+| Non-deterministic meta encoding | false positive trips | JSON key order, float formatting | canonical meta serialization | digest implementation |
+
+#### Tripwire checklist (where to assert)
+
+**Rank0 preflight (before sending any header that commits the receiver):**
+- Validate schema: version, plan, required fields present.
+- Validate phase plan: `expected_generator_calls` computed and consistent.
+- Validate tensors: dtype supported; shapes match geometry; contiguous if required.
+- Validate meta serialization: picklable or stable JSON; no nested tensors in meta.
+- Only then send header → meta/specs → tensors.
+
+**Mesh leader preflight (PP, before any `mesh_pg` collective):**
+- Receive full envelope p2p.
+- Validate envelope fully.
+- Only then broadcast within `mesh_pg`.
+
+**Worker / mesh runner checks (Phase B entry and exit):**
+- Assert `plan_id` matches role.
+- Assert `call_id`, `chunk_index`, `cache_epoch` monotonicity rules.
+- Assert `current_start_frame` matches expected stream progression.
+- Assert `expected_generator_calls` equals observed calls before returning.
+
+**Periodic lightweight parity checks (cheap and effective):**
+- Scalar all_gather every N chunks (N=64 or 128): `cache_epoch`, `current_start_frame`, `do_kv_recompute`, `num_denoise_steps`, `kv_cache_attention_bias`.
+- Optional input digest on envelope + tensors during bringup (`SCOPE_TP_INPUT_DIGEST=1`).
+- Shard fingerprint baseline and periodic recheck to detect Franken-model.
+
+**Optional: KV lifecycle digest (scalars/indices only)**
+- Every N chunks (N=128 is a reasonable starting point), compute a small hash over:
+  - envelope scalars: `cache_epoch`, `call_id`, `chunk_index`, `current_start_frame`, `do_kv_recompute`, `num_denoise_steps`, `kv_cache_attention_bias`
+  - plus 1–2 representative cache index scalars (e.g., `global_end_index`, `local_end_index`) from a fixed layer chosen deterministically
+- All-gather the hash across TP ranks / mesh ranks and crash if it differs.
+
+This is cheaper than full tensor digests and catches “lockstep but state drifted” bugs earlier than subjective output inspection. (Motivated by `scope-drd/notes/FA4/h200/tp/explainers/06-failure-modes.md` Franken-model class.)
+
+#### Break-it tests (minimal, high value)
+
+1. **Plan mismatch**: set `SCOPE_TP_PLAN` (or PP enable) differently across ranks → must fail at init via env parity (no hang).
+2. **Generator-call count mismatch**: force `do_kv_recompute=True` on rank0 but false on worker/mesh → must fail-fast via `expected_generator_calls` assert (not hang).
+3. **Missing recompute override**: schedule recompute but omit `context_frames_override` → rank0 preflight fails pre-header (or leader rejects pre-broadcast); no mesh fallback to VAE path.
+4. **Cache reset drift**: trigger cache reset on rank0 only (simulated bad endpoint) → must trip state digest or input digest quickly.
+5. **`current_start_frame` drift**: perturb start frame on one side for one chunk → must trip scalar all_gather or runner asserts.
+6. **PP stale result after hard cut**: delay a mesh result, then hard cut (`cache_epoch` increments), then deliver delayed result → rank0 must drop by epoch mismatch and never emit it.
 
 ### Gotchas and failure modes
 

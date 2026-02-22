@@ -162,6 +162,57 @@ TP example: `scope-drd/notes/FA4/h200/tp/explainers/03-broadcast-envelope.md` de
 12. **Bringup timeouts**:
    - Set low-ish distributed timeouts (`SCOPE_DIST_TIMEOUT_S`) and watchdogs during bringup. If something goes wrong, you want an early crash, not a 300s mystery hang.
 
+#### Worked example: TP v1.1 generator-only envelope (`tp_plan=v1_generator_only`, `tp_envelope_version=1`)
+
+This is the “operator manual” version of the TP v1.1 envelope contract: a strict schema + preflight ordering that prevents hangs and Franken-models when workers stop running text/VAE/decode. See: `deep-research/2026-02-22/tp-v11-envelope-contract/reply.md`.
+
+**P0 ship blockers (v1 plan)**
+
+- **Plan must be explicit**: select behavior via `tp_plan` + `tp_envelope_version`, never by “which tensors are present”.
+- **Strict schema validation** on both sender (rank0) and receiver (worker) with “no best-effort fallback” under v1.
+- **Preflight-before-header** must guarantee nothing can throw after the `INFER` header is broadcast (picklability, dtype map, deterministic `tensor_specs`, tensor materialization).
+- **Ban ad-hoc in-block broadcasts** for v1: all cross-rank tensors travel via control-plane `tensor_specs` (no worker-side shape inference).
+- **Explicit lockstep call-count plan**: `tp_do_kv_recompute`, `tp_num_denoise_steps`, `tp_expected_generator_calls` + reset bits must be present and cross-checked.
+- **Plan-aware warmup**: warmup must use the v1 entrypoint (or be disabled) so generator-only workers don’t accidentally run the full pipeline during warmup.
+
+**Minimal payload schema v1 (key fields)**
+
+Header fields (`action`, `call_id`, `chunk_index`, `cache_epoch`) are still required; this table is the **payload meta + tensors** that become mandatory in v1.
+
+| Field | Type | Required when | Why | Fail-fast check location |
+|---|---|---|---|---|
+| `tp_plan` | `str` | always (`INFER`) | dispatch + plan parity | rank0 preflight; worker preflight |
+| `tp_envelope_version` | `int` | `tp_plan=v1_generator_only` | schema dispatch | rank0 preflight; worker preflight |
+| `height`, `width` | `int` | `tp_plan=v1_generator_only` | shape sanity across ranks | rank0 preflight; worker preflight |
+| `current_start_frame` | `int` | `tp_plan=v1_generator_only` | cache indexing / determinism | rank0 preflight; worker preflight |
+| `tp_reset_kv_cache` | `bool` | `tp_plan=v1_generator_only` | cache reset must be explicit | rank0 preflight; worker validate |
+| `tp_reset_crossattn_cache` | `bool` | `tp_plan=v1_generator_only` | cache reset must be explicit | rank0 preflight; worker validate |
+| `kv_cache_attention_bias` | `float` | `tp_plan=v1_generator_only` | soft transition must match | rank0 preflight; worker validate |
+| `tp_do_kv_recompute` | `bool` | `tp_plan=v1_generator_only` | adds generator call | rank0 preflight; worker validate |
+| `tp_num_denoise_steps` | `int` | `tp_plan=v1_generator_only` | call-count plan | rank0 preflight; worker validate |
+| `tp_expected_generator_calls` | `int` | `tp_plan=v1_generator_only` | belt+suspenders vs FM-02 | rank0 preflight; worker validate |
+| `denoising_step_list` | `Tensor[int64]` | `tp_plan=v1_generator_only` | identical timesteps | rank0 preflight; worker validate |
+| `latents` | `Tensor[bf16/fp16]` | `tp_plan=v1_generator_only` | identical generator input (no per-rank RNG) | rank0 preflight; worker validate |
+| `conditioning_embeds` (or override tensor) | `Tensor[bf16/fp16]` | v1 bringup: every chunk | workers cannot encode; avoid stale conditioning | rank0 preflight; worker validate |
+| `context_frames_override` | `Tensor[bf16/fp16] \| None` | `tp_do_kv_recompute=True` | recompute anchor w/out VAE fallback | rank0 preflight; worker validate |
+| `video` | **forbidden** | `tp_plan=v1_generator_only` | workers must never receive pixel frames | rank0 preflight (strip) |
+
+**Lockstep call-count checks (must hold on both sides)**
+
+- `tp_num_denoise_steps == len(denoising_step_list)`
+- `tp_expected_generator_calls == (1 if tp_do_kv_recompute else 0) + tp_num_denoise_steps`
+- Worker must maintain `observed_generator_calls` and assert `observed == tp_expected_generator_calls` before returning from Phase B.
+
+**Stale override reuse hazards (FM-15/FM-06/FM-17)**
+
+- `context_frames_override` must be **cleared after read** and explicitly set to `None` when absent; omission must never reuse stale state.
+- Prefer `latents` as a direct generator input over “latents override stored in state,” to avoid stale reuse.
+- In v1 bringup, require conditioning every chunk; “only on update chunks” is unsafe without an explicit epoch contract (`conditioning_epoch`) and reset semantics.
+
+**Last-resort rule (anti-stranding)**
+
+If something still throws *after* the `INFER` header broadcast, treat the run as poisoned and fail-fast (exit) rather than attempting to continue; continuing risks stranded peers.
+
 ### Gotchas and failure modes
 
 - **Stranding receivers (the canonical failure)**:

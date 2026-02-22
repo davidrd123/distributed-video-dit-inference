@@ -50,7 +50,8 @@ Opus PDF page reading burned **45% of 5-hour budget in 40 minutes** doing B2 (3 
 | 2026-02-22 | opus1 | B2: gpipe, zero-bubble-pp, pipedream-2bw → Tier 2 | 3 papers via PDF page reading. 45% of 5hr quota in 40min — reassigning pipedit to GPT 5.2. |
 | 2026-02-22 | gpt-xhigh | pipedit → Tier 2 | 10pp + supplementary, dense tables preserved as monospaced blocks. Spot-checked by opus2 — numbers match PDF. |
 | 2026-02-22 | — | **Batch B2 complete, all Phase 1 Tier 2 done** | 15/15 Phase 1 resources at Tier 2+. Next: Track C (Tier 3 condensation). |
-| 2026-02-22 | opus3 | Created `refs/reading-guide.md` | Bringup-synced study guide (spine + phases + topic index). Derived from GPT-5.2 integrated learning path, reconciled with canonical catalog. Identified 3 manifest candidates (Wan 2.1, CausVid, SDv2 arxiv). |
+| 2026-02-22 | opus3 | Created `refs/reading-guide.md` | Bringup-synced study guide (spine + phases + topic index). Derived from GPT-5.2 integrated learning path, reconciled with canonical catalog. |
+| 2026-02-22 | opus3 | CausVid fetched (Tier 1), manifest updated | 14.6MB PDF + abstract. Added as Phase 1 (topics 22, 24). Also added SDv2 arxiv URL to manifest. |
 | | | | |
 
 ---
@@ -78,6 +79,7 @@ The reference library has 15 Phase 1 (high-priority) resources. 2 are complete (
 | `zero-bubble-pp` | paper | 649KB PDF | **2** | opus1, 2026-02-22. 19 pages (12+appendix A-H), 12 tables, ILP formulation |
 | `pipedit` | paper | 3.9MB PDF | **2** | gpt-xhigh, 2026-02-22. 10pp + supplementary, dense tables as monospaced blocks |
 | `pagedattention` | paper | 1.5MB PDF | **2** | opus2, 2026-02-22. 16 pages, all equations/tables/64 refs |
+| `causvid` | paper | 14.6MB PDF | **1** | opus3, 2026-02-22. New addition — AR blueprint for Wan 2.1. Tier 2 → gpt-xhigh. |
 
 ## Tier 2 policies (updated per Codex review)
 

@@ -901,6 +901,19 @@ resources:
     local_paths: []
     notes: "Distributed serving architecture, tensor/pipeline parallelism configuration"
 
+  - id: causvid
+    title: "From Slow Bidirectional to Fast Autoregressive Video Diffusion Models"
+    urls:
+      - https://arxiv.org/abs/2412.07772
+    type: paper
+    topics: [22, 24]
+    priority: high
+    status: fetched
+    local_paths:
+      - sources/causvid/raw/paper.pdf
+      - sources/causvid/raw/abstract.html
+    notes: "CausVid. Causal DiT framing — converts bidirectional video diffusion to autoregressive with KV caching. Blueprint for AR Wan 2.1. Referenced in StreamDiffusionV2 source (causvid/ directory). 14.6MB PDF."
+
   # ============================================================
   # Topic 23: VAE latency and chunking for video
   # ============================================================
@@ -967,6 +980,7 @@ resources:
   - id: streamdiffusionv2
     title: "StreamDiffusionV2"
     urls:
+      - https://arxiv.org/abs/2511.07399
       - https://streamdiffusionv2.github.io/
       - https://github.com/chenfengxu714/StreamDiffusionV2
     type: paper

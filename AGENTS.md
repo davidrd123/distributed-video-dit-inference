@@ -18,7 +18,9 @@ sources/
     raw/                             # Tier 1: original fetched artifacts
       page.html                      #   blogs/docs: saved HTML
       paper.pdf                      #   arXiv: downloaded PDF
-      issue.json                     #   GitHub: API response
+      abstract.html                  #   arXiv: abstract page
+      issue.json                     #   GitHub issues: API response
+      repo/                          #   GitHub repos: cloned source (key files only)
     full.md                          # Tier 2: lossless markdown conversion
 refs/
   manifest.yaml                      # master inventory of all resources
@@ -35,9 +37,9 @@ Each resource goes through three tiers. These are **separate operations** with d
 Store the original artifact exactly as retrieved. This is the ground truth — everything else derives from it.
 
 - **Blogs/docs**: Save HTML with `curl` or equivalent. Filename: `page.html`
-- **arXiv papers**: Download PDF from `https://arxiv.org/pdf/<arxiv-id>`. Filename: `paper.pdf`. Also save the abstract page HTML.
+- **arXiv papers**: Download PDF from `https://arxiv.org/pdf/<arxiv-id>`. Filename: `paper.pdf`. Also save the abstract page HTML as `abstract.html`.
 - **GitHub issues/RFCs**: Save via `gh api`. Filename: `issue.json`
-- **GitHub source files**: Save the raw file content. Filename: original filename.
+- **GitHub repos** (code resources): Clone or fetch key source files into `raw/repo/`. Don't clone the full history — fetch specific files/directories that are architecturally relevant. Include README, core source modules, config files. Skip tests, CI, docs-only files unless specifically relevant.
 - **Project pages**: Save HTML. Filename: `page.html`
 
 This tier is mechanical — no LLM needed, just fetch tools.
@@ -56,11 +58,13 @@ Convert the raw artifact to clean, complete markdown. **No summarization, no edi
 - For papers: preserve abstract, all sections, all equations, all tables, references
 - For docs: preserve all sections including API details, parameters, examples
 - For GitHub issues: preserve the original post body and key follow-up comments
+- For GitHub repos: `full.md` becomes an **annotated source guide** — README content, architecture overview, key file listing with inline code for the most important modules. This is not a dump of every file; it's the repo content an agent needs to understand the system's design and reference specific implementations.
 
 **Tooling preference**: Use the highest-fidelity conversion available:
 - HTML → markdown: pandoc, or a strong model reading the HTML
-- PDF → markdown: marker, nougat, or a strong model reading the PDF
+- PDF → markdown: marker, nougat, or a strong model reading the PDF. A strong model reading the rendered PDF pages is currently the highest-quality approach for academic papers (preserves equations, table structure, figure descriptions).
 - JSON (GitHub) → markdown: direct formatting from structured data
+- Repo → annotated guide: a strong model reading the key source files
 
 Aim for **zero information loss** relative to the raw artifact. If in doubt, include more rather than less. This file is the searchable ground truth that Tier 3 citations point back to.
 
@@ -83,14 +87,23 @@ Optional sections vary by type:
 - Docs: "Key sections", "API surface / configuration"
 - Blogs: "Key insights"
 - Code/RFCs: "Problem statement", "Design decisions", "Key APIs / interfaces"
+- **Repos**: "Architecture overview", "Key modules" (with file paths into `raw/repo/`), "Design patterns", "Configuration / entry points"
 
 **Manifest status after**: `converted` → `condensed`
 
-## Reference implementation
+## Reference implementations
 
-`making-dl-go-brrrr` is the completed reference (currently has Tier 2 + Tier 3 but needs Tier 1 raw fetch backfilled). See:
-- `sources/making-dl-go-brrrr/extracted.md` → rename to `full.md` (this is the Tier 2 output)
-- `refs/resources/making-dl-go-brrrr.md` (this is the Tier 3 output)
+Two completed references exist covering the main resource types:
+
+### Blog/HTML: `making-dl-go-brrrr`
+- Tier 1: `sources/making-dl-go-brrrr/raw/page.html` (159KB)
+- Tier 2: `sources/making-dl-go-brrrr/full.md` (~3700 words)
+- Tier 3: `refs/resources/making-dl-go-brrrr.md` (7 claims, 6 insights, 8 actionables)
+
+### Paper/PDF: `dit-paper`
+- Tier 1: `sources/dit-paper/raw/paper.pdf` (43MB) + `raw/abstract.html`
+- Tier 2: `sources/dit-paper/full.md` (~8500 words, all tables/equations/63 references)
+- Tier 3: `refs/resources/dit-paper.md` (7 claims, full architecture spec with configs, 8 actionables)
 
 ## Manifest (`refs/manifest.yaml`)
 
@@ -106,9 +119,38 @@ Priority: `high` (Phase 1, ~15 resources), `medium`, `low`.
 - **Phase 2**: Backfill by topic as implementation pressure hits
 - **`link_only` resources**: Google Docs, YouTube, paywalled ACM, missing CVPR URL — skip unless they become load-bearing
 
+## Process observations (from first two extractions)
+
+These notes capture what we learned doing the `making-dl-go-brrrr` and `dit-paper` extractions. Use them to avoid repeating mistakes.
+
+### Tier 2 "lossless" is aspirational for some sources
+
+- **WebFetch summarizes by default.** You cannot get verbatim full text through it for long content. For true lossless Tier 2, derive from the Tier 1 raw artifact (HTML or PDF), not from a web fetch.
+- **PDF extraction via a strong model reading rendered pages** is currently the highest-quality approach for papers. Read the PDF page-by-page, reconstruct section structure, tables, and equations. This is expensive but faithful.
+- **Blog posts lose ~20-25%** even with careful extraction (the `making-dl-go-brrrr` full.md is ~3700 words from a ~4500-5000 word original). Acceptable for blogs, but for papers and docs aim for genuinely complete text.
+- **Figures can't be reproduced in markdown.** Describe them in brackets with enough detail that an agent can understand what the figure shows without seeing it. Include axis labels, data series, and key takeaways.
+
+### Tier 3 quality depends on understanding the project context
+
+- The "Actionables / gotchas" section is the most valuable part of a resource card for agent JIT lookup. It answers "so what does this mean for *our* pipeline-parallel video DiT system?" Generic summaries are low value.
+- **Cross-reference related resources** — an agent looking at the DiT paper card should be pointed to the PP scheduling papers and the performance analysis resources. These links are what make the library navigable.
+- **Architecture details matter for papers.** For the DiT paper, capturing the exact model configs (layers, hidden dim, heads, Gflops) and the adaLN-Zero conditioning mechanism was essential — an agent partitioning the model across pipeline stages needs these specifics.
+
+### Practical extraction workflow
+
+1. **Tier 1 first, always.** Fetch raw artifacts before doing anything else. `curl` for HTML, `curl` for PDFs, `gh api` for GitHub issues. This is fast and gives you the ground truth to work from.
+2. **Tier 2 from Tier 1, not from web fetch.** Read the raw artifact directly (HTML file, PDF pages) rather than re-fetching through a summarizing tool.
+3. **Tier 3 from Tier 2.** Read `full.md` to write the resource card. This ensures your citations actually point to content that exists in `full.md`.
+4. **Update manifest last.** Set status and `local_paths` after all tiers are complete for that resource.
+
+### Resource types not yet templated
+
+- **GitHub repos** (code): StreamDiffusionV2 is the first repo-type resource. The pattern is: clone/fetch key files into `raw/repo/`, write an annotated source guide as `full.md`, condense into a resource card focusing on architecture, key APIs, and design patterns relevant to the project.
+- **Large docs pages**: PyTorch CUDA Semantics, NCCL User Guide — these are sprawling multi-section docs. May need to be selective about which sections go into `full.md` while still being transparent about what was included vs. omitted.
+
 ## Quality expectations
 
-- **Tier 2 (full.md)**: Zero information loss. If a sentence is in the original, it's in full.md. No editorial cuts.
+- **Tier 2 (full.md)**: Zero information loss for papers and blog posts. For large docs and repos, include all architecturally-relevant content and explicitly note any sections omitted.
 - **Tier 3 (resource cards)**: Every non-trivial claim must cite a specific heading or section in `sources/<id>/full.md`
 - Don't invent claims — if the source doesn't support it, don't include it
 - Flag uncertainty with `(unverified)` rather than guessing at hardware specs, numeric ranges, or protocol details
@@ -119,7 +161,8 @@ Priority: `high` (Phase 1, ~15 resources), `medium`, `low`.
 
 - Don't modify `distributed_video_dit_inference.md` (source curriculum) unless fixing a known error
 - Don't create resource cards for non-Phase-1 resources yet (stubs exist only for Phase 1)
-- Don't summarize full.md — it must be the complete source text
+- Don't summarize full.md — it must be the complete source text (or explicitly annotated subset for large docs/repos)
 - Don't add speculative "future work" sections to cards
 - Don't fetch `link_only` resources without being explicitly asked
 - Don't collapse Tier 1 and Tier 2 into one step — keep the raw artifact separate from the markdown conversion
+- Don't clone full git history for repo resources — fetch specific files/directories

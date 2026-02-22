@@ -13,54 +13,92 @@ The source curriculum is `distributed_video_dit_inference.md` — 24 topics, ~85
 
 ```
 distributed_video_dit_inference.md   # source curriculum (read-only reference)
+sources/
+  <id>/
+    raw/                             # Tier 1: original fetched artifacts
+      page.html                      #   blogs/docs: saved HTML
+      paper.pdf                      #   arXiv: downloaded PDF
+      issue.json                     #   GitHub: API response
+    full.md                          # Tier 2: lossless markdown conversion
 refs/
   manifest.yaml                      # master inventory of all resources
-  resources/<id>.md                  # per-resource reference cards
+  resources/<id>.md                  # Tier 3: condensed resource cards
   topics/<nn>-<slug>.md              # per-topic synthesis docs
-sources/
-  <id>/                              # fetched source material per resource
-    extracted.md                     # clean full-text markdown extraction
 ```
 
-## Manifest (`refs/manifest.yaml`)
+## Three-tier extraction pipeline
 
-Single source of truth for all resources. Fields: `id`, `title`, `urls`, `type`, `topics`, `priority`, `status`, `local_paths`, `notes`.
+Each resource goes through three tiers. These are **separate operations** with different fidelity requirements and can be run by different models or tools.
 
-Status values: `pending` → `fetched` → `extracted` → `summarized` | `link_only` (hard-to-fetch).
+### Tier 1 — Raw fetch (`sources/<id>/raw/`)
 
-Priority: `high` (Phase 1, ~15 resources), `medium`, `low`.
+Store the original artifact exactly as retrieved. This is the ground truth — everything else derives from it.
 
-## How to extract a resource
+- **Blogs/docs**: Save HTML with `curl` or equivalent. Filename: `page.html`
+- **arXiv papers**: Download PDF from `https://arxiv.org/pdf/<arxiv-id>`. Filename: `paper.pdf`. Also save the abstract page HTML.
+- **GitHub issues/RFCs**: Save via `gh api`. Filename: `issue.json`
+- **GitHub source files**: Save the raw file content. Filename: original filename.
+- **Project pages**: Save HTML. Filename: `page.html`
 
-Follow this two-file pattern (see `making-dl-go-brrrr` as the reference implementation):
+This tier is mechanical — no LLM needed, just fetch tools.
 
-### 1. Fetch and extract: `sources/<id>/extracted.md`
+**Manifest status after**: `pending` → `fetched`
+
+### Tier 2 — Lossless markdown conversion (`sources/<id>/full.md`)
+
+Convert the raw artifact to clean, complete markdown. **No summarization, no editorial judgment.** The full text, all sections, all content — just in a readable, searchable, agent-friendly format.
 
 - YAML frontmatter: `title`, `source_url`, `fetch_date`, `source_type`, `author` (if applicable)
-- Full text in markdown — do NOT summarize or truncate
-- Preserve all section headings, code blocks, formulas, API signatures
-- Describe figures/diagrams in brackets: `[Figure: description]`
-- For arXiv papers: fetch abstract page + PDF content
-- For docs: capture all relevant sections
-- For GitHub issues/RFCs: capture the original post and key design discussion
+- Preserve ALL section headings as markdown headings
+- Preserve all code blocks, formulas, API signatures verbatim
+- Preserve all tables
+- Describe figures/diagrams in brackets: `[Figure: description of what the figure shows]`
+- For papers: preserve abstract, all sections, all equations, all tables, references
+- For docs: preserve all sections including API details, parameters, examples
+- For GitHub issues: preserve the original post body and key follow-up comments
 
-### 2. Update resource card: `refs/resources/<id>.md`
+**Tooling preference**: Use the highest-fidelity conversion available:
+- HTML → markdown: pandoc, or a strong model reading the HTML
+- PDF → markdown: marker, nougat, or a strong model reading the PDF
+- JSON (GitHub) → markdown: direct formatting from structured data
+
+Aim for **zero information loss** relative to the raw artifact. If in doubt, include more rather than less. This file is the searchable ground truth that Tier 3 citations point back to.
+
+**Manifest status after**: `fetched` → `converted`
+
+### Tier 3 — Smart condensation (`refs/resources/<id>.md`)
+
+This is the resource card — the agent-facing reference. **This tier requires reading comprehension and project-specific judgment.** Use a strong model.
 
 Each card has a **type-appropriate template** (already stubbed). Required fields for all types:
 
 - **Source** (URL), **Type**, **Topics**, **Status**
 - **Why it matters** — 1-2 sentences on relevance to the project (pre-populated from source doc)
-- **Core claims** — each with `**Evidence**: sources/<id>/extracted.md#<heading>` citation
+- **Core claims** — each with `**Evidence**: sources/<id>/full.md#<heading>` citation
 - **Actionables / gotchas** — implementation implications for distributed video DiT inference
 - **Related resources** — cross-references to other resource IDs
 
-Optional sections vary by type (papers get "Key technical details"; docs get "API surface / configuration"; blogs get "Key insights"; code/RFCs get "Design decisions").
+Optional sections vary by type:
+- Papers: "Key technical details" (formulas, algorithms, architecture)
+- Docs: "Key sections", "API surface / configuration"
+- Blogs: "Key insights"
+- Code/RFCs: "Problem statement", "Design decisions", "Key APIs / interfaces"
 
-Update Status from `stub` to `extracted` when complete.
+**Manifest status after**: `converted` → `condensed`
 
-### 3. Update manifest
+## Reference implementation
 
-Change `status: pending` → `status: extracted` in `refs/manifest.yaml` for the completed resource.
+`making-dl-go-brrrr` is the completed reference (currently has Tier 2 + Tier 3 but needs Tier 1 raw fetch backfilled). See:
+- `sources/making-dl-go-brrrr/extracted.md` → rename to `full.md` (this is the Tier 2 output)
+- `refs/resources/making-dl-go-brrrr.md` (this is the Tier 3 output)
+
+## Manifest (`refs/manifest.yaml`)
+
+Single source of truth for all resources. Fields: `id`, `title`, `urls`, `type`, `topics`, `priority`, `status`, `local_paths`, `notes`.
+
+Status values: `pending` → `fetched` → `converted` → `condensed` | `link_only` (hard-to-fetch).
+
+Priority: `high` (Phase 1, ~15 resources), `medium`, `low`.
 
 ## Phasing
 
@@ -70,7 +108,8 @@ Change `status: pending` → `status: extracted` in `refs/manifest.yaml` for the
 
 ## Quality expectations
 
-- Every non-trivial claim in a resource card must cite a specific heading or section in `sources/<id>/extracted.md`
+- **Tier 2 (full.md)**: Zero information loss. If a sentence is in the original, it's in full.md. No editorial cuts.
+- **Tier 3 (resource cards)**: Every non-trivial claim must cite a specific heading or section in `sources/<id>/full.md`
 - Don't invent claims — if the source doesn't support it, don't include it
 - Flag uncertainty with `(unverified)` rather than guessing at hardware specs, numeric ranges, or protocol details
 - Preserve the author's terminology and framing — don't silently reinterpret
@@ -80,6 +119,7 @@ Change `status: pending` → `status: extracted` in `refs/manifest.yaml` for the
 
 - Don't modify `distributed_video_dit_inference.md` (source curriculum) unless fixing a known error
 - Don't create resource cards for non-Phase-1 resources yet (stubs exist only for Phase 1)
-- Don't summarize extracted.md — it should be the full source text
+- Don't summarize full.md — it must be the complete source text
 - Don't add speculative "future work" sections to cards
 - Don't fetch `link_only` resources without being explicitly asked
+- Don't collapse Tier 1 and Tier 2 into one step — keep the raw artifact separate from the markdown conversion

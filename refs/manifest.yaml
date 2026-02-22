@@ -1,7 +1,7 @@
 # Distributed Video DiT Inference — Resource Manifest
 # Generated from distributed_video_dit_inference.md
 # Phase 1: ~15 high-priority resources for immediate ingestion
-# Status: pending | fetched | extracted | summarized | link_only
+# Status: pending | fetched | converted | condensed | link_only
 
 resources:
 
@@ -254,8 +254,11 @@ resources:
     type: blog
     topics: [8, 16]
     priority: high
-    status: pending
-    local_paths: []
+    status: condensed
+    local_paths:
+      - sources/making-dl-go-brrrr/raw/page.html
+      - sources/making-dl-go-brrrr/full.md
+      - refs/resources/making-dl-go-brrrr.md
     notes: "Definitive blog post on overhead-bound, memory-bound, compute-bound regimes. Explains Python dispatch overhead and operator fusion. Also primary roofline resource (topic 16)"
 
   - id: gpu-mode-lecture-6

@@ -994,8 +994,11 @@ resources:
     type: paper
     topics: [24]
     priority: high
-    status: fetched
-    local_paths: []
+    status: converted
+    local_paths:
+      - sources/pipedit/raw/paper.pdf
+      - sources/pipedit/raw/abstract.html
+      - sources/pipedit/full.md
     notes: "PipeSP (pipelined sequence parallelism), DeDiVAE (decoupled diffusion/VAE), attention co-processing. Directly addresses pipeline-parallel DiT inference"
 
   - id: dit-paper

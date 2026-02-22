@@ -48,6 +48,8 @@ Opus PDF page reading burned **45% of 5-hour budget in 40 minutes** doing B2 (3 
 | 2026-02-22 | opus2 | pagedattention → Tier 2 | 16-page PDF read page-by-page, full lossless conversion with all equations/tables/figures/references. |
 | 2026-02-22 | codex1 | NCCL user guide → Tier 2 rebuild | Reassembled `sources/nccl-user-guide/full.md` to cover setup/communicators/thread-safety/API/troubleshooting; `py-modindex.html` link was 404 at fetch time. |
 | 2026-02-22 | opus1 | B2: gpipe, zero-bubble-pp, pipedream-2bw → Tier 2 | 3 papers via PDF page reading. 45% of 5hr quota in 40min — reassigning pipedit to GPT 5.2. |
+| 2026-02-22 | gpt-xhigh | pipedit → Tier 2 | 10pp + supplementary, dense tables preserved as monospaced blocks. Spot-checked by opus2 — numbers match PDF. |
+| 2026-02-22 | — | **Batch B2 complete, all Phase 1 Tier 2 done** | 15/15 Phase 1 resources at Tier 2+. Next: Track C (Tier 3 condensation). |
 | | | | |
 
 ---
@@ -73,7 +75,7 @@ The reference library has 15 Phase 1 (high-priority) resources. 2 are complete (
 | `gpipe` | paper | 539KB PDF | **2** | opus1, 2026-02-22. 11 pages, 5 tables, 49 refs |
 | `pipedream-2bw` | paper | 2.2MB PDF | **2** | opus1, 2026-02-22. 14 pages (10+appendix), Algorithm 1, cost model |
 | `zero-bubble-pp` | paper | 649KB PDF | **2** | opus1, 2026-02-22. 19 pages (12+appendix A-H), 12 tables, ILP formulation |
-| `pipedit` | paper | 3.9MB PDF | 1 | Assigned to gpt-xhigh |
+| `pipedit` | paper | 3.9MB PDF | **2** | gpt-xhigh, 2026-02-22. 10pp + supplementary, dense tables as monospaced blocks |
 | `pagedattention` | paper | 1.5MB PDF | **2** | opus2, 2026-02-22. 16 pages, all equations/tables/64 refs |
 
 ## Tier 2 policies (updated per Codex review)
@@ -186,7 +188,7 @@ Week 4:
 | Track A (context expansion) | **gpt-xhigh** | Reading + targeted edits across many files; no deep judgment |
 | Track B, B1 (HTML Tier 2) | **DONE** | Completed by opus (2026-02-22). |
 | Track B, B3 (repo Tier 2) | **DONE** | Completed by gpt-xhigh+opus (2026-02-22). |
-| Track B, B2 (Paper Tier 2) | **opus** (4 done) + **gpt-xhigh** (pipedit remaining) | Opus too expensive for PDF — 45% quota for 3 papers. GPT 5.2 to try image extraction approach for remaining. |
+| Track B, B2 (Paper Tier 2) | **DONE** | Completed by opus (4 papers) + gpt-xhigh (pipedit). All 5 B2 papers at Tier 2. |
 | Track C (Tier 3) | **opus**, user reviews each card | Requires project-specific judgment, working notes integration |
 | Track D (topic synthesis) | User + **opus** | Highest-judgment work; user's understanding matters most |
 

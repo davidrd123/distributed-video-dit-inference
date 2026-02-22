@@ -6,7 +6,7 @@
 | Type | blog |
 | Topics | 11, 12 |
 | Author | Edward Z. Yang |
-| Status | extracted |
+| Status | condensed |
 
 ## Why it matters
 

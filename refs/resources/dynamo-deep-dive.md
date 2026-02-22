@@ -5,7 +5,7 @@
 | Source | https://docs.pytorch.org/docs/stable/torch.compiler_dynamo_deepdive.html |
 | Type | docs |
 | Topics | 9 |
-| Status | extracted |
+| Status | condensed |
 
 ## Why it matters
 

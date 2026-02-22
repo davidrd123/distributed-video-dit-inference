@@ -300,7 +300,7 @@ resources:
     type: docs
     topics: [9]
     priority: high
-    status: converted
+    status: condensed
     local_paths:
       - sources/dynamo-deep-dive/raw/page.html
       - sources/dynamo-deep-dive/full.md
@@ -422,7 +422,7 @@ resources:
     type: blog
     topics: [11, 12]
     priority: high
-    status: converted
+    status: condensed
     local_paths:
       - sources/ezyang-state-of-compile/raw/page.html
       - sources/ezyang-state-of-compile/full.md

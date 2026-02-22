@@ -57,15 +57,23 @@ stage0_k     = A_time + C_time                    # rank0 encode/build + decode/
 stage1_k     = B_time                             # mesh denoise/generator-only
 hidden_k     = max(0, stage0_k + stage1_k - period_k)
 OverlapScore = median(hidden_k / min(stage0_k, stage1_k))
-pass gate: OverlapScore >= 0.30
+pass gate: OverlapScore >= 0.30  (after warmup)
 ```
+- **Overlap proof recipe (no clock sync required)** (from `deep-research/2026-02-22/pp-rank0-out-of-mesh/reply.md`):
+  - Rank0 logs monotonic timestamps per chunk: `tA0` (start build), `tA1` (envelope ready after tensor materialization), `tRecv` (result received), `tEmit` (decoded output enqueued), plus queue depths (`len(inflight_to_mesh)`, `len(ready_for_decode)`).
+  - Mesh leader reports durations in the result (no synchronized clocks needed): `tB_ms` (Phase B duration) and `t_mesh_idle_ms = max(0, tB0[k] - tB1[k-1])`.
+  - Use those to compute:
+    - `stage0_k = (tA1[k]-tA0[k]) + (tEmit[k]-tRecv[k])`
+    - `stage1_k = tB_ms[k]`
+    - `OverlapScore = median(max(0, stage0_k + stage1_k - period_k) / min(stage0_k, stage1_k))`
+  - Pass gate is **not just** the score: also require queues stay bounded and `period` trends toward `max(stage0, stage1)` rather than their sum.
 - **Period sanity check (no synchronized clocks required)** (from `pp-control-plane-pseudocode.md`):
 - With good overlap, observed period approaches `max(Stage0_ms, Stage1_ms)` rather than `Stage0_ms + Stage1_ms`.
 - Mesh-leader `t_mesh_idle_ms` should be small; if it grows with decode time, Stage 0 is still serializing the mesh.
 - **Hard cuts (`cache_epoch` flush semantics)** (from `pp-topology-pilot-plan.md` and `pp-control-plane-pseudocode.md`):
 - Hard cut flushes both queues and increments `cache_epoch`; the next envelope uses `init_cache=True`.
 - Envelopes/results are epoch-tagged; rank0 must drop stale-epoch results.
-- Control-plane tags derived from `(cache_epoch, chunk_id, field_id)` prevent cross-chunk message confusion.
+- Control-plane tags derived from `(cache_epoch, call_id, field_id)` prevent cross-chunk message confusion.
 
 #### TP analog (in-flight depth)
 
@@ -89,8 +97,8 @@ Increasing in-flight depth can improve throughput by reducing bubbles, but it al
 - Rank0 sends envelope `k+1` before decoding result `k` (this is the overlap).
 - Mesh leader validates envelope before broadcasting to `mesh_pg` (crash > hang; don’t strand mesh ranks in a collective).
 - **What to log (per chunk)**:
-- Rank0: `t_A_ms`, `t_C_ms`, `t_period_ms`, queue depths, `cache_epoch`, identifiers (`call_id`, `chunk_index`), and OverlapScore components.
-- Mesh leader (returned in result metadata): `t_B_ms`, `t_mesh_idle_ms`.
+- Rank0: monotonic timestamps (`tA0`, `tA1`, `tRecv`, `tEmit`), `period`, queue depths, `cache_epoch`, identifiers (`call_id`, `chunk_index`), and OverlapScore components.
+- Mesh leader (returned in result metadata): durations (`tB_ms`) and `t_mesh_idle_ms` (computed leader-local; no clock sync).
 - **What to assert (bringup gates)**:
 - `validate_before_send()` passes before any bytes are sent and before any mesh collective.
 - Overlap gate: `OverlapScore >= 0.30`, and observed period trends toward `max(Stage0, Stage1)` rather than their sum after warmup.

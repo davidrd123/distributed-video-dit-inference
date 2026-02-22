@@ -86,11 +86,27 @@ This is the “deadlock playbook” to apply any time you touch TP/PP distribute
 **4) Ban ad-hoc collectives inside blocks**
 - No “in-block broadcasts” with worker-side shape inference. All tensors that cross ranks must go through the explicit tensor manifest (`tensor_specs`) so both sides allocate identically and fail-fast before any broadcast. See: `scope-drd/notes/FA4/h200/tp/5pro/10-v11-correctness-deadlock-audit/response.md` (FM-08).
 
-**5) Multi-group PP specifics (PP1+)**
-- Validate that collectives are issued on the intended group; “wrong group” is instant deadlock. See: `scope-drd/notes/FA4/h200/tp/pp-next-steps.md` (A5).
-- Mesh leader must validate/pickle/spec *before* any `mesh_pg` broadcast (PP brings stranding hazards into group collectives too). See: `scope-drd/notes/FA4/h200/tp/pp-next-steps.md` (A1/A5).
+**5) Multi-group rulebook (PP1+)**
+- Treat “wrong group” as an **instant deadlock** class. The only safe posture is a strict rulebook + hard asserts/wrappers. See: `scope-drd/notes/FA4/h200/tp/pp-next-steps.md` (A5), `deep-research/2026-02-22/pp-rank0-out-of-mesh/reply.md`.
+- Minimal conventions (copy/paste strict):
+  - `world_pg`: all ranks. Used for startup + rank0↔leader p2p envelope/result traffic.
+  - `mesh_pg`: ranks `{1..mesh_tp}` only. Used for leader→mesh broadcast and **all TP collectives** inside Phase B.
+  - Convention: global rank 1 is mesh leader and is **mesh group-rank 0** (`src=0, group=mesh_pg`).
+- Hard rules:
+  1. Rank0 must never call a collective on `mesh_pg`.
+  2. Mesh Phase B must never call a collective on `world_pg` (or the default group).
+  3. Every TP collective wrapper must take an explicit `group=`; default-group collectives are forbidden in PP mode.
+  4. No conditional collectives behind per-rank flags unless the flag is parity-checked (or carried in the per-chunk plan and asserted).
 
-**6) Timeouts and exit paths**
+**6) Leader preflight + terminal actions (PP anti-stranding)**
+- Leader must fully receive + validate the envelope **before** initiating any `mesh_pg` broadcast. If invalid, leader must broadcast a terminal action (e.g., `SHUTDOWN`/`ERROR`) rather than throwing and disappearing (which strands non-leaders in a collective). See: `deep-research/2026-02-22/pp-rank0-out-of-mesh/reply.md`.
+- Same idea on rank0: **preflight-before-header** (picklability, dtype mapping, deterministic spec ordering, tensor materialization) must complete before sending an `INFER` commitment that makes peers block. See: `deep-research/2026-02-22/tp-v11-envelope-contract/reply.md`.
+
+**7) Prevent cross-thread collective interleaving**
+- “Same collectives, same order” is not just cross-rank: if one rank issues collectives from multiple threads, you can interleave `INFER` with `SHUTDOWN` and create a deadlock even when every other rank is correct.
+- Rule: any codepath that touches distributed comms (TP broadcast, shutdown, heartbeat, PP leader broadcast) must share a single lock / single-flight guard. See: `scope-drd/notes/FA4/h200/tp/5pro/03-code-review/response-v1.md` (shutdown interleaving hazard).
+
+**8) Timeouts and exit paths**
 - Ensure there is a clean `SHUTDOWN` path and a watchdog/timeout story so you don’t wait the default NCCL timeout (~300s) to learn you deadlocked. See: `scope-drd/notes/FA4/h200/tp/explainers/06-failure-modes.md` (Q7), `scope-drd/notes/FA4/h200/tp/pp-next-steps.md` (A2 `SCOPE_DIST_TIMEOUT_S`).
 
 ### Gotchas and failure modes
@@ -120,3 +136,5 @@ Run these intentionally-broken experiments to verify your tripwires catch deadlo
 3. **Conditional collective injection**: gate an `all_gather` behind a per-rank flag (without env parity) and confirm it hangs; then add the flag to parity keys and confirm it becomes deterministic (or refactor to “always collective, NOOP payload”). See: `scope-drd/notes/FA4/h200/tp/5pro/10-v11-correctness-deadlock-audit/response.md` (FM-03).
 4. **Anti-stranding regression**: make `pickle.dumps(payload_meta)` fail (inject a non-picklable object) and confirm no header/bytes were sent and the peer does not block forever (preflight ordering). See: `scope-drd/notes/FA4/h200/tp/pp-next-steps.md` (A1), `scope-drd/notes/FA4/h200/tp/5pro/10-v11-correctness-deadlock-audit/response.md` (FM-04).
 5. **Ad-hoc broadcast ban**: reintroduce a worker-side inferred-shape broadcast and confirm it is rejected by tests or lint rules; the only allowed transport should be via tensor manifest (`tensor_specs`). See: `scope-drd/notes/FA4/h200/tp/5pro/10-v11-correctness-deadlock-audit/response.md` (FM-08).
+6. **Leader validation failure (no mesh stranding)**: corrupt an envelope (bad version or missing required tensor) and confirm the leader does **not** start broadcasting payload; it broadcasts a terminal action so non-leaders exit cleanly. See: `deep-research/2026-02-22/pp-rank0-out-of-mesh/reply.md` (break-it test 2).
+7. **Wrong-group wrapper guard (PP1+)**: intentionally use `group=world_pg` for one Phase-B TP collective and confirm the wrapper detects mismatch and raises *before calling NCCL*, logs IDs + group, and triggers a clean mesh shutdown (no multi-minute hang). See: `deep-research/2026-02-22/pp-rank0-out-of-mesh/reply.md` (break-it test 1).

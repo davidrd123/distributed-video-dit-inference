@@ -136,7 +136,7 @@ rank0 must participate in the `all_reduce(load_ok)` collective (it's on the defa
 
 Questions:
 - Is there any pipeline-load side effect on rank0 that other ranks depend on? (e.g., shared filesystem state, model cache, tokenizer init)
-- The `init_tp_shard_fingerprint_baseline()` and `barrier()` after load — rank0 must skip the fingerprint (mesh-only) but participate in the barrier (all ranks). Is the barrier on the default group or mesh_pg? If default group, rank0 participates. If mesh_pg, rank0 must skip. Check which it is.
+- The `init_tp_shard_fingerprint_baseline()` and `barrier()` after load — rank0 must skip the fingerprint (mesh-only) but participate in the barrier (all ranks). We checked: `barrier()` is default-group in `scope-drd/src/scope/core/distributed/runtime.py`, and `init_tp_shard_fingerprint_baseline()` uses `get_mesh_pg()` in `scope-drd/src/scope/core/distributed/integrity.py`. Does that match your expectation for PP1 server-mode startup sequencing?
 - `_maybe_tp_lockstep_warmup()` runs on rank0 and broadcasts warmup calls to workers. Under PP1, rank0 can't do this. Should the mesh leader do autonomous warmup before entering the PP recv loop? If so, rank0 needs to know warmup is done before sending the first inference envelope. How is this synchronized?
 
 ### Q4) The "rank0 VAE" question

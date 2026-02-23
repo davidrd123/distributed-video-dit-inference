@@ -190,14 +190,88 @@ Questions:
 - Can we reuse the existing OM tests (om_07, om_13) for server-mode PP1,
   or do we need new server-specific operator tests?
 
+### Q7) frame_processor.py: hidden dependencies on `locked_pipeline.state` (PP1 rank0 has no pipeline)
+
+In pure TP, rank0 owns the pipeline and `frame_processor.py` reads pipeline-side
+state after calls (e.g., transition lifecycle + live conditioning). Under PP1,
+rank0 will not have `locked_pipeline`, so these reads must be re-homed or
+replaced.
+
+Concrete example locations:
+- `scope-drd/src/scope/server/frame_processor.py:3168` (`_tp_runtime_enabled` assumes rank0 is TP leader)
+- `scope-drd/src/scope/server/frame_processor.py:4340`–`4396` (post-call reads of `locked_pipeline.state`, e.g. `_transition_active`, `conditioning_embeds`, `_text_conditioning_last_incoming_prompts`)
+
+Questions:
+- Which pipeline-side state is *actually required* for production server semantics (transitions, embedding endpoints, prompt change detection), vs "nice-to-have"?
+- For required items, what's the cleanest PP1 design:
+  - (a) move the logic to mesh leader and return minimal metadata in `PPResultV1`
+  - (b) mirror the state machine on rank0 (track prompts/transitions locally)
+  - (c) explicitly disable/guard these features under PP1 (fail fast if enabled)
+- If (a): what additional fields should `PPResultV1` carry to avoid feature regressions?
+
+Note: the proposal (v2) now includes a 3-phase plan for this (bringup: safe defaults,
+production: PPResultV1 metadata, full parity: deferred). We want 5Pro to validate
+or revise that phasing.
+
+### Q8) PP transport robustness for server-mode (timeouts/cancellation/hangs)
+
+Today `PPControlPlane.recv_result()` is a blocking `dist.recv` with no timeout.
+In server-mode, rank0 can't afford to block the WebRTC server indefinitely if
+rank1 dies or the mesh wedges.
+
+Questions:
+- What is the recommended pattern for a *cancelable / time-bounded* PP recv on NCCL?
+  - `dist.irecv` + polling?
+  - a dedicated comms thread + watchdog that crash-exits the process?
+  - relying on `init_process_group(timeout=...)` (likely too coarse)?
+- Should PP1 server integration switch PP p2p to a dedicated `pp_pg=[0, leader]`
+  and pass `group=pp_pg` to `dist.send/recv` to reduce coupling with world-group usage?
+- Do you recommend extending the PP contract so the leader can always send an
+  explicit error result (no tensors) instead of "timeout-only" failure handling?
+
+Note: the proposal (v2) recommends NCCL timeout (`SCOPE_DIST_TIMEOUT_S`) for
+bringup and `irecv` + poll for production. We want 5Pro to assess whether the
+dedicated `pp_pg` idea has merit.
+
+### Q9) Rank0 Stage0 ownership (text/VAE encode) + dtype/shape contract
+
+In `scripts/pp1_pilot.py`, rank0 synthesizes `conditioning_embeds` / `latents_in` after a
+shapes+dtype handshake from rank1. In the production server, rank0 must instead compute:
+- `conditioning_embeds` from prompts (text encoder)
+- `latents_in` from WebRTC frames (VAE encode), and later decode `latents_out` (VAE decode)
+
+Questions:
+- Should rank0 load a "stage0-only" bundle (text encoder + VAE encode/decode + embedding blender),
+  while the mesh owns the generator? Or should we expand the PP contract so rank0 can send raw
+  frames/prompts and let the mesh produce embeddings/latents?
+- Do you recommend keeping an explicit shapes/dtype handshake (mesh leader → rank0) to guarantee
+  tensor shapes/dtypes match generator expectations, or is config/env sufficient? What are the
+  subtle mismatch risks?
+- Which stage0 features are "must keep" for parity (prompt transitions, conditioning updates, KV
+  context construction) vs acceptable to disable initially for bringup?
+
+### Q10) Multi-session concurrency and PP call_id sequencing
+
+The server can host multiple WebRTC sessions/rooms. Even if pipeline calls are serialized via
+`PipelineManager._inference_lock`, PP transport assumes strict in-order send/recv, and
+`PPControlPlane` tracks `call_id` per instance.
+
+Questions:
+- Should `PPControlPlane` be a singleton (process-global) on rank0 so `call_id` remains globally
+  monotonic across sessions?
+- Should we enforce "one in-flight envelope" (send+recv as an atomic critical section) in
+  server-mode PP1, or is pipelining multiple outstanding envelopes a goal?
+- If pipelining is desired later, do we need a result header/tagging/multiplex scheme (since
+  current `send_result()` has no separate header), or is the right answer to keep it single-flight?
+
 ## Output format
 
 Return:
 1. **Proposal review** — assessment of each proposed change (Q1). Confirm, revise, or reject.
-2. **frame_processor recommendation** (Q2) — concrete approach for the PP envelope path, with pseudocode.
+2. **frame_processor recommendation** (Q2/Q7/Q9) — concrete approach for the PP envelope path and state ownership, with pseudocode.
 3. **Pipeline load protocol** (Q3) — exact sequence for PP1 startup across all 3 ranks.
-4. **rank0 VAE recommendation** (Q4) — which option, with VRAM/latency analysis.
-5. **Error handling spec** (Q5) — timeout values, recovery behavior, shutdown sequence.
+4. **rank0 stage0/VAE recommendation** (Q4/Q9) — which option, with VRAM/latency analysis.
+5. **Error handling + PP robustness** (Q5/Q8/Q10) — timeout values, recovery behavior, shutdown sequence, concurrency model.
 6. **Test plan** (Q6) — ordered checklist from smoke test to full WebRTC validation.
 7. **Red flags** — anything in the proposal or current code that will break or cause subtle bugs.
 8. **Implementation ordering** — if we can only do 3 things before attempting the first server-mode PP1 run, which 3?

@@ -264,14 +264,37 @@ Questions:
 - If pipelining is desired later, do we need a result header/tagging/multiplex scheme (since
   current `send_result()` has no separate header), or is the right answer to keep it single-flight?
 
+### Q11) PP contract coverage for server inputs (video/VACE/transitions)
+
+In production, `frame_processor.py` frequently supplies `video` and/or `vace_input_frames` (+ masks) and uses `transition` configs. `PPEnvelopeV1` currently
+only carries generator-phase tensors and has `pp_disable_vace` as a bringup gate.
+
+Questions:
+- For initial server-mode PP1, should we explicitly disable VACE/V2V and run text-only (Phase G0/G1), or is it worth extending the PP contract immediately?
+- If extending the contract, what is the minimal set of additional fields you'd add to `PPEnvelopeV1` (and what should live in metadata vs tensors)? Suggested
+  candidates: `video` (or a latent override), `vace_input_frames`, `vace_input_masks`, `transition`.
+- Alternative: should rank0 send the existing `call_params` payload (TP-style kwargs + tensor_specs + tensors) p2p to the mesh leader, and keep `PPEnvelopeV1`
+  as an internal stage boundary only? Pros: minimal `frame_processor` rewrite; cons: weakens contract discipline. Which would you recommend?
+
+### Q12) Idle keepalive and watchdogs under PP1
+
+In pure TP, rank0 can run a TP heartbeat (`broadcast_noop`) while idle. Under PP1, rank0 is not the mesh leader, and mesh workers may exit if
+`SCOPE_TP_WORKER_WATCHDOG_S` is enabled and no headers arrive.
+
+Questions:
+- Recommended keepalive design: (a) rank0 periodically sends `PPAction.NOOP` to rank1, which relays `tp.broadcast_noop()` to the mesh, vs (b) mesh leader
+  autonomously sends TP noops even without PP traffic.
+- Do you recommend disabling/relaxing watchdogs under PP1 until keepalive exists, or making keepalive a bringup requirement?
+- Any pitfalls with implementing a periodic NOOP path given `PPControlPlane.recv_next()` is blocking today?
+
 ## Output format
 
 Return:
 1. **Proposal review** — assessment of each proposed change (Q1). Confirm, revise, or reject.
-2. **frame_processor recommendation** (Q2/Q7/Q9) — concrete approach for the PP envelope path and state ownership, with pseudocode.
+2. **frame_processor recommendation** (Q2/Q7/Q9/Q11) — concrete approach for the PP envelope path, state ownership, and VACE/V2V contract coverage, with pseudocode.
 3. **Pipeline load protocol** (Q3) — exact sequence for PP1 startup across all 3 ranks.
 4. **rank0 stage0/VAE recommendation** (Q4/Q9) — which option, with VRAM/latency analysis.
-5. **Error handling + PP robustness** (Q5/Q8/Q10) — timeout values, recovery behavior, shutdown sequence, concurrency model.
+5. **Error handling + PP robustness** (Q5/Q8/Q10/Q12) — timeout values, recovery behavior, shutdown sequence, concurrency model, keepalive/watchdog design.
 6. **Test plan** (Q6) — ordered checklist from smoke test to full WebRTC validation.
 7. **Red flags** — anything in the proposal or current code that will break or cause subtle bugs.
 8. **Implementation ordering** — if we can only do 3 things before attempting the first server-mode PP1 run, which 3?

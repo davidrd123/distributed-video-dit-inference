@@ -51,7 +51,7 @@ Wording correction that prevents real confusion:
 ## Status snapshot (this repo)
 
 Topic docs (`refs/topics/*.md`) current counts:
-- `draft`: 24
+- `draft`: 25
 - `stub`: 0
 
 Note: `refs/topics/meta-essential-resources.md` is a meta index and does not currently carry a `status:` frontmatter field.

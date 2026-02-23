@@ -46,6 +46,14 @@ any blind spots we're missing.
 - `scope-drd/src/scope/core/pipelines/krea_realtime_video/pipeline.py` (tp_worker_infer, _generate)
 - `scope-drd/src/scope/core/pipelines/krea_realtime_video/blocks/recompute_kv_cache.py` (recompute block — reads do_kv_recompute from call_params)
 
+### Run log (timing data for Q4/Q5 analysis)
+
+- `scope-drd/notes/FA4/h200/tp/bringup-run-log.md` (Runs 19-25 — exact timing data for R1/R0a/R0b, plus TP=1/2/4 baselines)
+
+### Launch scripts (for Q6 testing context)
+
+- `scope-drd/scripts/run_daydream_a100_tp.sh` (current TP launch script — no PP1 support yet, shows what env vars need extending)
+
 ### Prior 5Pro context
 
 - `scope-drd/deep-research/2026-02-23/pp1-topology-and-recompute/reply.md` (Q1-Q6 answers — VAE safety, new_group, concurrency, recompute coupling, shutdown, leader protocol)
@@ -57,7 +65,10 @@ any blind spots we're missing.
 | Run | What | Result |
 |-----|------|--------|
 | 19 | PP1 R1 happy-path (no recompute), 20 chunks | PASS, median 282ms |
+| 20 | A100 single-GPU baseline | PASS, ~6 FPS |
+| 21 | A100 TP=2 visual quality | PASS, ~8.2 FPS |
 | 22 | OM tests (5/5 including om_07 leader safety, om_13 orphan shutdown) | PASS |
+| 23 | A100 TP=4 visual quality (all 4 GPUs) | PASS, ~10.0 FPS |
 | 24 | PP1 R0a (recompute every chunk), 10 chunks | PASS, median 514ms |
 | 25 | PP1 R0b (recompute every 5), 20 chunks | PASS, skip logic correct |
 
@@ -146,7 +157,7 @@ Both require VAE access on rank0. Options:
 Questions:
 - Is (a) the right approach for initial server integration? The pilot already proves it works (A4b on PP0). What are the VRAM and latency implications of rank0 VAE on A100?
 - If (a): should rank0's VAE decode happen synchronously (blocking the PP send/recv loop) or asynchronously (overlap decode with next chunk's mesh inference)? The A3 overlap pattern from pp0_pilot.py does this with a comms thread — should the server do the same?
-- Under PP1 with 4 GPUs: rank0=VAE-only, ranks 1-2=TP mesh (generator), GPU3 idle. Is there a better GPU allocation? (e.g., rank0 shares GPU with a mesh worker?)
+- Under PP1 with 4 GPUs: rank0=VAE-only, ranks 1-2=TP mesh (generator), GPU3 idle. Is there a better GPU allocation? Note: **TP=4 is now proven** (Run 23, ~10 FPS on 4×A100, visually correct). So an alternative is rank0=VAE on GPU0, ranks 1-3=TP=3 mesh. But TP=3 (non-power-of-2) may cause head-sharding issues (40 heads / 3 = not even). Assess whether TP=3 is viable or if we should stick with TP=2 + idle GPU.
 
 ### Q5) Error propagation in the server context
 

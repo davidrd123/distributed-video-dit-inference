@@ -67,9 +67,22 @@ resources:
     type: docs
     topics: [2, 3]
     priority: medium
+    status: converted
+    local_paths:
+      - sources/pytorch-distributed-api/raw/page.html
+      - sources/pytorch-distributed-api/full.md
+    notes: "init_process_group, process group creation, backend selection, timeout semantics (default 10 min for NCCL). Also covers destroy_process_group for topic 3"
+
+  - id: torchrun-elastic
+    title: "torchrun / torch.distributed.elastic Reference"
+    urls:
+      - https://docs.pytorch.org/docs/stable/elastic/run.html
+    type: docs
+    topics: [2, 3]
+    priority: medium
     status: pending
     local_paths: []
-    notes: "init_process_group, process group creation, backend selection, timeout semantics (default 10 min for NCCL). Also covers destroy_process_group for topic 3"
+    notes: "Process management, --nproc_per_node CUDA device assignment, worker failure handling, rendezvous. Added from PP0 bringup feedback"
 
   - id: pytorch-dist-tutorial
     title: "Writing Distributed Applications with PyTorch"
@@ -1032,6 +1045,19 @@ resources:
       - sources/pipedit/full.md
       - refs/resources/pipedit.md
     notes: "PipeSP (pipelined sequence parallelism), DeDiVAE (decoupled diffusion/VAE), attention co-processing. Directly addresses pipeline-parallel DiT inference"
+
+  - id: wan21-paper
+    title: "Wan 2.1: A Comprehensive and Advanced Large Video Generation Model"
+    urls:
+      - https://arxiv.org/abs/2503.20314
+    type: paper
+    topics: [24]
+    priority: high
+    status: fetched
+    local_paths:
+      - sources/wan21-paper/raw/paper.pdf
+      - sources/wan21-paper/raw/abstract.html
+    notes: "Target model for Scope pipeline. 40-block transformer, causal vs bidirectional temporal attention, T5 text conditioning. Added from PP0 bringup feedback — needed for PP partitioning decisions"
 
   - id: dit-paper
     title: "Scalable Diffusion Models with Transformers (DiT)"

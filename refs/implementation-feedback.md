@@ -40,6 +40,8 @@ maps training PP concepts to streaming inference PP. The mapping is:
 back to the training PP literature. PipeDiT addresses DiT-specific PP but focuses on sequence
 parallelism rather than the stage-split model we're implementing.
 
+> **Library response (2026-02-22):** Topic 15 (`refs/topics/15-pipeline-scheduling-theory.md`) now covers this mapping explicitly. The "Mental model" section derives the bubble formula and immediately translates to inference: "Micro-batches are just **items in flight**" and "if P=2 and B=1, you get β = 1/2 ⇒ 50% idle time." The "Inference translation caveat" in Cross-resource agreement maps zero-bubble's B/W splitting to inference-side overlap candidates (transport on side stream, decode/encode, pre-staging envelopes). The "Throughput vs latency" key concept addresses the "sum → max" shift. The specific mapping table requested here (micro-batch→chunk, bubble fraction→stage imbalance, activation checkpointing→KV recompute, etc.) would be a valuable addition to Topic 15's mental model section — flagging for next revision.
+
 ---
 
 ## 2. Multi-rank debugging patterns — tribal knowledge gap
@@ -143,6 +145,8 @@ The current synthesis covers general principles but doesn't address PP-specific 
 - The operator test matrix has OM-13 (orphan shutdown) but the topic doesn't walk through
   the PP shutdown sequence.
 
+> **Library response (2026-02-22):** Topic 03 (`refs/topics/03-graceful-shutdown.md`) now covers all four points. The "Mental model" section distinguishes **drain + exit** (normal) vs **abort** (crash > hang). "Key concepts" covers `PPAction.SHUTDOWN` as the sentinel, heartbeat NOOPs for liveness detection, watchdog `os._exit(2)` for breaking blocked NCCL, and bringup timeouts (`SCOPE_DIST_TIMEOUT_S=60`). The "Drain vs abort" concept explicitly addresses the ordering question. The crash-only framing answers "what if rank0 crashes" — mesh timeout + watchdog is the recovery path.
+
 ### 4b. Topic 19 (Backpressure) — needs concrete PP queue design
 
 The synthesis discusses backpressure in general terms. For PP0 A3 (overlap), we need:
@@ -153,12 +157,16 @@ The synthesis discusses backpressure in general terms. For PP0 A3 (overlap), we 
 - The O-01/O-02/O-03 tests in the operator matrix reference this but the topic doesn't
   have the design spelled out
 
+> **Library response (2026-02-22):** Topic 19 (`refs/topics/19-producer-consumer-backpressure.md`) now has the concrete PP queue design. "Mental model" covers `D_in`/`D_out` with `D_in=D_out=2` as the minimal double buffer. "Key concepts" § "Bounded queues" defines both queues with capacity semantics, § "Backpressure rules" addresses the "D_out full" question (rank0 blocks enqueueing; mesh blocks on result send), and § "Why depth 2" derives the minimum. Hard-cut flushing is covered in the mental model: "Hard cuts are discontinuities. The system must flush both bounded queues, bump cache_epoch, and restart fill."
+
 ### 4c. Topic 20 (Message framing) — strongest topic, minor gap
 
 This is the best topic in the library for PP implementation. The preflight-before-commit
 pattern directly informed our Step A1 work. One gap: it doesn't cover **result framing**
 (mesh → rank0 direction). Currently PPResultV1 is simpler than PPEnvelopeV1, but as we
 add overlap, the result path needs the same anti-stranding treatment.
+
+> **Library response (2026-02-22):** Acknowledged — Topic 20 covers the forward path (rank0→mesh) comprehensively but is lighter on result framing (mesh→rank0). The "Key concepts" section does reference `PPResultV1` versioning and `cache_epoch` filtering for stale results, but doesn't walk through the anti-stranding protocol for the result direction. Flagging for next revision when overlap (Step A3) makes result framing load-bearing.
 
 ### 4d. Topic 22 (KV cache management) — needs recompute coupling for PP
 
@@ -169,6 +177,8 @@ coupling that isn't addressed:
 - The R1 → R0a → R0 progression in our bringup plan is specifically about managing this coupling
 - OM-10 tests for the missing-override case but the topic doesn't explain the PP recompute
   architecture
+
+> **Library response (2026-02-22):** Topic 22 (`refs/topics/22-kv-cache-management.md`) now covers this coupling in detail. "Key concepts" § "The recompute coupling problem" explains why generator-only workers need `context_frames_override` and cites the failure-modes explainer + PP topology plan. "Practical checklist" item 3 walks through the R1→R0a→R0 progression explicitly: start with recompute disabled (R1), restore via rank0-provided override (R0a), and treat latent-only anchor (R0) as a gated quality-risk experiment. The `cache_epoch` + queue flush coupling with hard cuts is checklist item 4.
 
 ---
 

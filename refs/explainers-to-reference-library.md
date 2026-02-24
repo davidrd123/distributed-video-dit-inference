@@ -138,6 +138,96 @@ Jump into the library:
 - Topics: `topics/13-classic-pipeline-parallelism.md`, `topics/15-pipeline-scheduling-theory.md`, `topics/19-producer-consumer-backpressure.md`, `topics/05-cuda-streams.md`
 - Resource cards: `resources/streamdiffusionv2.md`, `resources/pytorch-pipelining-api.md`, `resources/gpipe.md`, `resources/zero-bubble-pp.md`
 
+### 09 — PP topology (rank0-out-of-mesh / phase-PP)
+
+Link: `../scope-drd/notes/FA4/h200/tp/explainers/09-pp-topology.md`
+
+What it’s doing:
+- Defines “phase-PP” (rank0 outside mesh) and the PP envelope/result boundary.
+
+Invariants it leans on:
+- Preflight-before-send (never strand a peer on partial bytes).
+- Epoch + chunk indexing to bound in-flight work and drop stale results.
+
+Jump into the library:
+- Topics: `topics/19-producer-consumer-backpressure.md`, `topics/20-message-framing-versioning.md`, `topics/21-idempotency-and-replay.md`, `topics/03-graceful-shutdown.md`
+- Resource cards: `resources/pytorch-distributed-api.md` (send/recv), `resources/nccl-user-guide.md` (ordering + troubleshooting)
+
+### 10 — PP0 overlap threading (bounded queues + comms ownership)
+
+Link: `../scope-drd/notes/FA4/h200/tp/explainers/10-pp0-a3-overlap-threading.md`
+
+What it’s doing:
+- Producer/consumer overlap model (D_in/D_out) and why comms must be single-owner.
+
+Invariants it leans on:
+- “Send k+1 before decode k” scheduling invariant.
+- One-thread-per-control-plane rule for `dist.*` calls.
+
+Jump into the library:
+- Topics: `topics/19-producer-consumer-backpressure.md`, `topics/05-cuda-streams.md`, `topics/03-graceful-shutdown.md`
+- Resource cards: `resources/pytorch-cuda-semantics.md`, `resources/nccl-user-guide.md`
+
+### 11 — PP1 leader protocol (mesh leader state machine)
+
+Link: `../scope-drd/notes/FA4/h200/tp/explainers/11-pp1-leader-protocol.md`
+
+What it’s doing:
+- Explains how the mesh leader bridges PP point-to-point with mesh-local TP broadcast.
+
+Invariants it leans on:
+- Validate-before-broadcast (never strand mesh workers).
+- Mesh-local collectives must remain lockstep across ranks.
+
+Jump into the library:
+- Topics: `topics/01-nccl-internals.md`, `topics/02-deadlock-patterns.md`, `topics/04-determinism-across-ranks.md`, `topics/20-message-framing-versioning.md`
+- Resource cards: `resources/nccl-user-guide.md`, `resources/pytorch-distributed-api.md`
+
+### 12 — PP1 rank0 Stage0 state machine (server mode)
+
+Link: `../scope-drd/notes/FA4/h200/tp/explainers/12-pp1-rank0-stage0-state-machine.md`
+
+What it’s doing:
+- Shows the end-to-end “rank0 Stage0” loop (envelope build → send → recv → decode/emit) and the overlap (G1c) depth=1 pipeline.
+
+Invariants it leans on:
+- Rank0 never touches mesh collectives; all NCCL is mesh-only.
+- Sequencing fields (chunk_index/cache_epoch/current_start_frame) are part of the contract.
+
+Jump into the library:
+- Topics: `topics/01-nccl-internals.md`, `topics/05-cuda-streams.md`, `topics/19-producer-consumer-backpressure.md`, `topics/20-message-framing-versioning.md`
+- Resource cards: `resources/nccl-user-guide.md`, `resources/pytorch-cuda-semantics.md`
+
+### 13 — C2 context-stack parity (temporal coherence under PP1)
+
+Link: `../scope-drd/notes/FA4/h200/tp/explainers/13-c2-context-stack-parity.md`
+
+What it’s doing:
+- Explains why “slideshow” happens when KV recompute/context frames aren’t correct, and why PP1 requires rank0-provided `context_frames_override`.
+
+Invariants it leans on:
+- Cache recompute requires a stable context stack (first frame anchor + sliding buffers + re-encode).
+- Under PP1, mesh ranks cannot build that stack (no decoded/VAE state).
+
+Jump into the library:
+- Topics: `topics/22-kv-cache-management.md`, `topics/23-vae-latency-chunking.md`, `topics/04-determinism-across-ranks.md`
+- Resource cards: `resources/causvid.md`, `resources/streamdiffusionv2.md`, `resources/pytorch-cuda-semantics.md`
+
+### 14 — PP1 output backpressure + WebRTC (stale vs slideshow)
+
+Link: `../scope-drd/notes/FA4/h200/tp/explainers/14-pp1-output-backpressure-webrtc.md`
+
+What it’s doing:
+- Distinguishes “repeating frames” caused by stale playback/queue policy vs missing temporal coherence, and enumerates the knobs/diagnostics for interactive PP1.
+
+Invariants it leans on:
+- Backpressure must be explicit; unbounded queues become latency spirals.
+- For interactive preview, drop-oldest is usually the right default.
+
+Jump into the library:
+- Topics: `topics/19-producer-consumer-backpressure.md`, `topics/07-gpu-memory-management.md`, `topics/23-vae-latency-chunking.md`
+- Resource cards: `resources/pytorch-cuda-semantics.md`
+
 ## Cross-cut map: Seven Questions → library pointers
 
 This mirrors the “Seven Questions” in `../scope-drd/notes/FA4/h200/tp/explainers/06-failure-modes.md` and gives a quick “where do I read about this class of bug” index.
@@ -157,4 +247,3 @@ If an explainer introduces a new *invariant* (“must be identical across ranks�
 - a resource card (`refs/resources/...`) that makes the “why” citable.
 
 If you’re unsure where a new invariant belongs, start by updating the relevant topic synthesis (human-facing), then sharpen or add a resource card only if the invariant depends on an external source (NCCL semantics, CUDA stream rules, Dynamo tracing behavior, etc.).
-

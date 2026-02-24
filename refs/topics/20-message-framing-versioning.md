@@ -163,6 +163,14 @@ TP example: `scope-drd/notes/FA4/h200/tp/explainers/03-broadcast-envelope.md` de
 12. **Bringup timeouts**:
    - Set low-ish distributed timeouts (`SCOPE_DIST_TIMEOUT_S`) and watchdogs during bringup. If something goes wrong, you want an early crash, not a 300s mystery hang.
 
+**Transport ownership (PP overlap / cross-thread)**
+
+13. **Single-owner transport is part of framing**:
+   - If you introduce a comms thread (PP overlap), that thread must be the *only* caller of the protocol’s `send/recv` methods while it is alive.
+   - Disallow “secondary callers” (debug endpoints, smoke tests, concurrent request paths) from calling `PPControlPlane.send_infer/recv_result` directly during overlap; route through a single Stage0 API + lock, or return 409 “disabled while overlap is active.”
+   - Rationale: even if individual `send` calls are locked, interleaving `send↔recv` pairs from two callsites corrupts message boundaries and can strand peers.
+   - See: `scope-drd/notes/FA4/h200/tp/explainers/12-pp1-rank0-stage0-state-machine.md`, `deep-research/2026-02-23/pp1-g1c-overlap/reply.md`.
+
 #### Worked example: TP v1.1 generator-only envelope (`tp_plan=v1_generator_only`, `tp_envelope_version=1`)
 
 This is the “operator manual” version of the TP v1.1 envelope contract: a strict schema + preflight ordering that prevents hangs and Franken-models when workers stop running text/VAE/decode. See: `deep-research/2026-02-22/tp-v11-envelope-contract/reply.md`.
@@ -239,6 +247,11 @@ If something still throws *after* the `INFER` header broadcast, treat the run as
 - **Leader “throws and disappears” can strand the mesh** (PP multi-rank):
   - If the leader enters a `mesh_pg` broadcast and then throws (or exits) before completing the broadcast, non-leader mesh ranks can block indefinitely waiting for the rest of the payload.
   - Policy: leader must fully receive + validate the envelope *before* starting any `mesh_pg` broadcast; if invalid, the leader should broadcast a **terminal action** (`SHUTDOWN` or an explicit `ERROR` action/version) so non-leaders can exit cleanly rather than strand. See: `deep-research/2026-02-22/pp-rank0-out-of-mesh/reply.md` (“Invalid envelope policy”).
+
+- **Second caller corrupts framing (PP overlap)**:
+  - Once a comms thread owns `send_infer↔recv_result`, any other callsite that directly uses the same transport (debug smoke endpoint, concurrent request path) can interleave message pairs and break boundaries. This is “protocol corruption,” not “just a race.”
+  - Fix: Stage0 owns transport behind a single API + lock, or explicitly disable debug endpoints while overlap is active.
+  - See: `deep-research/2026-02-23/pp1-g1c-overlap/reply.md`.
 
 - **Make “commitment points” visible in logs**:
   - Log `(call_id, chunk_index, cache_epoch, action, version)` at each commitment point: header send, mesh broadcast start, and the first collective boundary in Phase B. When something wedges, these log lines localize which boundary stranded peers. See: `deep-research/2026-02-22/pp-rank0-out-of-mesh/reply.md` (“commitment point” note).

@@ -180,6 +180,20 @@ Overlap is proven by throughput period approaching `max(Stage0_ms, Stage1_ms)` r
 
 ---
 
+### Update (2026-02-24): PP1 Stage0 and “G1c overlap” lessons (now implemented)
+
+The PP0 overlap patterns have now been exercised in **PP1 server mode**, and a few sharp edges became “real codebase contracts” rather than theory.
+
+**Primary Scope references**:
+- `scope-drd/notes/FA4/h200/tp/landscape.md` (what worked, what didn’t, which levers matter next)
+- `scope-drd/notes/FA4/h200/tp/explainers/12-pp1-rank0-stage0-state-machine.md` (rank0 Stage0 state machine + comms-thread/event model)
+
+**Pullbacks into the reference library (topics to reread/update during PP work)**:
+- `05-cuda-streams`: in cross-thread PP overlap, **the calling thread’s current stream matters** for `dist.send/recv` ordering; the safe pattern is a dedicated `comm_stream` plus explicit ready/done events + `record_stream()` on received tensors.
+- `19-producer-consumer-backpressure`: “overlap” is not just queues; it includes **hard-cut semantics**. With depth=1 (one in-flight envelope), you still can’t “skip a recv” on hard cuts: drain+discard in-flight results before resetting, or go crash-only if comm is wedged.
+- `20-message-framing-versioning`: “single-owner transport” becomes a protocol rule. Any second caller (debug endpoint, smoke test, concurrent request) that touches `PPControlPlane.send_infer/recv_result` while overlap is active risks corrupting framing and stranding peers; Stage0 must own transport behind a single API/lock.
+- `03-graceful-shutdown`: under overlap, shutdown must treat “comms thread didn’t join” as **poisoned**: do not call into `dist` from the main thread afterward; fail fast (crash-only posture) rather than trying to unwind a wedged communicator.
+
 ## Cross-cutting: DiT architecture
 
 ### Finding: 40 uniform blocks, no skip connections, adaLN-Zero conditioning

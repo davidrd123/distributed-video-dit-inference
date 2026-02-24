@@ -103,6 +103,9 @@ Increasing in-flight depth can improve throughput by reducing bubbles, but it al
 - `validate_before_send()` passes before any bytes are sent and before any mesh collective.
 - Overlap gate: `OverlapScore >= 0.30`, and observed period trends toward `max(Stage0, Stage1)` rather than their sum after warmup.
 - Safety gate: queue depths never exceed bounds; after a hard cut, no stale-epoch result reaches decode/output.
+- **Depth=1 (“single in-flight”) still needs hard-cut semantics**:
+- If an envelope is already submitted, you generally can’t “skip a recv” without corrupting the transport framing. Drain+discard (epoch mismatch) is the safe default; if you can’t drain safely, crash-only is often the right bringup posture.
+- Ensure transport ownership is single-thread / single-callsite while overlap is active (no debug endpoint or secondary loop directly calling `send/recv`).
 
 ### Gotchas and failure modes
 
@@ -112,6 +115,7 @@ Increasing in-flight depth can improve throughput by reducing bubbles, but it al
 - Depth > 2 can hide scheduling problems: throughput may look better while latency and memory balloon.
 - Recompute coupling (R0a) can reintroduce serialization if building envelope `k+1` depends on decoding `k`; overlap must be re-validated when recompute is enabled.
 - **Classic “we thought we overlapped but didn’t” signature**: `t_mesh_idle_ms` tracks rank0 decode time and both queues stay near 0. This usually means rank0 is sending `env[k+1]` *after* decoding `res[k]`, serializing the mesh. Fix: send `env[k+1]` before decoding `res[k]` (Stage 0 must behave like a producer even while it is consuming Stage 1 results). See: `deep-research/2026-02-22/pp-rank0-out-of-mesh/reply.md` (“Scheduling bug signature”).
+- **Overlap can be correct yet not help**: if one stage dominates the critical path (e.g., Stage 0 decode), the best possible steady-state period is still ~that dominant stage. Use the same instrumentation to distinguish “overlap bug” from “nothing left to hide” (stage imbalance). See: `scope-drd/notes/FA4/h200/tp/landscape.md` and `scope-drd/notes/FA4/h200/tp/bringup-run-log.md`.
 
 ### Experiments to run
 

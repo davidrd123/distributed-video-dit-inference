@@ -76,6 +76,9 @@ This is intentionally **crash-only** in bringup: the recovery path is “kill an
    - Stop enqueueing new work first.
    - Ensure any bounded queues have a sentinel/close mechanism so blocked producers/consumers wake up on shutdown.
    - Only exit rank0 after in-flight envelopes have been accounted for (results received or explicitly abandoned by policy).
+   - If a **comms thread owns `dist` I/O**, make it the *only* caller of `send/recv` while alive. On shutdown: request stop, join with a deadline, then send `SHUTDOWN` from the main thread **only after** the comms thread has exited.
+   - If the comms thread **does not join** (likely blocked in `recv`), treat the process as **poisoned**: do not call into `dist` from the main thread after the join timeout. Prefer crash-only termination over attempting a “graceful” shutdown that can corrupt the protocol or wedge the job.
+   - On hard cuts with an in-flight envelope (depth=1 or greater), you generally **cannot “skip a recv.”** Receive the in-flight result and discard it (epoch mismatch) before resetting, or crash-only if you can’t drain safely.
 7. **Have a last-resort kill path on workers** (`os._exit`) for cases where the receiver is blocked in comms and cooperative shutdown cannot run.
 
 ### Gotchas and failure modes
@@ -86,6 +89,7 @@ This is intentionally **crash-only** in bringup: the recovery path is “kill an
 - **`os._exit` is intentionally harsh:** it skips Python cleanup and can leave logs/IO buffers unflushed, but it reliably terminates a process that might otherwise be unkillable from within Python due to blocked NCCL ops.
 - **`destroy_process_group()` is best-effort, not a guarantee:** teardown can hang even when the workload “ran fine,” and CUDA graph capture can introduce additional teardown sharp edges. Treat teardown as “attempted cleanup” and ensure your watchdog/timeout story still bounds time-to-exit. (See: resource stub `pytorch-issue-115388` in this topic; and `scope-drd/notes/FA4/h200/tp/explainers/06-failure-modes.md` Q7 for the bringup posture.)
 - **Teardown can hang even when metrics look perfect:** successful throughput/latency metrics do not guarantee clean shutdown. The TP bringup run log notes that a matrix runner sends SIGTERM shortly after writing JSON outputs specifically to avoid **intermittent teardown hangs**; the resulting SIGTERM noise from `torchrun` does not invalidate the measured metrics, it just highlights that teardown is its own failure surface.
+- **Overlap adds a new “poisoned shutdown” case:** if your comms owner thread wedges in `dist.recv()` and won’t join, calling `dist.*` from other threads afterward can corrupt framing or deadlock. Treat “join timeout” as a hard failure boundary (crash-only), not a recoverable condition. See: `scope-drd/notes/FA4/h200/tp/explainers/12-pp1-rank0-stage0-state-machine.md`, `deep-research/2026-02-23/pp1-g1c-overlap/reply.md`.
 
 ### Experiments to run
 

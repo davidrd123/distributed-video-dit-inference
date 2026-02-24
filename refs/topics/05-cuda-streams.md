@@ -4,7 +4,7 @@ status: draft
 
 # Topic 5: CUDA streams — execution/dependency model, events, synchronization, NCCL interaction
 
-Streams are the fundamental concurrency primitive for overlapping compute, communication, and memory transfers. NCCL operations execute on their own streams, and understanding how events synchronize across streams is essential for pipeline parallelism.
+Streams are the fundamental concurrency primitive for overlapping compute, communication, and memory transfers. NCCL ops are launched on a CUDA stream and are stream-ordered locally; once you add non-default streams (or cross-thread comms), you must make stream/event ordering explicit to stay correct.
 
 ## Resources
 
@@ -91,6 +91,15 @@ This is a bringup-oriented checklist for adding streams safely while pursuing PP
 
 7. **Treat “current stream” as part of the distributed contract under compile**:
    - Compile-aware collectives (functional collectives) work when stream ordering is consistent and traceable; introducing side streams inside compiled regions can induce ordering divergence or force graph breaks if not engineered carefully. (See `pytorch-cuda-semantics` Actionables; `refs/implementation-context.md` Phase 1 Run 12b notes.)
+
+8. **PP1 Stage0 overlap pattern (thread + `comm_stream` + CUDA events) is an ordering contract**:
+   - In PP1 overlap, `dist.send/recv` correctness depends on the calling thread’s current stream. The safe pattern is: a dedicated comms thread owns *all* `PPControlPlane.send_infer/recv_result` calls and runs them inside `with torch.cuda.stream(comm_stream): ...`.
+   - Use explicit ready/done events:
+     - main thread produces tensors → `ready_evt.record(main_stream)`
+     - comm thread does `comm_stream.wait_event(ready_evt)` → `send/recv` → `done_evt.record(comm_stream)`
+     - main thread does `main_stream.wait_event(done_evt)` before touching outputs
+   - Add allocator-lifetime edges: after `wait_event(done_evt)`, call `res.latents_out.record_stream(main_stream)` before decoding/consuming.
+   - Enforce “single-owner transport”: debug endpoints and smoke tests must not call `PPControlPlane` directly while overlap is active (route through Stage0 API + lock, or disable). See `scope-drd/notes/FA4/h200/tp/explainers/12-pp1-rank0-stage0-state-machine.md` and `deep-research/2026-02-23/pp1-g1c-overlap/reply.md`.
 
 ### Gotchas and failure modes
 

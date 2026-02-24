@@ -3,6 +3,27 @@
 Date: 2026-02-24
 Status: Ready to implement; requesting overlap safety audit
 
+## Update (2026-02-24)
+
+Overlap implementation has now been prototyped in `scope-drd` and is streaming video end-to-end, but we’d like a second pass:
+
+- **Code review request (implementation vs plan + safety audit):** `scope-drd/notes/FA4/h200/tp/proposals/g1c-impl-plan/ask-g1c-code-review.md`
+- **Companion output-path request (VAE decode + frame pacing + queue/backpressure):** `scope-drd/notes/FA4/h200/tp/proposals/g1c-impl-plan/ask-pp1-output-architecture.md`
+- **SM120-specific symptom report (repeat ~3 frames + WebRTC churn):** `scope-drd/notes/FA4/h200/tp/5pro/15-pp1-sm120-webrtc-repeat3frames/ask.md`
+
+## Update (2026-02-24 later) — temporal coherence (“slideshow”)
+
+We identified that the “chunk restarts / slideshow” symptom is largely due to **KV-cache recompute being disabled by default under PP1**:
+
+- Non-PP pipeline default: `RecomputeKVCacheBlock` runs every chunk (`SCOPE_KV_CACHE_RECOMPUTE_EVERY` defaults to `1` in the pipeline).
+- PP1 Stage0 default: `PP1Stage0._should_recompute()` returns `False` when `SCOPE_KV_CACHE_RECOMPUTE_EVERY` is unset, which sets `do_kv_recompute=False` in the PP envelope and causes the mesh to skip recompute.
+
+Immediate workaround to validate:
+- launch PP1 with `SCOPE_KV_CACHE_RECOMPUTE_EVERY=1` so rank0 supplies `context_frames` (currently synthetic from `prev_latents_out`) and the mesh recomputes KV cache each chunk.
+
+Open question (for review):
+- What is the correct “proper” context-frame construction under PP1 (decoded-first-frame anchor + re-encode path) so temporal coherence matches non-PP, and how should this interact with overlap/backpressure?
+
 ## Objective
 
 We’ve shipped PP1 server mode through **G1b** (dynamic prompts from rank0) and are now planning

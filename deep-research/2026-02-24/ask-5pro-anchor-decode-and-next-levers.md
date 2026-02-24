@@ -16,7 +16,7 @@ on 8×SM120 GPUs. Every easy lever has been pulled. Here's the scorecard:
 | 33 | Pure TP=8 (no PP) | 10.0 | **TP scaling collapsed** — PP1 wins with fewer GPUs |
 | 34 | PP1+TP=4, **compile** | **12.1** | 9% mesh speedup (885→805ms) — ceiling without arch change |
 | 35 | PP1+TP=5 | N/A | **Impossible** — ffn_dim=13824 not divisible by 5 |
-| 36 | PP1+TP=4, single GPU baseline | ~11.0 | PP1+TP=4+compile only 10% faster on 5× GPUs |
+| 36 | **Single GPU** (compile, no PP, no TP) | ~11.0 | PP1+TP=4+compile only 10% faster on 5× GPUs |
 | 37 | PP1+TP=4, compile, **R0 latent anchor** | **14.8** | 22% gain! But **quality glitchy** — rejected |
 
 **The binding constraint is clear**: the decode→re-encode anchor dependency serializes
@@ -40,14 +40,15 @@ Our VAE is Wan2.1's WanVAE (3D video VAE with temporal convolutions).
 The standard call is:
 
 ```python
-# Full chunk: 9 latent frames → 33 pixel frames (4:1 temporal upsample - 1 overlap)
-pixels = vae.decode(latents)  # latents: [1, 9, 16, H_lat, W_lat]
+# Full chunk in our realtime config: 3 latent frames → 12 pixel frames steady-state
+# (chunk 0 is 9 pixel frames). latents_out: [1, 3, 16, H_lat, W_lat]
+pixels = vae.decode(latents)
 ```
 
 We want to do:
 ```python
 # Anchor-only: 1 latent frame → 4 pixel frames
-anchor_pixels = vae.decode(latents[:, :1])  # [1, 1, 16, H_lat, W_lat]
+anchor_pixels = vae.decode(latents[:, :1])
 ```
 
 **Questions:**
@@ -55,8 +56,9 @@ anchor_pixels = vae.decode(latents[:, :1])  # [1, 1, 16, H_lat, W_lat]
    input correctly? Or do they require minimum T>1 due to padding/kernel size assumptions?
 
 2. If T=1 decode produces 4 pixel frames, is `pixel_frames[-1]` (the last of 4)
-   semantically equivalent to the first 4 pixels from a full T=9 decode? Or do later
-   temporal convolution layers cause cross-frame bleeding that makes T=1 output differ?
+   semantically equivalent to the *boundary* pixel frame used by the full streaming decode?
+   (In the reference pipeline, the anchor comes from `decoded_frame_buffer[:, :1]` after
+   sliding to max=9 frames, so it tends to be a boundary pixel frame.)
 
 3. Are there known workarounds if T=1 is unsupported? (E.g., decode T=2 and discard,
    or pad with zeros, or use the encoder's temporal receptive field to determine
@@ -70,6 +72,28 @@ anchor_pixels = vae.decode(latents[:, :1])  # [1, 1, 16, H_lat, W_lat]
    conv has kernel_size=3 with causal padding, and there are N temporal layers,
    the minimum T for stable output is bounded. What's that bound?
 
+6. **Streaming cache interaction:** our display decode uses streaming mode (`decode_to_pixel(..., use_cache=True)`
+   → `stream_decode()`), which preserves internal conv caches across calls. If we run an extra
+   anchor-only decode “in the middle”, how do we avoid corrupting the streaming cache?
+   - Is `use_cache=False` for the anchor decode acceptable (batch decode), or does it change the
+     anchor pixel enough to matter?
+   - Is there a known pattern for “decode with explicit cache” (shadow cache) like our encoder’s
+     `encode_to_latent_with_cache` helper?
+
+7. **Which pixel frame is the correct anchor?** After `_update_decoded_buffer()`, the
+   re-encode uses `decoded_frame_buffer[:, :1]`. With steady-state 12 decoded frames
+   and a buffer max of 9, that anchor is the oldest of the retained 9 — NOT “frame 0
+   of the current chunk.” Derive the exact mapping: which latent frame(s) must be
+   decoded to produce that specific pixel, and can it be produced without full-chunk
+   decode? (See `PrepareContextFramesBlock` in the prompt pack for the sliding-buffer
+   semantics.)
+
+8. **T=1 output length under streaming decode**: Our `decode_to_pixel()` calls
+   `stream_decode()` which has `first_batch` semantics (chunk 0 returns 9 frames,
+   steady-state returns 12 for T=3 input). What does T=1 return in `first_batch=True`
+   vs `first_batch=False`? Is the output length even well-defined for T=1 under
+   streaming decode?
+
 ### Thread 2: Why does torch.compile give 9% on SM120 vs 53% on H200?
 
 We measured:
@@ -82,6 +106,11 @@ Known factors:
 - KV-bias flash attention falls back from CuTe to Triton under dynamo
   (`__dlpack__` on FakeTensor incompatible with CuTe DSL)
 - SM120 may be more memory-bound at our tile sizes
+
+**Note**: The comparison is not perfectly apples-to-apples — H200 result was TP=2 only
+(no PP), SM120 is PP1+TP=4 (different topology, different attention backend constraints).
+The question is whether the gap is explained by topology differences or by fundamental
+SM120 compile effectiveness.
 
 **Questions:**
 1. What determines compile speedup variance across GPU architectures?
@@ -101,7 +130,17 @@ Known factors:
 
 5. **Practical diagnostic**: We can run `TORCH_LOGS=graph_breaks` on SM120. What
    should we look for? Is there a methodology to compare "fusion opportunity" between
-   two GPU architectures for the same model?
+   two GPU architectures for the same model? Minimal diagnostic: run single-rank
+   `profile_krea_pipeline_blocks.py --compile` with same KV-bias path and compare
+   op mix / fusion between SM90 and SM120.
+
+6. **CuTe↔dynamo compatibility pattern**: We lose the KV-bias flash attention path
+   under compile because CuTe DSL uses `__dlpack__` which is incompatible with
+   dynamo's FakeTensor tracing. What's the recommended pattern?
+   - `torch._dynamo.disable` on the CuTe call site (preserves graph elsewhere)?
+   - Register a custom op with a fake impl (`torch.library.custom_op`)?
+   - Accept the graph break and Triton fallback?
+   What net speedup should we expect on SM120 from fixing this vs accepting fallback?
 
 ### Thread 3: What else exists for hiding decode latency in pipeline-parallel video inference?
 
@@ -135,10 +174,32 @@ a broader search.
 6. **WanVAE-specific**: Any analysis of Wan2.1's VAE decode performance characteristics?
    Temporal upsampling cost vs spatial? Which layers dominate the 172ms?
 
+7. **Hybrid anchor schedule (R0 + periodic correction)**: Our R0 test (latent-only
+   anchor) gave 14.8 FPS but drifted visually. What if we use latent-only anchor
+   most chunks and do a real decode→re-encode every N chunks as periodic correction?
+   - How to pick N? (Drift rate vs correction cost trade-off.)
+   - What cheap drift detectors/metrics could gate when correction is needed?
+     (L2 norm divergence, LPIPS on decoded frames, latent histogram shift, etc.)
+   - Has anyone published on periodic correction schedules for rolling-window
+     diffusion with KV cache?
+
+### Thread 4 (optional): Throughput levers beyond single-stream FPS (multi-stream packing)
+
+PP1’s biggest practical advantage on this 8×SM120 box is that **TP=4 uses 5 GPUs** (rank0 + 4 mesh),
+leaving **3 idle GPUs**. If single-stream gains plateau, our next lever is B>1 / multi-stream packing.
+
+Questions:
+1. What’s the best “first ship” way to use the idle GPUs?
+   - Two independent processes (each TP=2) vs one rank0 serving multiple meshes.
+2. If sharing rank0 across streams, what should be shared vs isolated (VAE decode, text encoder, session state)?
+3. What scheduling/backpressure invariants should we enforce so multiple streams don’t self-DDOS (queue latency budgets)?
+4. Any prior art in realtime video generation systems for multi-stream packing with a shared decode stage?
+
 ## Repo prompt pack (include these files)
 
-### Our coordination doc (primary input)
+### Our coordination docs (primary input)
 - `scope-drd/notes/FA4/h200/tp/proposals/r0-latent-anchor/design.md`
+- `scope-drd/notes/FA4/h200/tp/proposals/r0-latent-anchor/ask-5pro-anchor-decode.md` (companion: detailed anchor-decode questions with ground-truth semantics)
 
 ### Current state / big picture
 - `scope-drd/notes/FA4/h200/tp/landscape.md`
@@ -149,6 +210,7 @@ a broader search.
 - `scope-drd/src/scope/core/pipelines/wan2_1/vae/wan.py` (WanVAE class — decode/encode methods)
 - `scope-drd/src/scope/core/pipelines/wan2_1/vae/modules/vae.py` (decoder internals — temporal convolutions)
 - `scope-drd/src/scope/core/pipelines/krea_realtime_video/blocks/recompute_kv_cache.py` (mesh-side context consumption, lines 264-357)
+- `scope-drd/src/scope/core/pipelines/krea_realtime_video/blocks/prepare_context_frames.py` (sliding-buffer semantics, decoded_frame_buffer size formula)
 
 ### Compile paths
 - `scope-drd/src/scope/core/pipelines/krea_realtime_video/modules/causal_model.py` (lines 545-582: _kv_bias_flash_combine — graph break source)
@@ -176,6 +238,9 @@ a broader search.
 - A clear YES/NO/CONDITIONAL on T=1 decode feasibility for Wan2.1
 - If NO: the minimum T and why, plus workaround strategies
 - If YES: confirmation of semantic equivalence (T=1 output vs first-T-of-full-decode)
+- **Equivalence check recipe**: Given a fixed latent tensor and defined decoder-cache
+  state, how to test (numerically) that `anchor_pixel_full == anchor_pixel_T1` — which
+  indices, what cache mode, what tolerance is acceptable
 - External precedent from other video VAEs
 
 ### Thread 2 (compile):

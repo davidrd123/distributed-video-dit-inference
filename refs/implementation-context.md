@@ -193,6 +193,7 @@ The PP0 overlap patterns have now been exercised in **PP1 server mode**, and a f
 - `19-producer-consumer-backpressure`: “overlap” is not just queues; it includes **hard-cut semantics**. With depth=1 (one in-flight envelope), you still can’t “skip a recv” on hard cuts: drain+discard in-flight results before resetting, or go crash-only if comm is wedged.
 - `20-message-framing-versioning`: “single-owner transport” becomes a protocol rule. Any second caller (debug endpoint, smoke test, concurrent request) that touches `PPControlPlane.send_infer/recv_result` while overlap is active risks corrupting framing and stranding peers; Stage0 must own transport behind a single API/lock.
 - `03-graceful-shutdown`: under overlap, shutdown must treat “comms thread didn’t join” as **poisoned**: do not call into `dist` from the main thread afterward; fail fast (crash-only posture) rather than trying to unwind a wedged communicator.
+- `23-vae-latency-chunking` / `17-reading-profiler-traces`: overlap can be mechanically correct and still deliver ~0 gain when decode fills the idle bubble; measure stage imbalance and prioritize decode knobs when decode dominates (see `scope-drd/notes/FA4/h200/tp/landscape.md`).
 
 ## Cross-cutting: DiT architecture
 

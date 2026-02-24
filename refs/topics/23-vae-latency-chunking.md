@@ -20,7 +20,10 @@ The VAE decoder is often the **latency bottleneck** in video generation pipeline
 
 Block profiling shows VAE decode is already a material slice of wall time in TP v0: **107ms/chunk (16.5%)** at 320×576 (Run 10b), and decode+recompute totals **33%** of measured GPU time. This motivates two parallel threads: v1.1 “generator-only workers” (avoid duplicated decode on worker ranks), and (if TTFF/latency is a priority) StreamDiffusionV2’s “Stream-VAE” idea (chunked 3D conv with cached features; reported ~30% of pipeline time). The parked async-decode-overlap plan estimates only a ~2–8% ceiling (~0.5 FPS) unless recompute is rare.
 
+Update (PP1 / 2026-02-24): in PP1 server mode on SM120, rank0 VAE decode measured ~172ms/chunk and consumed nearly the entire “idle bubble,” so the decode∥mesh overlap lever (Approach E) was mechanically correct but delivered ~0% FPS gain. This reaffirms the operator rule: overlap is only valuable once decode is small enough (or the semantic coupling is changed); otherwise, decode optimization is the first throughput lever.
+
 See: `refs/implementation-context.md` → Phase 2, `scope-drd/notes/FA4/h200/tp/bringup-run-log.md` (Run 10b), `scope-drd/notes/FA4/h200/tp/v1.1-generator-only-workers.md` (v1.1 rationale), `scope-drd/notes/FA4/h200/tp/streamdiffusion-v2-analysis-opus.md` (Stream-VAE), `scope-drd/notes/FA4/h200/tp/async-decode-overlap-scoping.md` (gain ceiling).
+See also: `scope-drd/notes/FA4/h200/tp/landscape.md` (PP1 scoreboard and “overlap E is ~0 on SM120 because decode fills bubble”).
 
 Relevant Scope code:
 - `scope-drd/src/scope/core/pipelines/krea_realtime_video/modules/vae.py` and `scope-drd/src/scope/core/pipelines/krea_realtime_video/blocks/prepare_context_frames.py` (where decode/encode and context assembly happen today)
